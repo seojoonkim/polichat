@@ -109,7 +109,7 @@ export default function ChatPage() {
     return (
       <div className="min-h-screen bg-gray-100 flex justify-center">
         <div
-          className={`w-full h-screen ${
+          className={`relative w-full h-screen ${
             phase === 'enter'
               ? 'animate-page-slide-in'
               : phase === 'exit'
