@@ -1,17 +1,17 @@
 <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#1E40AF"/>
-      <stop offset="100%" stop-color="#3B82F6"/>
+      <stop offset="0%" stop-color="#374151"/>
+      <stop offset="100%" stop-color="#6B7280"/>
     </linearGradient>
     <linearGradient id="g2" x1="0%" y1="100%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#64748B"/>
-      <stop offset="100%" stop-color="#94A3B8"/>
+      <stop offset="0%" stop-color="#9CA3AF"/>
+      <stop offset="100%" stop-color="#D1D5DB"/>
     </linearGradient>
   </defs>
-  <!-- Left speech bubble (blue) -->
+  <!-- Left speech bubble (dark gray) -->
   <path d="M12 22C12 16.477 16.477 12 22 12H38C43.523 12 48 16.477 48 22V38C48 43.523 43.523 48 38 48H26L18 56V48H22C16.477 48 12 43.523 12 38V22Z" fill="url(#g1)"/>
-  <!-- Right speech bubble (gray) -->
+  <!-- Right speech bubble (light gray) -->
   <path d="M32 32C32 26.477 36.477 22 42 22H58C63.523 22 68 26.477 68 32V48C68 53.523 63.523 58 58 58H54V66L46 58H42C36.477 58 32 53.523 32 48V32Z" fill="url(#g2)"/>
   <!-- Checkmark in overlap -->
   <path d="M38 38L42 42L50 34" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>

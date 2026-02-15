@@ -51,7 +51,7 @@ export default function IdolSelector({ idols }: Props) {
             className="flex items-center justify-center gap-2 mt-5 animate-fade-in-up"
             style={{ animationDelay: '0.2s' }}
           >
-            <span className="px-3 py-1.5 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
+            <span className="px-3 py-1.5 bg-slate-200 text-slate-700 text-xs font-semibold rounded-full">
               📋 실제 공약 기반
             </span>
             <span className="px-3 py-1.5 bg-slate-200 text-slate-700 text-xs font-semibold rounded-full">
@@ -129,7 +129,7 @@ export default function IdolSelector({ idols }: Props) {
                     </p>
                     
                     {/* CTA hint */}
-                    <div className="flex items-center gap-1 text-xs font-medium text-slate-500 group-hover:text-blue-600 transition-colors">
+                    <div className="flex items-center gap-1 text-xs font-medium text-slate-500 group-hover:text-slate-800 transition-colors">
                       <span>대화하기</span>
                       <svg className="w-3 h-3 transform group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
