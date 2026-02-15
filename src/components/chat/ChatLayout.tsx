@@ -9,21 +9,26 @@ import ChatInput from './ChatInput';
 
 // iOS Safari 키보드 올라와도 레이아웃 고정을 위한 커스텀 훅
 function useFixedHeight() {
-  const [fixedHeight, setFixedHeight] = useState<number | null>(null);
+  const [fixedHeight, setFixedHeight] = useState<string>('100lvh');
   
   useLayoutEffect(() => {
-    // 초기 높이 저장 (키보드 없는 상태)
-    const initialHeight = window.innerHeight;
-    setFixedHeight(initialHeight);
+    // 초기 높이 저장 (키보드 없는 상태) - CSS variable로 설정
+    const setHeight = () => {
+      const vh = window.innerHeight;
+      document.documentElement.style.setProperty('--app-height', `${vh}px`);
+      setFixedHeight(`${vh}px`);
+    };
+    
+    setHeight();
     
     // orientation 변경 시에만 높이 재계산
     const handleOrientationChange = () => {
-      setTimeout(() => {
-        setFixedHeight(window.innerHeight);
-      }, 100);
+      setTimeout(setHeight, 100);
     };
     
     window.addEventListener('orientationchange', handleOrientationChange);
+    // resize는 듣지 않음 (키보드로 인한 resize 무시)
+    
     return () => window.removeEventListener('orientationchange', handleOrientationChange);
   }, []);
   
