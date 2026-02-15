@@ -69,6 +69,38 @@ export async function loadIdolKnowledge(
   return result;
 }
 
+// --- Group info loading (for backward compatibility) ---
+
+const GROUP_FILES = ['overview', 'members', 'discography'] as const;
+
+export async function loadGroupInfo(groupSlug: string): Promise<string> {
+  const parts: string[] = [];
+  for (const file of GROUP_FILES) {
+    try {
+      const res = await fetch(`/groups/${groupSlug}/${file}.md`);
+      if (res.ok) {
+        const text = await res.text();
+        if (text.trim()) parts.push(text.trim());
+      }
+    } catch {
+      // skip
+    }
+  }
+  return parts.join('\n\n---\n\n');
+}
+
+const GROUP_SLUG_MAP: Record<string, string> = {
+  '국민의힘': 'ppp',
+  '더불어민주당': 'democratic',
+};
+
+export function getGroupSlug(groupName: string): string {
+  return (
+    GROUP_SLUG_MAP[groupName] ??
+    groupName.toLowerCase().replace(/\s+/g, '-')
+  );
+}
+
 // --- Party info loading ---
 
 export async function loadPartyInfo(partyId: string): Promise<string> {
