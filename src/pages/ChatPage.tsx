@@ -7,17 +7,6 @@ import ChatLayout from '@/components/chat/ChatLayout';
 
 type TransitionPhase = 'idle' | 'exit' | 'enter';
 
-// R&D Demo 안내 배너 - 입력창 아래에 위치 (z-10)
-function DemoBanner() {
-  return (
-    <div className="fixed bottom-0 left-0 right-0 bg-gray-100/95 backdrop-blur-sm border-t border-gray-200 py-1.5 px-4 text-center z-10">
-      <p className="text-[10px] text-gray-400 leading-relaxed">
-        R&D Demo · 저작권 요청 시 즉시 중단
-      </p>
-    </div>
-  );
-}
-
 export default function ChatPage() {
   const { idolId: urlIdolId } = useParams<{ idolId: string }>();
   const navigate = useNavigate();
@@ -139,7 +128,6 @@ export default function ChatPage() {
   return (
     <div className={phase === 'exit' ? 'animate-page-zoom-out' : ''}>
       <IdolSelector idols={idols} />
-      <DemoBanner />
     </div>
   );
 }
