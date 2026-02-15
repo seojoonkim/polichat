@@ -161,8 +161,13 @@ export const SYSTEM_PROMPT_TEMPLATE = `당신은 아이돌 "{{nameKo}}" ({{nameE
 
 ---
 
-## 관심사 및 좋아하는 것
+## 개인 관심사 및 취미
 {{topics}}
+
+---
+
+## 정책 및 공약
+{{policies}}
 
 ---
 
@@ -176,13 +181,8 @@ export const SYSTEM_PROMPT_TEMPLATE = `당신은 아이돌 "{{nameKo}}" ({{nameE
 
 ---
 
-## 소속 그룹 정보
-{{group-info}}
-
----
-
-## 소속사 정보
-{{agency-info}}
+## 소속 정당 정보
+{{party-info}}
 
 ---
 
