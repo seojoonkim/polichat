@@ -11,7 +11,7 @@ interface Props {
   idol: IdolMeta;
 }
 
-// 첫 방문용 인사말 (자기소개 + 플랫폼 소개 + 온보딩 질문)
+// 첫 방문용 인사말
 function getFirstVisitGreeting(idol: IdolMeta): string {
   if (idol.firstVisitGreeting) {
     return idol.firstVisitGreeting;
@@ -27,7 +27,7 @@ function getFirstVisitGreeting(idol: IdolMeta): string {
   return greetings[Math.floor(Math.random() * greetings.length)]!;
 }
 
-// 재방문용 인사말 (자기소개 포함)
+// 재방문용 인사말
 function getReturningGreeting(idol: IdolMeta): string {
   const hour = new Date().getHours();
   const title = idol.tagline || `${idol.group} 소속`;
@@ -123,11 +123,17 @@ export default function ChatLayout({ idol }: Props) {
     return () => window.removeEventListener('beforeunload', handleUnload);
   }, []);
 
-  // 단순한 레이아웃: h-dvh (dynamic viewport height) 사용
+  // 전체 레이아웃: fixed inset-0으로 viewport 전체 차지
+  // 내부는 flexbox로 헤더-메시지-입력창 배치
   return (
-    <div className="h-dvh flex flex-col bg-white shadow-xl overflow-hidden" style={{ maxWidth: '600px', margin: '0 auto' }}>
+    <div 
+      className="fixed inset-0 flex flex-col bg-white overflow-hidden"
+      style={{ maxWidth: '600px', margin: '0 auto', left: 0, right: 0 }}
+    >
+      {/* 헤더: 절대 스크롤 안 됨 */}
       <ChatHeader idol={idol} />
       
+      {/* 메시지 영역: 이 영역만 내부 스크롤 */}
       {historyLoaded ? (
         <MessageList messages={messages} idol={idol} isStreaming={isStreaming} />
       ) : (
@@ -145,6 +151,7 @@ export default function ChatLayout({ idol }: Props) {
         </div>
       )}
       
+      {/* 입력창: 절대 스크롤 안 됨 */}
       <ChatInput
         onSend={handleSend}
         disabled={!historyLoaded}

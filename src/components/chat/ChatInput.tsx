@@ -40,6 +40,22 @@ export default function ChatInput({ onSend, disabled, themeColor, language }: Pr
     }
   };
 
+  // iOS Safari: input focus 시 window 스크롤 리셋
+  const handleFocus = () => {
+    // Safari가 강제 스크롤하면 다시 원위치로
+    setTimeout(() => {
+      window.scrollTo(0, 0);
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+    }, 50);
+    setTimeout(() => {
+      window.scrollTo(0, 0);
+    }, 150);
+    setTimeout(() => {
+      window.scrollTo(0, 0);
+    }, 300);
+  };
+
   useEffect(() => {
     if (inputRef.current) {
       inputRef.current.style.height = 'auto';
@@ -66,6 +82,7 @@ export default function ChatInput({ onSend, disabled, themeColor, language }: Pr
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={handleKeyDown}
+        onFocus={handleFocus}
         placeholder={getPlaceholder(language)}
         rows={1}
         className="flex-1 px-4 py-2.5 rounded-2xl bg-gray-50 border border-gray-200 text-[15px] outline-none
