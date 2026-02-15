@@ -3,7 +3,6 @@ import type { IdolMeta } from '@/types/idol';
 import { useSystemPrompt } from '@/hooks/use-system-prompt';
 import { useChat } from '@/hooks/use-chat';
 import { useChatStore } from '@/stores/chat-store';
-import { useIntimacyStore } from '@/stores/intimacy-store';
 import ChatHeader from './ChatHeader';
 import MessageList from './MessageList';
 import ChatInput from './ChatInput';
@@ -73,35 +72,8 @@ export default function ChatLayout({ idol }: Props) {
   const { systemPrompt, knowledge } = useSystemPrompt(idol);
   const { messages, isStreaming, error, sendMessage, addAssistantMessage, historyLoaded } = useChat(systemPrompt, knowledge);
   
-  const levelChangeEvent = useIntimacyStore((s) => s.levelChangeEvent);
-  const clearLevelChangeEvent = useIntimacyStore((s) => s.clearLevelChangeEvent);
-  const checkInactivityPenalty = useIntimacyStore((s) => s.checkInactivityPenalty);
-  
   const greetingShown = useRef(false);
-  const inactivityChecked = useRef(false);
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
-
-  // Check inactivity penalty on load
-  useEffect(() => {
-    if (historyLoaded && !inactivityChecked.current) {
-      inactivityChecked.current = true;
-      checkInactivityPenalty(idol.id);
-    }
-  }, [historyLoaded, idol.id, checkInactivityPenalty]);
-
-  // Handle level change events
-  useEffect(() => {
-    if (levelChangeEvent && levelChangeEvent.idolId === idol.id) {
-      const { oldLevel, newLevel, title } = levelChangeEvent;
-      const isLevelUp = newLevel > oldLevel;
-      const systemMessage = `[시스템] ${isLevelUp ? '🎉' : '💔'} ${isLevelUp ? '레벨업' : '레벨다운'}! Lv.${oldLevel} → Lv.${newLevel} (${title})`;
-      
-      setTimeout(() => {
-        addAssistantMessage(systemMessage);
-        clearLevelChangeEvent();
-      }, 500);
-    }
-  }, [levelChangeEvent, idol.id, addAssistantMessage, clearLevelChangeEvent]);
 
   // Show greeting on first load
   useEffect(() => {
