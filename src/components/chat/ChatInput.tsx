@@ -40,10 +40,20 @@ export default function ChatInput({ onSend, disabled, themeColor, language }: Pr
     }
   };
 
-  // iOS Safari: visualViewport 기반으로 처리하므로 scrollTo 불필요
-  // 깜빡임 방지를 위해 아무것도 안 함
+  // iOS Safari: input focus 시 window 스크롤 리셋
   const handleFocus = () => {
-    // visualViewport가 height를 조절하므로 별도 처리 불필요
+    // Safari가 강제 스크롤하면 다시 원위치로
+    setTimeout(() => {
+      window.scrollTo(0, 0);
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+    }, 50);
+    setTimeout(() => {
+      window.scrollTo(0, 0);
+    }, 150);
+    setTimeout(() => {
+      window.scrollTo(0, 0);
+    }, 300);
   };
 
   useEffect(() => {

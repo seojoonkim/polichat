@@ -11,33 +11,6 @@ interface Props {
   idol: IdolMeta;
 }
 
-// iOS Safari 키보드 대응: visualViewport로 실제 보이는 높이 추적
-function useVisualViewport() {
-  const [height, setHeight] = useState<number | null>(null);
-  
-  useEffect(() => {
-    const vv = window.visualViewport;
-    if (!vv) return;
-    
-    const update = () => {
-      setHeight(vv.height);
-    };
-    
-    // 초기값 설정
-    update();
-    
-    vv.addEventListener('resize', update);
-    vv.addEventListener('scroll', update);
-    
-    return () => {
-      vv.removeEventListener('resize', update);
-      vv.removeEventListener('scroll', update);
-    };
-  }, []);
-  
-  return height;
-}
-
 // 첫 방문용 인사말
 function getFirstVisitGreeting(idol: IdolMeta): string {
   if (idol.firstVisitGreeting) {
@@ -100,9 +73,6 @@ export default function ChatLayout({ idol }: Props) {
   
   const greetingShown = useRef(false);
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
-  
-  // iOS Safari 키보드 대응
-  const viewportHeight = useVisualViewport();
 
   // Show greeting on first load
   useEffect(() => {
@@ -153,16 +123,12 @@ export default function ChatLayout({ idol }: Props) {
     return () => window.removeEventListener('beforeunload', handleUnload);
   }, []);
 
-  // 전체 레이아웃: visualViewport 높이 사용 (iOS Safari 키보드 대응)
-  // height를 동적으로 설정하면 키보드가 올라와도 레이아웃이 안정적
+  // 전체 레이아웃: fixed inset-0으로 viewport 전체 차지
+  // 내부는 flexbox로 헤더-메시지-입력창 배치
   return (
     <div 
-      className="fixed left-0 right-0 top-0 flex flex-col bg-white overflow-hidden"
-      style={{ 
-        maxWidth: '600px', 
-        margin: '0 auto',
-        height: viewportHeight ? `${viewportHeight}px` : '100dvh',
-      }}
+      className="fixed inset-0 flex flex-col bg-white overflow-hidden"
+      style={{ maxWidth: '600px', margin: '0 auto', left: 0, right: 0 }}
     >
       {/* 헤더: 절대 스크롤 안 됨 */}
       <ChatHeader idol={idol} />
