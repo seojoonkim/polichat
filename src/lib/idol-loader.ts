@@ -38,7 +38,6 @@ export async function loadIdolMeta(idolId: string): Promise<IdolMeta | null> {
 export async function loadIdolKnowledge(
   idolId: string,
   agencyId?: string,
-  _groupName?: string,
 ): Promise<Record<KnowledgeCategory, string>> {
   const result = {} as Record<KnowledgeCategory, string>;
   const dbFiles = await db.getAllKnowledgeForIdol(idolId);
@@ -70,59 +69,7 @@ export async function loadIdolKnowledge(
   return result;
 }
 
-// Load single group info.md file (unused but kept for future)
-async function _loadGroupInfoMd(groupSlug: string): Promise<string> {
-  try {
-    const res = await fetch(`/parties/${groupSlug}/info.md`);
-    if (!res.ok) return '';
-    return await res.text();
-  } catch {
-    return '';
-  }
-}
-
-// --- Group info loading ---
-
-const GROUP_FILES = ['overview', 'members', 'discography'] as const;
-
-export async function loadGroupInfo(groupSlug: string): Promise<string> {
-  const parts: string[] = [];
-  for (const file of GROUP_FILES) {
-    try {
-      const res = await fetch(`/groups/${groupSlug}/${file}.md`);
-      if (res.ok) {
-        const text = await res.text();
-        if (text.trim()) parts.push(text.trim());
-      }
-    } catch {
-      // skip
-    }
-  }
-  return parts.join('\n\n---\n\n');
-}
-
-/** Map group display name to folder slug */
-const GROUP_SLUG_MAP: Record<string, string> = {
-  IVE: 'ive',
-  SEVENTEEN: 'seventeen',
-  tripleS: 'triples',
-  ARTMS: 'artms',
-  '트리플에스': 'triples',
-  '세븐틴': 'seventeen',
-  '아이브': 'ive',
-  '아르테미스': 'artms',
-  '솔로': 'solo',
-  Solo: 'solo',
-};
-
-export function getGroupSlug(groupName: string): string {
-  return (
-    GROUP_SLUG_MAP[groupName] ??
-    groupName.toLowerCase().replace(/\s+/g, '-')
-  );
-}
-
-// --- Agency info loading ---
+// --- Party info loading ---
 
 export async function loadPartyInfo(partyId: string): Promise<string> {
   try {
@@ -145,10 +92,8 @@ export async function loadAllIdols(): Promise<IdolMeta[]> {
     const staticMeta = await fetchStaticMeta(id);
     const dbMeta = dbIdolMap.get(id);
     if (staticMeta) {
-      // Merge: static values are authoritative for built-in fields
       allIdols.push({
         ...staticMeta,
-        // Keep user's chat history association but use static profile
       });
       dbIdolMap.delete(id);
     } else if (dbMeta) {
@@ -162,10 +107,8 @@ export async function loadAllIdols(): Promise<IdolMeta[]> {
     allIdols.push(idol);
   }
 
-  // Sort by Korean name, but keep hodong at the end
+  // Sort by Korean name
   return allIdols.sort((a, b) => {
-    if (a.id === 'hodong') return 1;
-    if (b.id === 'hodong') return -1;
     return a.nameKo.localeCompare(b.nameKo, 'ko');
   });
 }

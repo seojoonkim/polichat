@@ -102,7 +102,7 @@ export const useIdolStore = create<IdolStore>((set, get) => ({
   getKnowledge: async (idolId) => {
     // Find idol to get agencyId and group
     const idol = get().idols.find((i) => i.id === idolId);
-    return loadIdolKnowledge(idolId, idol?.agencyId, idol?.group);
+    return loadIdolKnowledge(idolId, idol?.agencyId);
   },
 
   saveKnowledgeFile: async (idolId, category, content) => {
