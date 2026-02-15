@@ -42,9 +42,10 @@ export default function ChatInput({ onSend, disabled, themeColor, language }: Pr
     const handleResize = () => {
       if (formRef.current && window.visualViewport) {
         const bottomInset = window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop;
-        formRef.current.style.paddingBottom = isStandalone 
-          ? 'max(1rem, env(safe-area-inset-bottom))'
-          : `${Math.max(50, bottomInset)}px`;
+        // 키보드가 올라왔을 때만 bottomInset 적용, 아니면 기본 패딩
+        formRef.current.style.paddingBottom = bottomInset > 10 
+          ? `${bottomInset}px`
+          : 'max(0.75rem, env(safe-area-inset-bottom))';
       }
     };
 
@@ -106,7 +107,7 @@ export default function ChatInput({ onSend, disabled, themeColor, language }: Pr
       style={{ 
         maxWidth: '600px', 
         bottom: 0,
-        paddingBottom: 'max(1rem, env(safe-area-inset-bottom))'
+        paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))'
       }}
     >
       <textarea
