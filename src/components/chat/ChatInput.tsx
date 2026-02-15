@@ -22,28 +22,24 @@ function getPlaceholder(language?: string): string {
 export default function ChatInput({ onSend, disabled, themeColor, language }: Props) {
   const [text, setText] = useState('');
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const formRef = useRef<HTMLFormElement>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!text.trim()) return;
     onSend(text);
     setText('');
-    // Reset textarea height
     if (inputRef.current) {
       inputRef.current.style.height = 'auto';
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    // Skip if IME is composing (Japanese/Chinese/Korean input)
     if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
       handleSubmit(e);
     }
   };
 
-  // Auto-resize textarea
   useEffect(() => {
     if (inputRef.current) {
       inputRef.current.style.height = 'auto';
@@ -51,7 +47,6 @@ export default function ChatInput({ onSend, disabled, themeColor, language }: Pr
     }
   }, [text]);
 
-  // Auto-focus when enabled (after AI response completes)
   useEffect(() => {
     if (!disabled && inputRef.current) {
       inputRef.current.focus();
@@ -62,12 +57,9 @@ export default function ChatInput({ onSend, disabled, themeColor, language }: Pr
 
   return (
     <form
-      ref={formRef}
       onSubmit={handleSubmit}
-      className="shrink-0 bg-white border-t border-gray-100 px-4 pt-3 flex items-end gap-2.5"
-      style={{ 
-        paddingBottom: 'max(12px, env(safe-area-inset-bottom))'
-      }}
+      className="shrink-0 bg-white border-t border-gray-100 px-4 pt-3 pb-safe flex items-end gap-2.5"
+      style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}
     >
       <textarea
         ref={inputRef}
@@ -80,7 +72,6 @@ export default function ChatInput({ onSend, disabled, themeColor, language }: Pr
           focus:border-purple-300 focus:ring-2 focus:ring-purple-50 transition-all duration-200
           resize-none leading-relaxed scrollbar-hide"
         style={{ minHeight: '42px', maxHeight: '120px' }}
-        autoFocus
       />
       <button
         type="submit"
@@ -90,15 +81,9 @@ export default function ChatInput({ onSend, disabled, themeColor, language }: Pr
         style={{
           backgroundColor: hasText ? themeColor : '#d1d5db',
           boxShadow: hasText ? `0 4px 12px -2px ${themeColor}40` : 'none',
-          transform: hasText ? 'scale(1)' : 'scale(0.95)',
         }}
       >
-        <svg
-          className="w-5 h-5 transition-transform duration-200"
-          style={{ transform: hasText ? 'rotate(-45deg)' : 'rotate(-45deg)' }}
-          fill="currentColor"
-          viewBox="0 0 24 24"
-        >
+        <svg className="w-5 h-5" style={{ transform: 'rotate(-45deg)' }} fill="currentColor" viewBox="0 0 24 24">
           <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
         </svg>
       </button>

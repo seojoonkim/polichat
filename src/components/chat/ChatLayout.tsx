@@ -7,36 +7,6 @@ import ChatHeader from './ChatHeader';
 import MessageList from './MessageList';
 import ChatInput from './ChatInput';
 
-// iOS Safari 키보드 대응: visualViewport API로 컨테이너 위치 보정
-// transform 대신 top/height 사용 (transform은 fixed 요소에 영향을 줌)
-function useVisualViewportFix(containerRef: React.RefObject<HTMLDivElement | null>, messageListRef: React.RefObject<HTMLDivElement | null>) {
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container || !window.visualViewport) return;
-
-    const handleViewportChange = () => {
-      const vv = window.visualViewport!;
-      // top과 height를 직접 설정 (transform 사용 X)
-      container.style.top = `${vv.offsetTop}px`;
-      container.style.height = `${vv.height}px`;
-      
-      // 키보드가 올라오면 메시지 영역도 맨 아래로 스크롤
-      if (messageListRef.current) {
-        messageListRef.current.scrollTop = messageListRef.current.scrollHeight;
-      }
-    };
-
-    window.visualViewport.addEventListener('resize', handleViewportChange);
-    window.visualViewport.addEventListener('scroll', handleViewportChange);
-    handleViewportChange();
-
-    return () => {
-      window.visualViewport?.removeEventListener('resize', handleViewportChange);
-      window.visualViewport?.removeEventListener('scroll', handleViewportChange);
-    };
-  }, [containerRef, messageListRef]);
-}
-
 interface Props {
   idol: IdolMeta;
 }
@@ -47,7 +17,6 @@ function getFirstVisitGreeting(idol: IdolMeta): string {
     return idol.firstVisitGreeting;
   }
   
-  // 직책/소속 정보 생성
   const title = idol.tagline || `${idol.group} 소속`;
   
   const greetings = [
@@ -104,11 +73,6 @@ export default function ChatLayout({ idol }: Props) {
   
   const greetingShown = useRef(false);
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const messageListRef = useRef<HTMLDivElement>(null);
-  
-  // iOS Safari 키보드 대응
-  useVisualViewportFix(containerRef, messageListRef);
 
   // Show greeting on first load
   useEffect(() => {
@@ -159,20 +123,13 @@ export default function ChatLayout({ idol }: Props) {
     return () => window.removeEventListener('beforeunload', handleUnload);
   }, []);
 
+  // 단순한 레이아웃: h-dvh (dynamic viewport height) 사용
   return (
-    <div className="fixed inset-0 flex justify-center bg-gray-100">
-      {/* max-width 컨테이너 - visualViewport로 위치 보정 */}
-      <div 
-        ref={containerRef}
-        className="w-full flex flex-col bg-white shadow-xl overflow-hidden" 
-        style={{ maxWidth: '600px' }}
-      >
-        {/* 헤더: shrink-0으로 고정 높이 */}
-        <ChatHeader idol={idol} />
+    <div className="h-dvh flex flex-col bg-white shadow-xl overflow-hidden" style={{ maxWidth: '600px', margin: '0 auto' }}>
+      <ChatHeader idol={idol} />
       
-      {/* 메시지 영역: flex-1로 남은 공간 채움, 내부 스크롤 */}
       {historyLoaded ? (
-        <MessageList messages={messages} idol={idol} isStreaming={isStreaming} scrollRef={messageListRef} />
+        <MessageList messages={messages} idol={idol} isStreaming={isStreaming} />
       ) : (
         <div className="flex-1 flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
@@ -188,14 +145,12 @@ export default function ChatLayout({ idol }: Props) {
         </div>
       )}
       
-      {/* 입력창: shrink-0으로 고정 높이 */}
       <ChatInput
         onSend={handleSend}
         disabled={!historyLoaded}
         themeColor={idol.themeColor}
         language={idol.language}
       />
-      </div>
     </div>
   );
 }

@@ -7,19 +7,11 @@ interface Props {
   messages: Message[];
   idol: IdolMeta;
   isStreaming: boolean;
-  scrollRef?: React.RefObject<HTMLDivElement | null>;
 }
 
-export default function MessageList({ messages, idol, isStreaming, scrollRef }: Props) {
+export default function MessageList({ messages, idol, isStreaming }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  
-  // 외부 scrollRef와 내부 containerRef 동기화
-  useEffect(() => {
-    if (scrollRef && containerRef.current) {
-      (scrollRef as React.MutableRefObject<HTMLDivElement | null>).current = containerRef.current;
-    }
-  }, [scrollRef]);
 
   // 스크롤 함수 - 더 확실하게
   const scrollToBottom = useCallback((smooth = true) => {
