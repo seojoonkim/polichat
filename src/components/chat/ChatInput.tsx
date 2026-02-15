@@ -24,49 +24,6 @@ export default function ChatInput({ onSend, disabled, themeColor, language }: Pr
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
-  // Detect if running in standalone/webview (no browser toolbar) vs Safari (has toolbar)
-  const [isStandalone, setIsStandalone] = useState(false);
-  
-  useEffect(() => {
-    // Check if running as PWA or in-app webview (no Safari toolbar)
-    const standalone = window.matchMedia('(display-mode: standalone)').matches 
-      || (window.navigator as any).standalone === true
-      || !window.navigator.userAgent.includes('Safari')
-      || window.navigator.userAgent.includes('CriOS')
-      || window.navigator.userAgent.includes('FxiOS');
-    setIsStandalone(standalone);
-  }, []);
-
-  // Handle iOS Safari viewport changes (keyboard, toolbar)
-  useEffect(() => {
-    const handleResize = () => {
-      if (formRef.current && window.visualViewport) {
-        const bottomInset = window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop;
-        // 키보드가 올라왔을 때만 패딩 적용 (bottomInset > 10)
-        if (bottomInset > 10) {
-          formRef.current.style.paddingBottom = `${bottomInset + 12}px`;
-        } else {
-          formRef.current.style.paddingBottom = isStandalone 
-            ? 'max(12px, env(safe-area-inset-bottom))'
-            : 'max(12px, env(safe-area-inset-bottom))';
-        }
-      }
-    };
-
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', handleResize);
-      window.visualViewport.addEventListener('scroll', handleResize);
-      handleResize();
-    }
-
-    return () => {
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', handleResize);
-        window.visualViewport.removeEventListener('scroll', handleResize);
-      }
-    };
-  }, [isStandalone]);
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!text.trim()) return;
@@ -107,10 +64,8 @@ export default function ChatInput({ onSend, disabled, themeColor, language }: Pr
     <form
       ref={formRef}
       onSubmit={handleSubmit}
-      className="fixed left-1/2 -translate-x-1/2 w-full bg-white/95 backdrop-blur-md border-t border-gray-100 px-4 pt-3 flex items-end gap-2.5 z-50"
+      className="shrink-0 bg-white border-t border-gray-100 px-4 pt-3 flex items-end gap-2.5"
       style={{ 
-        maxWidth: '600px', 
-        bottom: 0,
         paddingBottom: 'max(12px, env(safe-area-inset-bottom))'
       }}
     >

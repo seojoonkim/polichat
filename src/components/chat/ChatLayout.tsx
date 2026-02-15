@@ -125,9 +125,13 @@ export default function ChatLayout({ idol }: Props) {
   }, []);
 
   return (
-    <div className="flex flex-col h-screen bg-white shadow-xl overflow-hidden overflow-x-hidden">
-      <ChatHeader idol={idol} />
+    <div className="fixed inset-0 flex justify-center bg-gray-100">
+      {/* max-width 컨테이너 */}
+      <div className="w-full flex flex-col bg-white shadow-xl overflow-hidden" style={{ maxWidth: '600px' }}>
+        {/* 헤더: shrink-0으로 고정 높이 */}
+        <ChatHeader idol={idol} />
       
+      {/* 메시지 영역: flex-1로 남은 공간 채움, 내부 스크롤 */}
       {historyLoaded ? (
         <MessageList messages={messages} idol={idol} isStreaming={isStreaming} />
       ) : (
@@ -145,12 +149,14 @@ export default function ChatLayout({ idol }: Props) {
         </div>
       )}
       
+      {/* 입력창: shrink-0으로 고정 높이 */}
       <ChatInput
         onSend={handleSend}
         disabled={!historyLoaded}
         themeColor={idol.themeColor}
         language={idol.language}
       />
+      </div>
     </div>
   );
 }
