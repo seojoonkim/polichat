@@ -8,6 +8,7 @@ import MessageList from './MessageList';
 import ChatInput from './ChatInput';
 
 // iOS Safari 키보드 대응: visualViewport API로 컨테이너 위치 보정
+// transform 대신 top/height 사용 (transform은 fixed 요소에 영향을 줌)
 function useVisualViewportFix(containerRef: React.RefObject<HTMLDivElement | null>) {
   useEffect(() => {
     const container = containerRef.current;
@@ -15,8 +16,8 @@ function useVisualViewportFix(containerRef: React.RefObject<HTMLDivElement | nul
 
     const handleViewportChange = () => {
       const vv = window.visualViewport!;
-      // 키보드로 인해 viewport가 위로 스크롤된 만큼 컨테이너를 아래로 이동
-      container.style.transform = `translateY(${vv.offsetTop}px)`;
+      // top과 height를 직접 설정 (transform 사용 X)
+      container.style.top = `${vv.offsetTop}px`;
       container.style.height = `${vv.height}px`;
     };
 
