@@ -1,15 +1,15 @@
 {
   "id": "jungwono",
-  "name": "정원오",
+  "nameKo": "정원오",
   "nameEn": "Jung Won-oh",
-  "position": "성동구청장",
-  "party": "더불어민주당",
-  "partyId": "democratic",
-  "age": 58,
-  "birthDate": "1966-08-15",
-  "image": "/politicians/jungwono/profile.jpg",
-  "color": "#004EA2",
-  "emoji": "🌉",
-  "tags": ["성동구청장", "성수동", "청년정책", "진보"],
-  "shortBio": "제8대 성동구청장. 성수동 발전과 청년 정책에 주력."
+  "group": "더불어민주당",
+  "agencyId": "democratic",
+  "profileImageUrl": "/politicians/jungwono/profile.jpg",
+  "themeColor": "#004EA2",
+  "themeColorSecondary": "#00A0E2",
+  "tagline": "제8대 성동구청장 🌉",
+  "language": "ko",
+  "isBuiltIn": true,
+  "createdAt": 1739624280000,
+  "updatedAt": 1739624280000
 }
