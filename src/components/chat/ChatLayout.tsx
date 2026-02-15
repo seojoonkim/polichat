@@ -12,17 +12,19 @@ interface Props {
   idol: IdolMeta;
 }
 
-// 첫 방문용 인사말 (플랫폼 소개 + 온보딩 질문)
+// 첫 방문용 인사말 (자기소개 + 플랫폼 소개 + 온보딩 질문)
 function getFirstVisitGreeting(idol: IdolMeta): string {
   if (idol.firstVisitGreeting) {
     return idol.firstVisitGreeting;
   }
   
+  // 직책/소속 정보 생성
+  const title = idol.tagline || `${idol.group} 소속`;
+  
   const greetings = [
-    `안녕하세요! 폴리챗에 오신 걸 환영합니다. 여기서 직접 소통할 수 있어서 좋네요. 어떻게 불러드리면 될까요?`,
-    `반갑습니다! 폴리챗 처음이시죠? 여기서 1:1로 대화할 수 있어요. 어떻게 불러드릴까요?`,
-    `안녕하세요, 반가워요! 폴리챗에서 이렇게 만나뵙네요. 이름이 어떻게 되세요?`,
-    `반갑습니다! 폴리챗에서 시민분들과 직접 소통할 수 있어서 좋아요. 뭐라고 불러드릴까요?`,
+    `안녕하세요, ${title} ${idol.nameKo}입니다! 폴리챗에서 이렇게 만나뵙게 되어 반갑습니다. 어떻게 불러드리면 될까요?`,
+    `반갑습니다! ${idol.nameKo}입니다. ${title}이에요. 여기서 시민분들과 직접 소통할 수 있어서 좋네요. 성함이 어떻게 되세요?`,
+    `안녕하세요, ${idol.nameKo}입니다! 폴리챗에서 1:1로 대화할 수 있어서 좋습니다. 뭐라고 불러드릴까요?`,
   ];
   return greetings[Math.floor(Math.random() * greetings.length)]!;
 }
