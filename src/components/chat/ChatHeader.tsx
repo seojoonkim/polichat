@@ -82,7 +82,7 @@ export default function ChatHeader({ idol }: Props) {
         <div className="flex-1 min-w-0 overflow-hidden">
           <div className="font-bold text-base truncate">
             {idol.nameKo}
-            <span className="font-normal opacity-80 ml-1.5">| {idol.group}</span>
+            <span className="font-normal text-sm opacity-70 ml-1.5">| {idol.group}</span>
           </div>
           <div className="text-xs opacity-80 truncate">
             {idol.tagline}
