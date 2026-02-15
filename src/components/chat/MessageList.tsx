@@ -74,6 +74,7 @@ export default function MessageList({ messages, idol, isStreaming }: Props) {
 
   return (
     <div ref={containerRef} className="flex-1 overflow-y-auto overflow-x-hidden px-5 pt-5 pb-4 custom-scrollbar" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <div className="min-h-full flex flex-col justify-end">
       {/* Welcome message area */}
       {messages.length === 0 && (
         <div className="flex flex-col items-center justify-center h-full text-center">
@@ -128,6 +129,7 @@ export default function MessageList({ messages, idol, isStreaming }: Props) {
         ))}
 
       <div ref={bottomRef} />
+      </div>
     </div>
   );
 }

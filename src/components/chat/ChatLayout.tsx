@@ -22,7 +22,7 @@ function getFirstVisitGreetings(idol: IdolMeta): [string, string] {
 }
 
 // 재방문용 인사말 (짧게)
-function getReturningGreeting(idol: IdolMeta): string {
+function getReturningGreeting(_idol: IdolMeta): string {
   const hour = new Date().getHours();
   
   if (hour >= 6 && hour < 12) {
