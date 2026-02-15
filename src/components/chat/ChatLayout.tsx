@@ -123,12 +123,12 @@ export default function ChatLayout({ idol }: Props) {
     return () => window.removeEventListener('beforeunload', handleUnload);
   }, []);
 
-  // 전체 레이아웃: fixed inset-0으로 viewport 전체 차지
+  // 전체 레이아웃: 100svh로 Safari 툴바 고려
   // 내부는 flexbox로 헤더-메시지-입력창 배치
   return (
     <div 
-      className="fixed inset-0 flex flex-col bg-white overflow-hidden"
-      style={{ maxWidth: '600px', margin: '0 auto', left: 0, right: 0 }}
+      className="fixed top-0 left-0 right-0 flex flex-col bg-white overflow-hidden"
+      style={{ maxWidth: '600px', margin: '0 auto', height: '100svh' }}
     >
       {/* 헤더: 절대 스크롤 안 됨 */}
       <ChatHeader idol={idol} />
