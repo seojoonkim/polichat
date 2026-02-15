@@ -7,6 +7,30 @@ import ChatHeader from './ChatHeader';
 import MessageList from './MessageList';
 import ChatInput from './ChatInput';
 
+// iOS Safari 키보드 대응: visualViewport API로 컨테이너 위치 보정
+function useVisualViewportFix(containerRef: React.RefObject<HTMLDivElement | null>) {
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || !window.visualViewport) return;
+
+    const handleViewportChange = () => {
+      const vv = window.visualViewport!;
+      // 키보드로 인해 viewport가 위로 스크롤된 만큼 컨테이너를 아래로 이동
+      container.style.transform = `translateY(${vv.offsetTop}px)`;
+      container.style.height = `${vv.height}px`;
+    };
+
+    window.visualViewport.addEventListener('resize', handleViewportChange);
+    window.visualViewport.addEventListener('scroll', handleViewportChange);
+    handleViewportChange();
+
+    return () => {
+      window.visualViewport?.removeEventListener('resize', handleViewportChange);
+      window.visualViewport?.removeEventListener('scroll', handleViewportChange);
+    };
+  }, [containerRef]);
+}
+
 interface Props {
   idol: IdolMeta;
 }
@@ -74,6 +98,10 @@ export default function ChatLayout({ idol }: Props) {
   
   const greetingShown = useRef(false);
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  // iOS Safari 키보드 대응
+  useVisualViewportFix(containerRef);
 
   // Show greeting on first load
   useEffect(() => {
@@ -126,8 +154,12 @@ export default function ChatLayout({ idol }: Props) {
 
   return (
     <div className="fixed inset-0 flex justify-center bg-gray-100">
-      {/* max-width 컨테이너 */}
-      <div className="w-full flex flex-col bg-white shadow-xl overflow-hidden" style={{ maxWidth: '600px' }}>
+      {/* max-width 컨테이너 - visualViewport로 위치 보정 */}
+      <div 
+        ref={containerRef}
+        className="w-full flex flex-col bg-white shadow-xl overflow-hidden" 
+        style={{ maxWidth: '600px' }}
+      >
         {/* 헤더: shrink-0으로 고정 높이 */}
         <ChatHeader idol={idol} />
       
