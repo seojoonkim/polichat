@@ -111,9 +111,9 @@ export default function ChatPage() {
         <div
           className={`w-full h-screen ${
             phase === 'enter'
-              ? 'animate-page-slide-in'
+              ? 'animate-fade-in'
               : phase === 'exit'
-                ? 'animate-page-slide-out'
+                ? 'animate-fade-out'
                 : ''
           }`}
           style={{ maxWidth: '600px' }}
