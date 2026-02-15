@@ -29,42 +29,42 @@ function getFirstVisitGreeting(idol: IdolMeta): string {
   return greetings[Math.floor(Math.random() * greetings.length)]!;
 }
 
-// 재방문용 인사말
-function getReturningGreeting(): string {
+// 재방문용 인사말 (자기소개 포함)
+function getReturningGreeting(idol: IdolMeta): string {
   const hour = new Date().getHours();
+  const title = idol.tagline || `${idol.group} 소속`;
   
   if (hour >= 6 && hour < 12) {
     const greetings = [
-      `좋은 아침이에요! 잘 주무셨나요? ☀️`,
-      `아침부터 찾아주셨네요! 반갑습니다 😊`,
-      `좋은 아침입니다! 오늘 하루도 화이팅이에요!`,
+      `안녕하세요, ${idol.nameKo}입니다! 좋은 아침이에요 ☀️`,
+      `${idol.nameKo}입니다. 아침부터 찾아주셨네요! 반갑습니다 😊`,
+      `안녕하세요! ${title} ${idol.nameKo}입니다. 오늘 하루도 화이팅이에요!`,
     ];
     return greetings[Math.floor(Math.random() * greetings.length)]!;
   }
   
   if (hour >= 18 && hour < 23) {
     const greetings = [
-      `저녁 시간에 찾아주셨네요! 오늘 하루 어떠셨어요?`,
-      `저녁 식사는 하셨나요?`,
-      `하루 수고 많으셨어요! 피곤하시죠?`,
+      `안녕하세요, ${idol.nameKo}입니다! 저녁 시간에 찾아주셨네요.`,
+      `${idol.nameKo}입니다. 저녁 식사는 하셨나요?`,
+      `안녕하세요! ${title} ${idol.nameKo}입니다. 하루 수고 많으셨어요!`,
     ];
     return greetings[Math.floor(Math.random() * greetings.length)]!;
   }
   
   if (hour >= 23 || hour < 6) {
     const greetings = [
-      `이 시간에 찾아주셨네요. 늦은 시간인데 괜찮으세요?`,
-      `밤늦게까지 수고가 많으시네요.`,
-      `늦은 시간에 무슨 일 있으신가요?`,
+      `안녕하세요, ${idol.nameKo}입니다. 이 시간에 찾아주셨네요.`,
+      `${idol.nameKo}입니다. 밤늦게까지 수고가 많으시네요.`,
+      `안녕하세요! ${title} ${idol.nameKo}입니다. 늦은 시간인데 괜찮으세요?`,
     ];
     return greetings[Math.floor(Math.random() * greetings.length)]!;
   }
   
   const greetings = [
-    `다시 찾아주셨네요! 반갑습니다 😊`,
-    `안녕하세요! 잘 지내셨어요?`,
-    `반갑습니다! 오늘은 어떠세요?`,
-    `다시 뵙네요! 무엇이 궁금하신가요?`,
+    `안녕하세요, ${idol.nameKo}입니다! 다시 찾아주셨네요 😊`,
+    `${idol.nameKo}입니다. 반갑습니다! 잘 지내셨어요?`,
+    `안녕하세요! ${title} ${idol.nameKo}입니다. 무엇이 궁금하신가요?`,
   ];
   return greetings[Math.floor(Math.random() * greetings.length)]!;
 }
@@ -113,7 +113,7 @@ export default function ChatLayout({ idol }: Props) {
       
       let greeting: string;
       if (hasVisited) {
-        greeting = getReturningGreeting();
+        greeting = getReturningGreeting(idol);
       } else {
         greeting = getFirstVisitGreeting(idol);
         localStorage.setItem(visitedKey, 'true');
