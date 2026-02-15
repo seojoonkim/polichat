@@ -229,7 +229,7 @@ export function useOnboardingChat(idol: IdolMeta) {
         // 더 자연스러운 온보딩 완료 메시지 (생일 안 물어봄)
         return {
           nextStep: 'complete',
-          idolResponse: `좋아 ${callName}~! 💕||앞으로 밈챗에서 자주 얘기하자!||오늘 하루 어땠어?`,
+          idolResponse: `좋아 ${callName}~! 💕||앞으로 폴리챗에서 자주 얘기하자!||오늘 하루 어땠어?`,
           shouldSendToAI: false,
         };
       }

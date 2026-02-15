@@ -39,7 +39,7 @@ function AdminGate({ children }: { children: React.ReactNode }) {
       >
         <div className="text-center mb-6">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">
-            Mim.chat Admin
+            Polichat Admin
           </h1>
           <p className="text-gray-400 text-sm mt-1">비밀번호를 입력하세요</p>
         </div>
