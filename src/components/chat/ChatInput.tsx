@@ -24,29 +24,26 @@ export default function ChatInput({ onSend, disabled, themeColor, language }: Pr
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
-  // Handle iOS Safari viewport changes (keyboard)
-  // 키보드가 올라오면 입력창만 transform으로 위로 이동 (헤더/메시지는 그대로)
+  // iOS Safari 키보드 처리 - 입력창만 키보드 위로 이동
   useEffect(() => {
-    // 초기 뷰포트 높이 저장
-    const initialHeight = window.innerHeight;
-    
     const handleViewportChange = () => {
       if (!formRef.current || !window.visualViewport) return;
       
-      // 키보드 높이 = 초기 높이 - 현재 visualViewport 높이
-      const keyboardHeight = initialHeight - window.visualViewport.height;
+      const viewportHeight = window.visualViewport.height;
+      const windowHeight = window.innerHeight;
+      const keyboardHeight = windowHeight - viewportHeight;
+      const isMobile = window.innerWidth <= 768;
       
       if (keyboardHeight > 100) {
-        // 키보드가 올라왔을 때: transform으로 입력창만 위로 이동
-        formRef.current.style.transform = `translateY(-${keyboardHeight}px)`;
-        formRef.current.style.paddingBottom = '0.5rem';
+        // 키보드가 올라왔을 때
+        formRef.current.style.bottom = `${keyboardHeight}px`;
+        formRef.current.style.paddingBottom = '0.75rem';
       } else {
-        // 키보드가 없을 때: 원래 위치
-        formRef.current.style.transform = 'translateY(0)';
-        const isMobile = window.innerWidth <= 768;
+        // 키보드가 없을 때
+        formRef.current.style.bottom = '0';
         formRef.current.style.paddingBottom = isMobile 
-          ? 'max(60px, env(safe-area-inset-bottom, 60px))'
-          : 'max(1rem, env(safe-area-inset-bottom))';
+          ? 'max(50px, env(safe-area-inset-bottom, 50px))'
+          : '1rem';
       }
     };
 
@@ -104,12 +101,11 @@ export default function ChatInput({ onSend, disabled, themeColor, language }: Pr
     <form
       ref={formRef}
       onSubmit={handleSubmit}
-      className="fixed left-1/2 -translate-x-1/2 w-full bg-white/95 backdrop-blur-md border-t border-gray-100 px-4 pt-3 flex items-end gap-2.5 transition-transform duration-150"
+      className="fixed left-1/2 -translate-x-1/2 w-full bg-white/95 backdrop-blur-md border-t border-gray-100 px-4 pt-3 flex items-end gap-2.5 transition-[bottom] duration-100"
       style={{ 
         maxWidth: '600px', 
         bottom: 0,
-        paddingBottom: 'max(60px, env(safe-area-inset-bottom, 60px))',
-        willChange: 'transform'
+        paddingBottom: 'max(50px, env(safe-area-inset-bottom, 50px))'
       }}
     >
       <textarea

@@ -31,10 +31,8 @@
 }
 
 html, body, #root {
-  /* iOS Safari 키보드 대응 - 큰 뷰포트 높이 사용 */
   height: 100%;
-  height: 100lvh; /* large viewport height - 키보드 무시 */
-  height: -webkit-fill-available;
+  height: 100dvh;
   margin: 0;
   padding: 0;
   overflow: hidden;
