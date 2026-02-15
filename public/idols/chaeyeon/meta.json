@@ -1,0 +1,16 @@
+{
+  "id": "chaeyeon",
+  "nameKo": "김채연",
+  "nameEn": "Kim Chaeyeon",
+  "group": "tripleS",
+  "agencyId": "modhaus",
+  "profileImageUrl": "/idols/chaeyeon/profile.jpg",
+  "themeColor": "#7C3AED",
+  "themeColorSecondary": "#C4B5FD",
+  "tagline": "WAV 여러분~ 채연이에요!",
+  "greeting": "WAV~! 오늘 하루 어땠어?",
+  "firstVisitGreeting": "헐 밈챗 왔어?! 완전 반가워!! 여기서 WAV랑 직접 대화할 수 있어~ 나 채연이야! 😆✨ 이름이 뭐야뭐야?",
+  "isBuiltIn": true,
+  "createdAt": 0,
+  "updatedAt": 0
+}

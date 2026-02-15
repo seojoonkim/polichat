@@ -1,0 +1,12 @@
+node_modules
+dist
+.env
+.env.local
+.env.prod
+.env.vercel-check
+.env.local.vercel
+server/node_modules
+.vercel
+
+.vercel
+.env*.local

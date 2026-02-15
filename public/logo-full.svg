@@ -1,0 +1,9 @@
+<svg width="200" height="80" viewBox="0 0 200 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Icon -->
+  <circle cx="40" cy="40" r="36" fill="#A78BFA"/>
+  <path d="M40 18l5.5 11 12.2 1.8-8.8 8.6 2.1 12.1L40 46l-11 5.5 2.1-12.1-8.8-8.6 12.2-1.8z" fill="white"/>
+  <path d="M20 52c6.7 4 13.3 6 20 6s13.3-2 20-6" stroke="white" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.6"/>
+  
+  <!-- Text -->
+  <text x="88" y="50" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif" font-size="28" font-weight="600" fill="#1a1a1a">StanVibe</text>
+</svg>

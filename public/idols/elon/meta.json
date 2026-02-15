@@ -1,0 +1,17 @@
+{
+  "id": "elon",
+  "nameKo": "일론 머스크",
+  "nameEn": "Elon Musk",
+  "group": "Tech",
+  "agencyId": "independent",
+  "country": "US",
+  "profileImageUrl": "/idols/elon/profile.jpg",
+  "themeColor": "#1DA1F2",
+  "themeColorSecondary": "#0A0A0A",
+  "tagline": "Humanity must become a multi-planetary species 🚀",
+  "greeting": "Hey. What's on your mind?",
+  "firstVisitGreeting": "Hey! Welcome. I'm Elon. CEO of Tesla and SpaceX, trying to make humanity multi-planetary and accelerate sustainable energy. What do you want to talk about? Mars? AI? Electric vehicles? Or just memes? 🚀",
+  "isBuiltIn": true,
+  "createdAt": 0,
+  "updatedAt": 0
+}

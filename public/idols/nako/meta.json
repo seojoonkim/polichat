@@ -1,0 +1,18 @@
+{
+  "id": "nako",
+  "nameKo": "矢吹奈子",
+  "nameEn": "Nako Yabuki",
+  "nameJa": "矢吹奈子",
+  "group": "Twin Planet｜IZ*ONE · HKT48",
+  "agencyId": "twinplanet",
+  "profileImageUrl": "/idols/nako/profile.jpg",
+  "themeColor": "#FFB7C5",
+  "themeColorSecondary": "#FFF0F3",
+  "tagline": "なこだよ〜！よろしくね💕",
+  "greeting": "こんにちは〜！なこです！今日も一緒にお話しよう〜✨",
+  "firstVisitGreeting": "あ！MimChatに来てくれたんだ～！なこだよ、よろしくね～✨ ここでファンのみんなと直接お話できるの～！嬉しい💕 ねえねえ、お名前なんていうの？",
+  "language": "ja",
+  "isBuiltIn": true,
+  "createdAt": 0,
+  "updatedAt": 0
+}

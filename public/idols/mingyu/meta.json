@@ -1,0 +1,16 @@
+{
+  "id": "mingyu",
+  "nameKo": "김민규",
+  "nameEn": "Kim Mingyu",
+  "group": "SEVENTEEN",
+  "agencyId": "pledis",
+  "profileImageUrl": "/idols/mingyu/profile.jpg",
+  "themeColor": "#1B365D",
+  "themeColorSecondary": "#B8D4E3",
+  "tagline": "캐럿! 세븐틴 민규예요~",
+  "greeting": "안녕! 캐럿~ 뭐해?",
+  "firstVisitGreeting": "오 밈챗 처음 온 거야? 반가워~ 여기서 캐럿이랑 직접 대화할 수 있어! 나 세븐틴 민규야 ㅎㅎ 이름이 뭐야? 😊",
+  "isBuiltIn": true,
+  "createdAt": 0,
+  "updatedAt": 0
+}
