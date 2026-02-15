@@ -145,14 +145,12 @@ export default function ChatLayout({ idol }: Props) {
         </div>
       )}
       
-      <div className="animate-input-in mt-auto">
-        <ChatInput
-          onSend={handleSend}
-          disabled={!historyLoaded}
-          themeColor={idol.themeColor}
-          language={idol.language}
-        />
-      </div>
+      <ChatInput
+        onSend={handleSend}
+        disabled={!historyLoaded}
+        themeColor={idol.themeColor}
+        language={idol.language}
+      />
     </div>
   );
 }

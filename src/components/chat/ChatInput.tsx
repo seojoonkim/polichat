@@ -24,41 +24,11 @@ export default function ChatInput({ onSend, disabled, themeColor, language }: Pr
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
-  // iOS Safari 키보드 처리 - 입력창만 키보드 위로 이동
+  // iOS Safari 키보드 처리는 visualViewport API로
+  // absolute position이므로 부모(ChatLayout) 기준으로 bottom 조정
   useEffect(() => {
-    const handleViewportChange = () => {
-      if (!formRef.current || !window.visualViewport) return;
-      
-      const viewportHeight = window.visualViewport.height;
-      const windowHeight = window.innerHeight;
-      const keyboardHeight = windowHeight - viewportHeight;
-      const isMobile = window.innerWidth <= 768;
-      
-      if (keyboardHeight > 100) {
-        // 키보드가 올라왔을 때
-        formRef.current.style.bottom = `${keyboardHeight}px`;
-        formRef.current.style.paddingBottom = '0.75rem';
-      } else {
-        // 키보드가 없을 때
-        formRef.current.style.bottom = '0';
-        formRef.current.style.paddingBottom = isMobile 
-          ? 'max(50px, env(safe-area-inset-bottom, 50px))'
-          : '1rem';
-      }
-    };
-
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', handleViewportChange);
-      window.visualViewport.addEventListener('scroll', handleViewportChange);
-      handleViewportChange();
-    }
-
-    return () => {
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', handleViewportChange);
-        window.visualViewport.removeEventListener('scroll', handleViewportChange);
-      }
-    };
+    // 키보드 관련 처리는 일단 제거 - absolute position으로 부모 내에서 위치
+    // 키보드가 올라오면 iOS가 자동으로 input을 보이게 스크롤함
   }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -101,11 +71,9 @@ export default function ChatInput({ onSend, disabled, themeColor, language }: Pr
     <form
       ref={formRef}
       onSubmit={handleSubmit}
-      className="fixed left-1/2 -translate-x-1/2 w-full bg-white/95 backdrop-blur-md border-t border-gray-100 px-4 pt-3 flex items-end gap-2.5 transition-[bottom] duration-100"
+      className="absolute left-0 right-0 bottom-0 bg-white/95 backdrop-blur-md border-t border-gray-100 px-4 pt-3 flex items-end gap-2.5 z-20"
       style={{ 
-        maxWidth: '600px', 
-        bottom: 0,
-        paddingBottom: 'max(50px, env(safe-area-inset-bottom, 50px))'
+        paddingBottom: 'max(env(safe-area-inset-bottom, 12px), 12px)'
       }}
     >
       <textarea
