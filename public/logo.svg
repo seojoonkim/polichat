@@ -1,23 +1,18 @@
 <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#1E3A5F"/>
-      <stop offset="100%" stop-color="#334155"/>
+    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E40AF"/>
+      <stop offset="100%" stop-color="#3B82F6"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#64748B"/>
+      <stop offset="100%" stop-color="#94A3B8"/>
     </linearGradient>
   </defs>
-  <!-- Capitol dome simplified -->
-  <path d="M40 12 L40 20" stroke="url(#grad1)" stroke-width="3" stroke-linecap="round"/>
-  <ellipse cx="40" cy="24" rx="12" ry="6" fill="url(#grad1)"/>
-  <rect x="22" y="28" width="36" height="4" rx="1" fill="url(#grad1)"/>
-  <!-- Pillars -->
-  <rect x="26" y="32" width="4" height="20" rx="1" fill="url(#grad1)"/>
-  <rect x="38" y="32" width="4" height="20" rx="1" fill="url(#grad1)"/>
-  <rect x="50" y="32" width="4" height="20" rx="1" fill="url(#grad1)"/>
-  <!-- Base -->
-  <rect x="20" y="52" width="40" height="5" rx="2" fill="url(#grad1)"/>
-  <!-- Chat bubble -->
-  <path d="M52 58 Q68 54 68 66 Q68 74 58 74 L54 74 L52 78 L50 74 L48 74 Q42 74 42 66 Q42 58 52 58 Z" fill="#3B82F6"/>
-  <circle cx="50" cy="66" r="1.5" fill="white"/>
-  <circle cx="55" cy="66" r="1.5" fill="white"/>
-  <circle cx="60" cy="66" r="1.5" fill="white"/>
+  <!-- Left speech bubble (blue) -->
+  <path d="M12 22C12 16.477 16.477 12 22 12H38C43.523 12 48 16.477 48 22V38C48 43.523 43.523 48 38 48H26L18 56V48H22C16.477 48 12 43.523 12 38V22Z" fill="url(#g1)"/>
+  <!-- Right speech bubble (gray) -->
+  <path d="M32 32C32 26.477 36.477 22 42 22H58C63.523 22 68 26.477 68 32V48C68 53.523 63.523 58 58 58H54V66L46 58H42C36.477 58 32 53.523 32 48V32Z" fill="url(#g2)"/>
+  <!-- Checkmark in overlap -->
+  <path d="M38 38L42 42L50 34" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
