@@ -24,19 +24,6 @@ export default function ChatInput({ onSend, disabled, themeColor, language }: Pr
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
-  // Detect if running in standalone/webview (no browser toolbar) vs Safari (has toolbar)
-  const [isStandalone, setIsStandalone] = useState(false);
-  
-  useEffect(() => {
-    // Check if running as PWA or in-app webview (no Safari toolbar)
-    const standalone = window.matchMedia('(display-mode: standalone)').matches 
-      || (window.navigator as any).standalone === true
-      || !window.navigator.userAgent.includes('Safari')
-      || window.navigator.userAgent.includes('CriOS')
-      || window.navigator.userAgent.includes('FxiOS');
-    setIsStandalone(standalone);
-  }, []);
-
   // Handle iOS Safari viewport changes (keyboard)
   // 키보드가 올라오면 입력창만 키보드 위로 이동 (헤더/메시지는 그대로)
   useEffect(() => {
