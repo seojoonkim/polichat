@@ -37,38 +37,42 @@ export default function ChatInput({ onSend, disabled, themeColor, language }: Pr
     setIsStandalone(standalone);
   }, []);
 
-  // Handle iOS Safari viewport changes (keyboard, toolbar)
+  // Handle iOS Safari viewport changes (keyboard)
+  // 키보드가 올라오면 입력창만 키보드 위로 이동 (헤더/메시지는 그대로)
   useEffect(() => {
-    const handleResize = () => {
-      if (formRef.current && window.visualViewport) {
-        const bottomInset = window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop;
-        // 키보드가 올라왔을 때만 bottomInset 적용
-        // 모바일 Safari 툴바 높이(~50px) 고려해서 기본 패딩 설정
-        if (bottomInset > 10) {
-          formRef.current.style.paddingBottom = `${bottomInset}px`;
-        } else {
-          // 모바일: Safari 툴바 고려, 데스크탑: 최소 패딩
-          const isMobile = window.innerWidth <= 768;
-          formRef.current.style.paddingBottom = isMobile 
-            ? 'max(60px, env(safe-area-inset-bottom, 60px))'
-            : 'max(1rem, env(safe-area-inset-bottom))';
-        }
+    const handleViewportChange = () => {
+      if (!formRef.current || !window.visualViewport) return;
+      
+      // visualViewport.height가 window.innerHeight보다 작으면 키보드가 올라온 것
+      const keyboardHeight = window.innerHeight - window.visualViewport.height;
+      const isMobile = window.innerWidth <= 768;
+      
+      if (keyboardHeight > 100) {
+        // 키보드가 올라왔을 때: 입력창을 키보드 바로 위로 이동
+        formRef.current.style.bottom = `${keyboardHeight}px`;
+        formRef.current.style.paddingBottom = '0.75rem';
+      } else {
+        // 키보드가 없을 때: 기본 위치
+        formRef.current.style.bottom = '0';
+        formRef.current.style.paddingBottom = isMobile 
+          ? 'max(60px, env(safe-area-inset-bottom, 60px))'
+          : 'max(1rem, env(safe-area-inset-bottom))';
       }
     };
 
     if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', handleResize);
-      window.visualViewport.addEventListener('scroll', handleResize);
-      handleResize();
+      window.visualViewport.addEventListener('resize', handleViewportChange);
+      window.visualViewport.addEventListener('scroll', handleViewportChange);
+      handleViewportChange();
     }
 
     return () => {
       if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', handleResize);
-        window.visualViewport.removeEventListener('scroll', handleResize);
+        window.visualViewport.removeEventListener('resize', handleViewportChange);
+        window.visualViewport.removeEventListener('scroll', handleViewportChange);
       }
     };
-  }, [isStandalone]);
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
