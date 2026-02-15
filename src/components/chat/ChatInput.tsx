@@ -40,20 +40,10 @@ export default function ChatInput({ onSend, disabled, themeColor, language }: Pr
     }
   };
 
-  // iOS Safari: input focus 시 window 스크롤 리셋
+  // iOS Safari: scrollTo 제거 - 깜빡임 유발했음
+  // CSS로 전체 레이아웃 고정하고 키보드는 자연스럽게 처리
   const handleFocus = () => {
-    // Safari가 강제 스크롤하면 다시 원위치로
-    setTimeout(() => {
-      window.scrollTo(0, 0);
-      document.body.scrollTop = 0;
-      document.documentElement.scrollTop = 0;
-    }, 50);
-    setTimeout(() => {
-      window.scrollTo(0, 0);
-    }, 150);
-    setTimeout(() => {
-      window.scrollTo(0, 0);
-    }, 300);
+    // 아무것도 안 함 - Safari 기본 동작 사용
   };
 
   useEffect(() => {
@@ -74,8 +64,8 @@ export default function ChatInput({ onSend, disabled, themeColor, language }: Pr
   return (
     <form
       onSubmit={handleSubmit}
-      className="shrink-0 bg-white border-t border-gray-100 px-4 pt-3 pb-safe flex items-end gap-2.5"
-      style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}
+      className="shrink-0 bg-white border-t border-gray-100 px-4 pt-3 flex items-end gap-2.5"
+      style={{ paddingBottom: 'max(16px, calc(env(safe-area-inset-bottom) + 8px))' }}
     >
       <textarea
         ref={inputRef}

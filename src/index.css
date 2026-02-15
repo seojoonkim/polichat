@@ -45,6 +45,9 @@ html, body, #root {
   width: 100%;
   top: 0;
   left: 0;
+  /* iOS Safari keyboard - prevent overscroll */
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Hide scrollbar utility */
