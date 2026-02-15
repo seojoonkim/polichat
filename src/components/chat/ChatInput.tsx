@@ -65,7 +65,7 @@ export default function ChatInput({ onSend, disabled, themeColor, language }: Pr
     <form
       onSubmit={handleSubmit}
       className="shrink-0 bg-white border-t border-gray-100 px-4 pt-3 flex items-end gap-2.5"
-      style={{ paddingBottom: 'max(16px, calc(env(safe-area-inset-bottom) + 8px))' }}
+      style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 60px)' }}
     >
       <textarea
         ref={inputRef}
