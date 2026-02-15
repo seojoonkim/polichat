@@ -79,19 +79,19 @@ export default function ChatHeader({ idol }: Props) {
         </div>
 
         {/* Name & Position */}
-        <div className="flex-1 min-w-0">
-          <div className="font-bold text-base flex items-center gap-2">
+        <div className="flex-1 min-w-0 overflow-hidden">
+          <div className="font-bold text-base truncate">
             {idol.nameKo}
           </div>
-          <div className="text-xs opacity-90 flex items-center gap-1.5">
+          <div className="text-xs opacity-90 flex items-center gap-1 whitespace-nowrap overflow-hidden">
             <span 
-              className="px-1.5 py-0.5 rounded text-[10px] font-medium"
+              className="px-1.5 py-0.5 rounded text-[10px] font-medium shrink-0"
               style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
             >
-              {idol.group}
+              {idol.group?.replace('더불어민주당', '민주당').replace('국민의힘', '국힘')}
             </span>
-            <span className="opacity-70">•</span>
-            <span className="opacity-70">{idol.tagline?.split(' ').slice(0, 3).join(' ')}</span>
+            <span className="opacity-70 shrink-0">•</span>
+            <span className="opacity-70 truncate">{idol.tagline}</span>
           </div>
         </div>
 
