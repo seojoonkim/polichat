@@ -38,7 +38,7 @@ export default function ChatHeader({ idol }: Props) {
   return (
     <>
       <div
-        className="sticky top-0 z-10 px-4 pb-3 pt-[calc(env(safe-area-inset-top,44px)+8px)] flex items-center gap-3 text-white shadow-md animate-header-in"
+        className="shrink-0 z-50 px-4 pb-3 pt-[calc(env(safe-area-inset-top,44px)+8px)] flex items-center gap-3 text-white shadow-md animate-header-in"
         style={{
           background: `linear-gradient(135deg, ${idol.themeColor}, ${idol.themeColorSecondary})`,
         }}
