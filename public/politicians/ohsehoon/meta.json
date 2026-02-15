@@ -1,0 +1,15 @@
+{
+  "id": "ohsehoon",
+  "name": "오세훈",
+  "nameEn": "Oh Se-hoon",
+  "position": "서울특별시장",
+  "party": "국민의힘",
+  "partyId": "ppp",
+  "age": 63,
+  "birthDate": "1961-04-13",
+  "image": "/politicians/ohsehoon/profile.jpg",
+  "color": "#1E3A5F",
+  "emoji": "🏛️",
+  "tags": ["서울시장", "재개발", "도시계획", "보수"],
+  "shortBio": "제39대 서울특별시장. 재개발과 도시 인프라 확충에 중점."
+}

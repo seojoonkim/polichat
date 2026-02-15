@@ -5,7 +5,7 @@ import * as db from './db';
 
 async function fetchStaticMeta(idolId: string): Promise<IdolMeta | null> {
   try {
-    const res = await fetch(`/idols/${idolId}/meta.json`);
+    const res = await fetch(`/politicians/${idolId}/meta.json`);
     if (!res.ok) return null;
     return await res.json();
   } catch {
@@ -18,7 +18,7 @@ async function fetchStaticKnowledge(
   category: KnowledgeCategory,
 ): Promise<string | null> {
   try {
-    const res = await fetch(`/idols/${idolId}/${category}.md`);
+    const res = await fetch(`/politicians/${idolId}/${category}.md`);
     if (!res.ok) return null;
     return await res.text();
   } catch {
@@ -84,7 +84,8 @@ export async function loadIdolKnowledge(
 // Load single group info.md file
 async function loadGroupInfoMd(groupSlug: string): Promise<string> {
   try {
-    const res = await fetch(`/groups/${groupSlug}/info.md`);
+    // Groups not used for politicians
+    const res = await fetch(`/parties/${groupSlug}/info.md`);
     if (!res.ok) return '';
     return await res.text();
   } catch {
@@ -137,7 +138,7 @@ export function getGroupSlug(groupName: string): string {
 
 export async function loadAgencyInfo(agencyId: string): Promise<string> {
   try {
-    const res = await fetch(`/agencies/${agencyId}/info.md`);
+    const res = await fetch(`/parties/${agencyId}/info.md`);
     if (!res.ok) return '';
     return await res.text();
   } catch {
