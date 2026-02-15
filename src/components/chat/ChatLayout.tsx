@@ -125,7 +125,7 @@ export default function ChatLayout({ idol }: Props) {
   }, []);
 
   return (
-    <div className="absolute inset-0 flex flex-col bg-white shadow-xl overflow-hidden overflow-x-hidden">
+    <div className="flex flex-col h-screen bg-white shadow-xl overflow-hidden overflow-x-hidden">
       <ChatHeader idol={idol} />
       
       {historyLoaded ? (

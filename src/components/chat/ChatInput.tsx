@@ -24,12 +24,48 @@ export default function ChatInput({ onSend, disabled, themeColor, language }: Pr
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
-  // iOS Safari 키보드 처리는 visualViewport API로
-  // absolute position이므로 부모(ChatLayout) 기준으로 bottom 조정
+  // Detect if running in standalone/webview (no browser toolbar) vs Safari (has toolbar)
+  const [isStandalone, setIsStandalone] = useState(false);
+  
   useEffect(() => {
-    // 키보드 관련 처리는 일단 제거 - absolute position으로 부모 내에서 위치
-    // 키보드가 올라오면 iOS가 자동으로 input을 보이게 스크롤함
+    // Check if running as PWA or in-app webview (no Safari toolbar)
+    const standalone = window.matchMedia('(display-mode: standalone)').matches 
+      || (window.navigator as any).standalone === true
+      || !window.navigator.userAgent.includes('Safari')
+      || window.navigator.userAgent.includes('CriOS')
+      || window.navigator.userAgent.includes('FxiOS');
+    setIsStandalone(standalone);
   }, []);
+
+  // Handle iOS Safari viewport changes (keyboard, toolbar)
+  useEffect(() => {
+    const handleResize = () => {
+      if (formRef.current && window.visualViewport) {
+        const bottomInset = window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop;
+        // 키보드가 올라왔을 때만 패딩 적용 (bottomInset > 10)
+        if (bottomInset > 10) {
+          formRef.current.style.paddingBottom = `${bottomInset + 12}px`;
+        } else {
+          formRef.current.style.paddingBottom = isStandalone 
+            ? 'max(12px, env(safe-area-inset-bottom))'
+            : 'max(12px, env(safe-area-inset-bottom))';
+        }
+      }
+    };
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleResize);
+      window.visualViewport.addEventListener('scroll', handleResize);
+      handleResize();
+    }
+
+    return () => {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleResize);
+        window.visualViewport.removeEventListener('scroll', handleResize);
+      }
+    };
+  }, [isStandalone]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,9 +107,11 @@ export default function ChatInput({ onSend, disabled, themeColor, language }: Pr
     <form
       ref={formRef}
       onSubmit={handleSubmit}
-      className="shrink-0 bg-white/95 backdrop-blur-md border-t border-gray-100 px-4 pt-3 flex items-end gap-2.5 z-20"
+      className="fixed left-1/2 -translate-x-1/2 w-full bg-white/95 backdrop-blur-md border-t border-gray-100 px-4 pt-3 flex items-end gap-2.5 z-50"
       style={{ 
-        paddingBottom: 'max(env(safe-area-inset-bottom, 12px), 12px)'
+        maxWidth: '600px', 
+        bottom: 0,
+        paddingBottom: 'max(12px, env(safe-area-inset-bottom))'
       }}
     >
       <textarea
