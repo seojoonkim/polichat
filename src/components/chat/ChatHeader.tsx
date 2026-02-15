@@ -126,7 +126,8 @@ export default function ChatHeader({ idol }: Props) {
       {/* Reset Confirmation Modal */}
       {showResetModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-fade-in">
-          <div className="bg-white rounded-2xl p-6 mx-4 max-w-sm w-full shadow-xl animate-scale-up">
+          <div className="w-full max-w-[600px] px-4 flex justify-center">
+            <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl animate-scale-up">
             <div className="text-center">
               <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
                 <svg
@@ -164,6 +165,7 @@ export default function ChatHeader({ idol }: Props) {
                   초기화
                 </button>
               </div>
+            </div>
             </div>
           </div>
         </div>
