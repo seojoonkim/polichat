@@ -45,21 +45,10 @@ export async function loadIdolKnowledge(
   const dbMap = new Map(dbFiles.map((f) => [f.category, f.content]));
 
   for (const category of KNOWLEDGE_CATEGORIES) {
-    // Special handling for agency-info
-    if (category === 'agency-info') {
+    // Special handling for party-info
+    if (category === 'party-info') {
       if (agencyId) {
-        result[category] = await loadAgencyInfo(agencyId);
-      } else {
-        result[category] = '';
-      }
-      continue;
-    }
-
-    // Special handling for group-info
-    if (category === 'group-info') {
-      if (groupName) {
-        const groupSlug = getGroupSlug(groupName);
-        result[category] = await loadGroupInfoMd(groupSlug);
+        result[category] = await loadPartyInfo(agencyId);
       } else {
         result[category] = '';
       }
@@ -136,9 +125,9 @@ export function getGroupSlug(groupName: string): string {
 
 // --- Agency info loading ---
 
-export async function loadAgencyInfo(agencyId: string): Promise<string> {
+export async function loadPartyInfo(partyId: string): Promise<string> {
   try {
-    const res = await fetch(`/parties/${agencyId}/info.md`);
+    const res = await fetch(`/parties/${partyId}/info.md`);
     if (!res.ok) return '';
     return await res.text();
   } catch {
