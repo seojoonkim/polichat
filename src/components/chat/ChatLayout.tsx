@@ -11,58 +11,51 @@ interface Props {
   idol: IdolMeta;
 }
 
-// 첫 방문용 인사말
-function getFirstVisitGreeting(idol: IdolMeta): string {
-  if (idol.firstVisitGreeting) {
-    return idol.firstVisitGreeting;
-  }
-  
-  const title = idol.tagline || `${idol.group} 소속`;
-  
-  const greetings = [
-    `안녕하세요, ${title} ${idol.nameKo}입니다! 폴리챗에서 이렇게 만나뵙게 되어 반갑습니다. 어떻게 불러드리면 될까요?`,
-    `반갑습니다! ${idol.nameKo}입니다. ${title}이에요. 여기서 시민분들과 직접 소통할 수 있어서 좋네요. 성함이 어떻게 되세요?`,
-    `안녕하세요, ${idol.nameKo}입니다! 폴리챗에서 1:1로 대화할 수 있어서 좋습니다. 뭐라고 불러드릴까요?`,
+// 첫 방문용 인사말 (짧게, 두 개로 쪼개서)
+function getFirstVisitGreetings(idol: IdolMeta): [string, string] {
+  const greetings: [string, string][] = [
+    [`안녕하세요! ${idol.nameKo}입니다.`, `어떻게 불러드릴까요?`],
+    [`반갑습니다! ${idol.nameKo}입니다.`, `성함이 어떻게 되세요?`],
+    [`안녕하세요, ${idol.nameKo}입니다!`, `뭐라고 불러드릴까요?`],
   ];
   return greetings[Math.floor(Math.random() * greetings.length)]!;
 }
 
-// 재방문용 인사말
+// 재방문용 인사말 (짧게)
 function getReturningGreeting(idol: IdolMeta): string {
   const hour = new Date().getHours();
-  const title = idol.tagline || `${idol.group} 소속`;
   
   if (hour >= 6 && hour < 12) {
     const greetings = [
-      `안녕하세요, ${idol.nameKo}입니다! 좋은 아침이에요 ☀️`,
-      `${idol.nameKo}입니다. 아침부터 찾아주셨네요! 반갑습니다 😊`,
-      `안녕하세요! ${title} ${idol.nameKo}입니다. 오늘 하루도 화이팅이에요!`,
+      `좋은 아침이에요!`,
+      `아침부터 찾아주셨네요!`,
+      `오늘 하루도 화이팅이에요!`,
     ];
     return greetings[Math.floor(Math.random() * greetings.length)]!;
   }
   
   if (hour >= 18 && hour < 23) {
     const greetings = [
-      `안녕하세요, ${idol.nameKo}입니다! 저녁 시간에 찾아주셨네요.`,
-      `${idol.nameKo}입니다. 저녁 식사는 하셨나요?`,
-      `안녕하세요! ${title} ${idol.nameKo}입니다. 하루 수고 많으셨어요!`,
+      `저녁 시간에 찾아주셨네요.`,
+      `저녁 식사는 하셨나요?`,
+      `하루 수고 많으셨어요!`,
     ];
     return greetings[Math.floor(Math.random() * greetings.length)]!;
   }
   
   if (hour >= 23 || hour < 6) {
     const greetings = [
-      `안녕하세요, ${idol.nameKo}입니다. 이 시간에 찾아주셨네요.`,
-      `${idol.nameKo}입니다. 밤늦게까지 수고가 많으시네요.`,
-      `안녕하세요! ${title} ${idol.nameKo}입니다. 늦은 시간인데 괜찮으세요?`,
+      `이 시간에 찾아주셨네요.`,
+      `밤늦게까지 수고가 많으시네요.`,
+      `늦은 시간인데 괜찮으세요?`,
     ];
     return greetings[Math.floor(Math.random() * greetings.length)]!;
   }
   
   const greetings = [
-    `안녕하세요, ${idol.nameKo}입니다! 다시 찾아주셨네요 😊`,
-    `${idol.nameKo}입니다. 반갑습니다! 잘 지내셨어요?`,
-    `안녕하세요! ${title} ${idol.nameKo}입니다. 무엇이 궁금하신가요?`,
+    `다시 찾아주셨네요!`,
+    `반갑습니다!`,
+    `무엇이 궁금하신가요?`,
   ];
   return greetings[Math.floor(Math.random() * greetings.length)]!;
 }
@@ -74,7 +67,7 @@ export default function ChatLayout({ idol }: Props) {
   const greetingShown = useRef(false);
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
 
-  // Show greeting on first load
+  // Show greeting on first load (짧게 쪼개서)
   useEffect(() => {
     if (historyLoaded && messages.length === 0 && !greetingShown.current) {
       greetingShown.current = true;
@@ -82,18 +75,27 @@ export default function ChatLayout({ idol }: Props) {
       const visitedKey = `polichat_visited_${idol.id}`;
       const hasVisited = localStorage.getItem(visitedKey) === 'true';
       
-      let greeting: string;
-      if (hasVisited) {
-        greeting = getReturningGreeting(idol);
-      } else {
-        greeting = getFirstVisitGreeting(idol);
-        localStorage.setItem(visitedKey, 'true');
-      }
+      const delay1 = 300 + Math.random() * 200;
       
-      const delay = 300 + Math.random() * 300;
-      setTimeout(() => {
-        addAssistantMessage(greeting);
-      }, delay);
+      if (hasVisited) {
+        // 재방문: 짧은 인사 하나만
+        setTimeout(() => {
+          addAssistantMessage(getReturningGreeting(idol));
+        }, delay1);
+      } else {
+        // 첫 방문: 두 개로 쪼개서
+        const [greeting1, greeting2] = getFirstVisitGreetings(idol);
+        localStorage.setItem(visitedKey, 'true');
+        
+        setTimeout(() => {
+          addAssistantMessage(greeting1);
+        }, delay1);
+        
+        // 두 번째 메시지는 1초 후
+        setTimeout(() => {
+          addAssistantMessage(greeting2);
+        }, delay1 + 1000);
+      }
     }
   }, [historyLoaded, messages.length, idol.id, addAssistantMessage]);
 
