@@ -106,7 +106,7 @@ export default function ChatInput({ onSend, disabled, themeColor, language }: Pr
       style={{ 
         maxWidth: '600px', 
         bottom: 0,
-        paddingBottom: isStandalone ? 'max(1rem, env(safe-area-inset-bottom))' : '50px'
+        paddingBottom: 'max(1rem, env(safe-area-inset-bottom))'
       }}
     >
       <textarea
