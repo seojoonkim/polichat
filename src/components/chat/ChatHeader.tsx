@@ -2,9 +2,7 @@ import { useState, useMemo } from 'react';
 import type { IdolMeta } from '@/types/idol';
 import { useChatStore } from '@/stores/chat-store';
 import { useUserStore } from '@/stores/user-store';
-import { useIntimacyStore } from '@/stores/intimacy-store';
-import { getFlagImageUrl, getCountryName, formatRelativeTime, getTypingText } from '@/utils/language';
-import IntimacyModal from './IntimacyModal';
+import { formatRelativeTime, getTypingText } from '@/utils/language';
 
 interface Props {
   idol: IdolMeta;
@@ -12,7 +10,6 @@ interface Props {
 
 export default function ChatHeader({ idol }: Props) {
   const [showResetModal, setShowResetModal] = useState(false);
-  const [showIntimacyModal, setShowIntimacyModal] = useState(false);
   
   const setCurrentIdol = useChatStore((s) => s.setCurrentIdol);
   const clearMessages = useChatStore((s) => s.clearMessages);
@@ -20,11 +17,7 @@ export default function ChatHeader({ idol }: Props) {
   const isStreaming = useChatStore((s) => s.isStreaming);
   const resetUser = useUserStore((s) => s.reset);
   const setOnboardingStep = useUserStore((s) => s.setOnboardingStep);
-  const dayCount = useUserStore((s) => s.getDayCount(idol.id));
-  
-  // 친밀도 데이터
-  const intimacy = useIntimacyStore((s) => s.getOrCreateIntimacy(idol.id));
-  
+
   // 상대적 시간 (스트리밍 중이면 "입력 중...")
   const relativeTime = useMemo(() => {
     if (isStreaming) return getTypingText(idol.language);
@@ -36,12 +29,9 @@ export default function ChatHeader({ idol }: Props) {
   };
 
   const handleReset = () => {
-    // 채팅 기록 삭제
     clearMessages();
-    // 유저 프로필 초기화 (온보딩 다시 시작)
     resetUser();
     setOnboardingStep('name');
-    // 모달 닫기
     setShowResetModal(false);
   };
 
@@ -75,7 +65,7 @@ export default function ChatHeader({ idol }: Props) {
 
         {/* Profile */}
         <div
-          className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold bg-white/20 shrink-0 overflow-hidden ring-2 ring-white/30"
+          className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold bg-white/20 shrink-0 overflow-hidden ring-2 ring-white/30"
         >
           {idol.profileImageUrl ? (
             <img
@@ -88,45 +78,34 @@ export default function ChatHeader({ idol }: Props) {
           )}
         </div>
 
-        {/* Name & Day Counter */}
+        {/* Name & Position */}
         <div className="flex-1 min-w-0">
-          <div className="font-semibold text-sm flex items-center gap-2">
+          <div className="font-bold text-base flex items-center gap-2">
             {idol.nameKo}
-            <img 
-              src={getFlagImageUrl(idol.language)} 
-              alt={getCountryName(idol.language)}
-              className="w-4 h-3 object-cover rounded-sm"
-              title={idol.language || 'ko'}
-            />
-            {dayCount > 0 && (
-              <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">
-                💕 +{dayCount}
-              </span>
-            )}
           </div>
-          <div className="text-xs opacity-80">{idol.group}</div>
+          <div className="text-xs opacity-90 flex items-center gap-1.5">
+            <span 
+              className="px-1.5 py-0.5 rounded text-[10px] font-medium"
+              style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
+            >
+              {idol.group}
+            </span>
+            <span className="opacity-70">•</span>
+            <span className="opacity-70">{idol.tagline?.split(' ').slice(0, 3).join(' ')}</span>
+          </div>
         </div>
 
-        {/* 친밀도 레벨 표시 */}
-        <button
-          onClick={() => setShowIntimacyModal(true)}
-          className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/20 hover:bg-white/30 active:scale-95 transition-all duration-200"
-        >
-          <span>❤️</span>
-          <span className="text-xs font-bold">Lv.{intimacy.level}</span>
-        </button>
-
-        {/* 마지막 대화 시간 / 온라인 상태 */}
-        <div className="flex items-center gap-1.5 text-xs opacity-80">
-          <div className={`w-2 h-2 rounded-full ${isStreaming ? 'bg-yellow-300' : 'bg-green-300'} animate-pulse`} />
-          <span>{relativeTime}</span>
+        {/* 온라인 상태 */}
+        <div className="flex items-center gap-1.5 text-xs bg-white/15 px-2.5 py-1 rounded-full">
+          <div className={`w-2 h-2 rounded-full ${isStreaming ? 'bg-yellow-300' : 'bg-green-400'} animate-pulse`} />
+          <span className="opacity-90">{relativeTime}</span>
         </div>
 
         {/* Reset button */}
         <button
           onClick={() => setShowResetModal(true)}
-          className="p-1.5 rounded-full hover:bg-white/20 active:bg-red-500/50 active:scale-90 transition-all duration-200 ml-1"
-          title="Reset chat"
+          className="p-1.5 rounded-full hover:bg-white/20 active:bg-red-500/50 active:scale-90 transition-all duration-200"
+          title="대화 초기화"
         >
           <svg
             className="w-4 h-4"
@@ -143,15 +122,6 @@ export default function ChatHeader({ idol }: Props) {
           </svg>
         </button>
       </div>
-
-      {/* Intimacy Modal */}
-      {showIntimacyModal && (
-        <IntimacyModal
-          intimacy={intimacy}
-          idol={idol}
-          onClose={() => setShowIntimacyModal(false)}
-        />
-      )}
 
       {/* Reset Confirmation Modal */}
       {showResetModal && (
@@ -174,31 +144,24 @@ export default function ChatHeader({ idol }: Props) {
                 </svg>
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-2">
-                {idol.language === 'ja' ? 'チャットをリセットしますか？' : 
-                 idol.language === 'en' ? 'Reset this chat?' : 
-                 '채팅을 리셋할까요?'}
+                대화를 초기화할까요?
               </h3>
               <p className="text-sm text-gray-500 mb-6">
-                {idol.language === 'ja' ? (
-                  <>{idol.nameKo}とのメッセージがすべて削除され、<br />最初からやり直します。</>
-                ) : idol.language === 'en' ? (
-                  <>All messages with {idol.nameKo} will be deleted<br />and start fresh.</>
-                ) : (
-                  <>{idol.nameKo}와의 모든 메시지가 삭제되고<br />처음부터 다시 시작합니다.</>
-                )}
+                {idol.nameKo}와의 모든 대화 내용이 삭제되고<br />
+                처음부터 다시 시작합니다.
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowResetModal(false)}
                   className="flex-1 py-2.5 px-4 rounded-xl bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition-colors"
                 >
-                  {idol.language === 'ja' ? 'キャンセル' : idol.language === 'en' ? 'Cancel' : '취소'}
+                  취소
                 </button>
                 <button
                   onClick={handleReset}
                   className="flex-1 py-2.5 px-4 rounded-xl bg-red-500 text-white font-medium hover:bg-red-600 transition-colors"
                 >
-                  {idol.language === 'ja' ? 'リセット' : idol.language === 'en' ? 'Reset' : '리셋'}
+                  초기화
                 </button>
               </div>
             </div>

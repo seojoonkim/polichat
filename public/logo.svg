@@ -1,11 +1,23 @@
 <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="starGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#7C3AED"/>
-      <stop offset="50%" stop-color="#A78BFA"/>
-      <stop offset="100%" stop-color="#6366F1"/>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E3A5F"/>
+      <stop offset="100%" stop-color="#334155"/>
     </linearGradient>
   </defs>
-  <path d="M40 8l8 16 17.7 2.6-12.8 12.5 3 17.5L40 48l-15.9 8.6 3-17.5L14.3 26.6 32 24z" fill="url(#starGradient)"/>
-  <path d="M15 62c8.3 5 16.7 7.5 25 7.5s16.7-2.5 25-7.5" stroke="url(#starGradient)" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <!-- Capitol dome simplified -->
+  <path d="M40 12 L40 20" stroke="url(#grad1)" stroke-width="3" stroke-linecap="round"/>
+  <ellipse cx="40" cy="24" rx="12" ry="6" fill="url(#grad1)"/>
+  <rect x="22" y="28" width="36" height="4" rx="1" fill="url(#grad1)"/>
+  <!-- Pillars -->
+  <rect x="26" y="32" width="4" height="20" rx="1" fill="url(#grad1)"/>
+  <rect x="38" y="32" width="4" height="20" rx="1" fill="url(#grad1)"/>
+  <rect x="50" y="32" width="4" height="20" rx="1" fill="url(#grad1)"/>
+  <!-- Base -->
+  <rect x="20" y="52" width="40" height="5" rx="2" fill="url(#grad1)"/>
+  <!-- Chat bubble -->
+  <path d="M52 58 Q68 54 68 66 Q68 74 58 74 L54 74 L52 78 L50 74 L48 74 Q42 74 42 66 Q42 58 52 58 Z" fill="#3B82F6"/>
+  <circle cx="50" cy="66" r="1.5" fill="white"/>
+  <circle cx="55" cy="66" r="1.5" fill="white"/>
+  <circle cx="60" cy="66" r="1.5" fill="white"/>
 </svg>

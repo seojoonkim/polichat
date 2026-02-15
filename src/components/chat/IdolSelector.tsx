@@ -24,10 +24,8 @@ export default function IdolSelector({ idols }: Props) {
         {/* Hero */}
         <div className="text-center mb-10">
           {/* Logo */}
-          <div className="flex items-center justify-center gap-3 mb-4 animate-fade-in">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-slate-800 to-slate-600 flex items-center justify-center shadow-lg">
-              <span className="text-2xl">🏛️</span>
-            </div>
+          <div className="flex items-center justify-center gap-3 mb-5 animate-fade-in">
+            <img src="/logo.svg" alt="Polichat" className="w-14 h-14" />
             <h1 className="text-4xl font-black tracking-tight text-slate-800">
               Polichat
             </h1>
@@ -38,15 +36,35 @@ export default function IdolSelector({ idols }: Props) {
             className="animate-fade-in-up"
             style={{ animationDelay: '0.1s' }}
           >
-            <p className="text-xl font-bold text-slate-700 tracking-tight mb-2">
-              정치인과 대화하기 💬
+            <p className="text-xl font-bold text-slate-700 tracking-tight mb-3">
+              정치인에게 직접 물어보세요
             </p>
-            <p className="text-sm text-slate-500 leading-relaxed">
-              AI가 학습한 정치인의 정책과 비전
+            <p className="text-sm text-slate-500 leading-relaxed max-w-sm mx-auto">
+              AI가 공약, 경력, 발언을 학습했습니다
               <br />
-              <span className="text-slate-400">직접 물어보고 토론하세요</span>
+              <span className="text-slate-400">정책 질문부터 일상 대화까지 자유롭게</span>
             </p>
           </div>
+          
+          {/* Feature badges */}
+          <div 
+            className="flex items-center justify-center gap-2 mt-5 animate-fade-in-up"
+            style={{ animationDelay: '0.2s' }}
+          >
+            <span className="px-3 py-1 bg-blue-50 text-blue-600 text-xs font-medium rounded-full">
+              📋 실제 공약 기반
+            </span>
+            <span className="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-medium rounded-full">
+              💬 실시간 대화
+            </span>
+          </div>
+        </div>
+
+        {/* Section title */}
+        <div className="mb-4 animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
+          <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">
+            대화 상대 선택
+          </h2>
         </div>
 
         {/* Politician Cards */}
@@ -56,7 +74,7 @@ export default function IdolSelector({ idols }: Props) {
               key={idol.id}
               onClick={() => setCurrentIdol(idol.id)}
               className="w-full text-left animate-slide-up-bounce group"
-              style={{ animationDelay: `${0.15 + index * 0.06}s` }}
+              style={{ animationDelay: `${0.2 + index * 0.08}s` }}
             >
               <div 
                 className="politician-card rounded-2xl overflow-hidden"
@@ -78,55 +96,43 @@ export default function IdolSelector({ idols }: Props) {
                         src={idol.profileImageUrl}
                         alt={idol.nameKo}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                        }}
                       />
-                    ) : (
-                      <span className="drop-shadow-lg text-3xl">{getInitials(idol.nameKo)}</span>
-                    )}
+                    ) : null}
+                    <span className={idol.profileImageUrl ? 'hidden' : ''}>
+                      {getInitials(idol.nameKo)}
+                    </span>
                   </div>
 
                   {/* Info */}
-                  <div className="flex-1 min-w-0 px-4 py-4 flex flex-col justify-center">
-                    <div className="flex items-center gap-2 mb-1 min-w-0">
-                      <span className="font-bold text-lg text-slate-800 tracking-tight">
+                  <div className="flex-1 p-4 flex flex-col justify-center min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-bold text-lg text-slate-800 truncate">
                         {idol.nameKo}
-                      </span>
-                      <span
-                        className="party-badge text-[10px] px-2.5 py-0.5 rounded-full text-white font-medium"
-                        style={{ 
-                          background: idol.themeColor,
+                      </h3>
+                      <span 
+                        className="px-2 py-0.5 text-xs font-medium rounded-full shrink-0"
+                        style={{
+                          backgroundColor: `${idol.themeColor}15`,
+                          color: idol.themeColor,
                         }}
                       >
                         {idol.group}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-400 font-medium mb-1">
-                      {idol.nameEn}
-                    </p>
-                    <p className="text-sm text-slate-600 truncate">
+                    
+                    <p className="text-sm text-slate-500 line-clamp-2 mb-2">
                       {idol.tagline}
                     </p>
-                  </div>
-
-                  {/* Arrow */}
-                  <div className="flex items-center pr-4">
-                    <div 
-                      className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 group-hover:scale-110"
-                      style={{
-                        background: `${idol.themeColor}15`,
-                      }}
-                    >
-                      <svg
-                        className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-0.5"
-                        fill="none"
-                        stroke={idol.themeColor}
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2.5}
-                          d="M9 5l7 7-7 7"
-                        />
+                    
+                    {/* CTA hint */}
+                    <div className="flex items-center gap-1 text-xs text-slate-400 group-hover:text-blue-500 transition-colors">
+                      <span>대화하기</span>
+                      <svg className="w-3 h-3 transform group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>
                     </div>
                   </div>
@@ -136,15 +142,17 @@ export default function IdolSelector({ idols }: Props) {
           ))}
         </div>
 
-        {idols.length === 0 && (
-          <div className="text-center text-slate-400 mt-10 animate-fade-in bg-white/60 backdrop-blur-sm rounded-2xl p-8 border border-slate-200">
-            <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
-              <span className="text-2xl">🏛️</span>
-            </div>
-            <p className="text-sm font-medium text-slate-600">등록된 정치인이 없습니다</p>
-            <p className="text-xs text-slate-400 mt-1">곧 새로운 정치인이 추가됩니다</p>
-          </div>
-        )}
+        {/* Footer info */}
+        <div 
+          className="mt-8 text-center animate-fade-in-up"
+          style={{ animationDelay: '0.4s' }}
+        >
+          <p className="text-xs text-slate-400 leading-relaxed">
+            AI가 생성한 응답입니다. 실제 정치인의 발언이 아닙니다.
+            <br />
+            <span className="text-slate-300">정책 정보는 공식 자료를 참고해 주세요.</span>
+          </p>
+        </div>
       </div>
     </div>
   );
