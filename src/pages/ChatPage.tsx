@@ -102,7 +102,7 @@ export default function ChatPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-pink-50 to-purple-50">
+      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-slate-50 to-slate-100">
         <div className="flex flex-col items-center gap-3">
           <div className="loading-spinner" />
           <div className="text-gray-400 text-sm animate-pulse">Loading...</div>
