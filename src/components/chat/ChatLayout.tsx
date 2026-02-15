@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useEffect, useRef, useCallback, useState, useLayoutEffect } from 'react';
 import type { IdolMeta } from '@/types/idol';
 import { useSystemPrompt } from '@/hooks/use-system-prompt';
 import { useChat } from '@/hooks/use-chat';
@@ -6,6 +6,29 @@ import { useChatStore } from '@/stores/chat-store';
 import ChatHeader from './ChatHeader';
 import MessageList from './MessageList';
 import ChatInput from './ChatInput';
+
+// iOS Safari 키보드 올라와도 레이아웃 고정을 위한 커스텀 훅
+function useFixedHeight() {
+  const [fixedHeight, setFixedHeight] = useState<number | null>(null);
+  
+  useLayoutEffect(() => {
+    // 초기 높이 저장 (키보드 없는 상태)
+    const initialHeight = window.innerHeight;
+    setFixedHeight(initialHeight);
+    
+    // orientation 변경 시에만 높이 재계산
+    const handleOrientationChange = () => {
+      setTimeout(() => {
+        setFixedHeight(window.innerHeight);
+      }, 100);
+    };
+    
+    window.addEventListener('orientationchange', handleOrientationChange);
+    return () => window.removeEventListener('orientationchange', handleOrientationChange);
+  }, []);
+  
+  return fixedHeight;
+}
 
 interface Props {
   idol: IdolMeta;
@@ -74,6 +97,7 @@ export default function ChatLayout({ idol }: Props) {
   
   const greetingShown = useRef(false);
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
+  const fixedHeight = useFixedHeight();
 
   // Show greeting on first load
   useEffect(() => {
@@ -125,7 +149,10 @@ export default function ChatLayout({ idol }: Props) {
   }, []);
 
   return (
-    <div className="relative flex flex-col h-screen bg-white shadow-xl overflow-hidden overflow-x-hidden">
+    <div 
+      className="relative flex flex-col bg-white shadow-xl overflow-hidden overflow-x-hidden"
+      style={{ height: fixedHeight ? `${fixedHeight}px` : '100vh' }}
+    >
       <ChatHeader idol={idol} />
       
       {historyLoaded ? (
