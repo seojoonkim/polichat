@@ -71,7 +71,7 @@ export default function ChatInput({ onSend, disabled, themeColor, language }: Pr
     <form
       ref={formRef}
       onSubmit={handleSubmit}
-      className="absolute left-0 right-0 bottom-0 bg-white/95 backdrop-blur-md border-t border-gray-100 px-4 pt-3 flex items-end gap-2.5 z-20"
+      className="shrink-0 bg-white/95 backdrop-blur-md border-t border-gray-100 px-4 pt-3 flex items-end gap-2.5 z-20"
       style={{ 
         paddingBottom: 'max(env(safe-area-inset-bottom, 12px), 12px)'
       }}
