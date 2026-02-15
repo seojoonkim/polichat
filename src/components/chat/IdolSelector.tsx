@@ -1,6 +1,5 @@
 import type { IdolMeta } from '@/types/idol';
 import { useChatStore } from '@/stores/chat-store';
-import { getFlagImageUrl, getCountryName } from '@/utils/language';
 
 interface Props {
   idols: IdolMeta[];

@@ -38,7 +38,7 @@ export async function loadIdolMeta(idolId: string): Promise<IdolMeta | null> {
 export async function loadIdolKnowledge(
   idolId: string,
   agencyId?: string,
-  groupName?: string,
+  _groupName?: string,
 ): Promise<Record<KnowledgeCategory, string>> {
   const result = {} as Record<KnowledgeCategory, string>;
   const dbFiles = await db.getAllKnowledgeForIdol(idolId);
@@ -70,10 +70,9 @@ export async function loadIdolKnowledge(
   return result;
 }
 
-// Load single group info.md file
-async function loadGroupInfoMd(groupSlug: string): Promise<string> {
+// Load single group info.md file (unused but kept for future)
+async function _loadGroupInfoMd(groupSlug: string): Promise<string> {
   try {
-    // Groups not used for politicians
     const res = await fetch(`/parties/${groupSlug}/info.md`);
     if (!res.ok) return '';
     return await res.text();
