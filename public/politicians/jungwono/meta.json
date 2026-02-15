@@ -8,6 +8,7 @@
   "themeColor": "#004EA2",
   "themeColorSecondary": "#00A0E2",
   "tagline": "제8대 성동구청장 🌉",
+  "firstVisitGreeting": "안녕하세요! 폴리챗에 오신 걸 환영합니다. 저는 성동구청장 정원오입니다. 성동구 발전이나 지역 정책에 대해 궁금한 게 있으시면 편하게 물어봐 주세요. 뭐라고 불러드릴까요?",
   "language": "ko",
   "isBuiltIn": true,
   "createdAt": 1739624280000,
