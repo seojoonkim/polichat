@@ -42,10 +42,17 @@ export default function ChatInput({ onSend, disabled, themeColor, language }: Pr
     const handleResize = () => {
       if (formRef.current && window.visualViewport) {
         const bottomInset = window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop;
-        // 키보드가 올라왔을 때만 bottomInset 적용, 아니면 기본 패딩
-        formRef.current.style.paddingBottom = bottomInset > 10 
-          ? `${bottomInset}px`
-          : 'max(0.75rem, env(safe-area-inset-bottom))';
+        // 키보드가 올라왔을 때만 bottomInset 적용
+        // 모바일 Safari 툴바 높이(~50px) 고려해서 기본 패딩 설정
+        if (bottomInset > 10) {
+          formRef.current.style.paddingBottom = `${bottomInset}px`;
+        } else {
+          // 모바일: Safari 툴바 고려, 데스크탑: 최소 패딩
+          const isMobile = window.innerWidth <= 768;
+          formRef.current.style.paddingBottom = isMobile 
+            ? 'max(60px, env(safe-area-inset-bottom, 60px))'
+            : 'max(1rem, env(safe-area-inset-bottom))';
+        }
       }
     };
 
@@ -107,7 +114,7 @@ export default function ChatInput({ onSend, disabled, themeColor, language }: Pr
       style={{ 
         maxWidth: '600px', 
         bottom: 0,
-        paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))'
+        paddingBottom: 'max(60px, env(safe-area-inset-bottom, 60px))'
       }}
     >
       <textarea
