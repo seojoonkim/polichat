@@ -100,6 +100,22 @@ export function useChat(systemPrompt: string, knowledge?: Record<KnowledgeCatego
         }
       }
 
+      // 🕐 실시간 시간 정보 inject (시스템 프롬프트 로드 시점과 현재 시간 차이 보정)
+      const now = new Date();
+      const hour = now.getHours();
+      let timeOfDay = '밤';
+      if (hour >= 6 && hour < 12) timeOfDay = '아침';
+      else if (hour >= 12 && hour < 18) timeOfDay = '낮';
+      else if (hour >= 18 && hour < 23) timeOfDay = '저녁';
+      
+      const timeContext = `\n\n[⏰ 현재 시간 - 반드시 참고해서 시간에 맞는 인사/대화를 하세요!]
+- 현재 시각: ${hour}시 ${now.getMinutes()}분
+- 시간대: ${timeOfDay}
+- 날짜: ${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일
+- 예시: 아침이면 "좋은 아침입니다", 밤이면 "밤늦게 찾아주셨네요"`;
+      
+      enhancedSystemPrompt = enhancedSystemPrompt + timeContext;
+
       await streamChat({
         systemPrompt: enhancedSystemPrompt,
         messages: conversationMessages,

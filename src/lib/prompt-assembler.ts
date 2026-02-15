@@ -126,11 +126,11 @@ export function assembleSystemPrompt(
     prompt = prompt.replaceAll('{{userHonorific}}', getHonorificDesc(userInfo.relationType));
     prompt = prompt.replaceAll('{{userCallName}}', getUserCallName(userInfo.name, userInfo.relationType));
   } else {
-    // Fallback - should rarely happen if onboarding is complete
-    prompt = prompt.replaceAll('{{userName}}', '친구');
+    // Fallback for Polichat - 정치인이 시민에게 공손하게
+    prompt = prompt.replaceAll('{{userName}}', '(아직 모름)');
     prompt = prompt.replaceAll('{{userBirthday}}', '(비공개)');
-    prompt = prompt.replaceAll('{{userHonorific}}', '팬');
-    prompt = prompt.replaceAll('{{userCallName}}', '친구야');
+    prompt = prompt.replaceAll('{{userHonorific}}', '시민');
+    prompt = prompt.replaceAll('{{userCallName}}', '(이름을 먼저 여쭤보세요)');
   }
 
   for (const category of KNOWLEDGE_CATEGORIES) {
