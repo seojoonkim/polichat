@@ -213,11 +213,11 @@ export default function MessageBubble({ message, idol, isNew = false, onBubbleRe
                 style={{ animationDuration: '0.3s' }}
               >
                 <span className="text-sm">{message.reaction}</span>
-                <span className="text-[10px] text-pink-500 font-medium">+1 MIM</span>
+                <span className="text-[10px] text-pink-500 font-medium">+1 POLI</span>
               </div>
             )}
           </div>
-          {/* 읽음 표시 + MIM */}
+          {/* 읽음 표시 + POLI */}
           <div className="flex items-center gap-1.5 mr-1">
             {message.isRead && (
               <span className="text-[10px] text-gray-400">
@@ -229,7 +229,7 @@ export default function MessageBubble({ message, idol, isNew = false, onBubbleRe
                 className="text-[10px] font-bold animate-mim-glow"
                 style={{ color: idol.themeColor }}
               >
-                ✨ +{message.expGained} MIM
+                ✨ +{message.expGained} POLI
               </span>
             )}
           </div>
@@ -277,13 +277,13 @@ export default function MessageBubble({ message, idol, isNew = false, onBubbleRe
                 {parseInstagramHandles(part)}
               </div>
             ))}
-            {/* MIM 획득 표시 */}
+            {/* POLI 획득 표시 */}
             {message.expGained && message.expGained > 0 && (
               <span 
                 className="text-[10px] font-bold ml-1 animate-mim-glow"
                 style={{ color: idol.themeColor }}
               >
-                ✨ +{message.expGained} MIM
+                ✨ +{message.expGained} POLI
               </span>
             )}
           </div>

@@ -73,10 +73,10 @@ export default function MessageList({ messages, idol, isStreaming }: Props) {
   }, [isStreaming, scrollToBottom]);
 
   return (
-    <div ref={containerRef} className="flex-1 overflow-y-auto overflow-x-hidden px-5 pt-5 pb-24 custom-scrollbar flex flex-col">
+    <div ref={containerRef} className="flex-1 overflow-y-auto overflow-x-hidden px-5 pt-5 pb-24 custom-scrollbar">
       {/* Welcome message area */}
       {messages.length === 0 && (
-        <div className="flex flex-col items-center justify-center flex-1 text-center">
+        <div className="flex flex-col items-center justify-center h-full text-center">
           <div
             className="w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl font-bold mb-4 shadow-lg animate-scale-in overflow-hidden ring-2 ring-white/50"
             style={{
@@ -113,9 +113,6 @@ export default function MessageList({ messages, idol, isStreaming }: Props) {
           </p>
         </div>
       )}
-
-      {/* Spacer to push messages to bottom */}
-      {messages.length > 0 && <div className="flex-1" />}
 
       {/* Messages - 시스템 트리거만 필터링, 나머지는 MessageBubble이 처리 */}
       {messages

@@ -85,7 +85,7 @@ export default function IntimacyModal({
                 
                 {/* 경험치 수치 */}
                 <div className="flex justify-between items-center mt-1.5 text-xs text-white/80">
-                  <span className="font-medium">{intimacy.exp}/100 MIM</span>
+                  <span className="font-medium">{intimacy.exp}/100 POLI</span>
                 </div>
                 
                 {/* 레벨 프로그레스 (10등분 점 방식) */}

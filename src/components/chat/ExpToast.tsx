@@ -164,7 +164,7 @@ export default function ExpToast({ event, onDone }: Props) {
         {emoji}
       </span>
       <span className={`relative ${isPositive && visible ? 'animate-number-pop' : ''}`}>
-        {sign}{event.amount} MIM
+        {sign}{event.amount} POLI
       </span>
       
       {/* Extra sparkle for big gains */}
