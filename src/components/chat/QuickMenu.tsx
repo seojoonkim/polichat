@@ -93,25 +93,20 @@ export default function QuickMenu({ politicianId, themeColor, onSelect, onDirect
         }
         .quick-menu-scroll {
           display: flex;
+          flex-direction: column;
           gap: 8px;
-          overflow-x: auto;
           padding-bottom: 4px;
-          -webkit-overflow-scrolling: touch;
-          scrollbar-width: none;
-        }
-        .quick-menu-scroll::-webkit-scrollbar {
-          display: none;
         }
         .quick-menu-btn {
-          flex-shrink: 0;
-          padding: 8px 14px;
-          border-radius: 20px;
+          padding: 10px 16px;
+          border-radius: 12px;
           border: 1.5px solid;
           background: white;
           font-size: 13px;
           font-weight: 500;
           cursor: pointer;
           white-space: nowrap;
+          text-align: left;
           transition: background 0.2s, color 0.2s;
           animation: quickMenuFadeIn 0.4s ease both;
           -webkit-tap-highlight-color: transparent;
