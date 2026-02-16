@@ -9,14 +9,14 @@
       <stop offset="100%" stop-color="#FB7185"/>
     </linearGradient>
   </defs>
-  <!-- Left speech bubble (sky blue) -->
-  <path d="M12 22C12 16.477 16.477 12 22 12H38C43.523 12 48 16.477 48 22V38C48 43.523 43.523 48 38 48H26L18 56V48H22C16.477 48 12 43.523 12 38V22Z" fill="url(#g1)"/>
-  <!-- Right speech bubble (pink) -->
-  <path d="M32 32C32 26.477 36.477 22 42 22H58C63.523 22 68 26.477 68 32V48C68 53.523 63.523 58 58 58H54V66L46 58H42C36.477 58 32 53.523 32 48V32Z" fill="url(#g2)"/>
+  <!-- Right speech bubble (pink) - rendered FIRST so it's behind -->
+  <path d="M34 30C34 24.477 38.477 20 44 20H58C63.523 20 68 24.477 68 30V46C68 51.523 63.523 56 58 56H54V64L46 56H44C38.477 56 34 51.523 34 46V30Z" fill="url(#g2)"/>
+  <!-- Left speech bubble (sky blue) - rendered SECOND so it's in front -->
+  <path d="M10 20C10 14.477 14.477 10 20 10H38C43.523 10 48 14.477 48 20V36C48 41.523 43.523 46 38 46H26L18 54V46H20C14.477 46 10 41.523 10 36V20Z" fill="url(#g1)"/>
   <!-- Three dots (...) in left bubble -->
-  <circle cx="24" cy="30" r="2" fill="white" opacity="0.9"/>
-  <circle cx="30" cy="30" r="2" fill="white" opacity="0.9"/>
-  <circle cx="36" cy="30" r="2" fill="white" opacity="0.9"/>
+  <circle cx="23" cy="28" r="2.2" fill="white" opacity="0.9"/>
+  <circle cx="29" cy="28" r="2.2" fill="white" opacity="0.9"/>
+  <circle cx="35" cy="28" r="2.2" fill="white" opacity="0.9"/>
   <!-- Checkmark in right bubble -->
-  <path d="M44 40L48 44L56 36" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+  <path d="M46 40L50 44L58 36" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
 </svg>

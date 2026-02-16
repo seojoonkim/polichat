@@ -107,11 +107,11 @@ body {
   100% { transform: translate3d(1%, -1%, 0) scale(1); }
 }
 
-/* ===== Logo Quicksand + Gradient ===== */
+/* ===== Logo Poppins + Gradient ===== */
 .logo-text-gradient {
-  font-family: 'Quicksand', sans-serif;
-  font-weight: 800;
-  letter-spacing: 0.06em;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 900;
+  letter-spacing: -0.02em;
   background: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7);
   background-clip: text;
   -webkit-background-clip: text;

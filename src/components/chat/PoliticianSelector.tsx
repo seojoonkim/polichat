@@ -142,32 +142,25 @@ export default function PoliticianSelector({ politicians }: Props) {
             </h1>
           </div>
 
-          {/* LIVE Badge */}
-          <div
-            className="animate-fade-in-up flex justify-center mb-4"
-            style={{ animationDelay: '0.05s' }}
-          >
-            <div className="live-badge inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold text-slate-700">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="live-dot absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
-              </span>
-              LIVE · 실시간 대화 가능
-            </div>
-          </div>
-
-          {/* Hero Message */}
+          {/* Hero Message + LIVE Badge inline */}
           <div
             className="animate-fade-in-up"
             style={{ animationDelay: '0.1s' }}
           >
-            <p className="text-xl font-bold text-slate-800 tracking-tight mb-3">
-              정치인에게 직접 물어보세요
-            </p>
-            <p className="text-sm text-slate-600 leading-relaxed max-w-sm mx-auto">
-              AI가 공약, 경력, 발언을 학습했습니다
-              <br />
-              <span className="text-slate-500">정책 질문부터 일상 대화까지 자유롭게</span>
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <p className="text-xl font-bold text-slate-800 tracking-tight">
+                정치인과 직접 대화하세요
+              </p>
+              <div className="live-badge inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold text-slate-700">
+                <span className="relative flex h-2 w-2">
+                  <span className="live-dot absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                </span>
+                LIVE
+              </div>
+            </div>
+            <p className="text-sm text-slate-500 leading-relaxed max-w-md mx-auto">
+              AI가 공약, 경력, 발언을 학습했습니다. 정책 질문부터 일상 대화까지 자유롭게!
             </p>
           </div>
 
