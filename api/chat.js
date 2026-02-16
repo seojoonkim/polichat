@@ -457,7 +457,7 @@ export default async function handler(req, res) {
     }
     openaiMessages.push(...messages);
 
-    const modelUsed = 'minimax/minimax-01';
+    const modelUsed = 'openai/gpt-4o-mini';
     const body = {
       model: modelUsed,
       max_tokens: max_tokens || 1024,
