@@ -13,7 +13,7 @@ export default function PoliticianSelector({ politicians }: Props) {
   const setCurrentPolitician = useChatStore((s) => s.setCurrentPolitician);
 
   return (
-    <div className="polichat-bg min-h-[100dvh] overflow-y-auto overflow-x-hidden relative hide-scrollbar">
+    <div className="polichat-bg h-[100svh] overflow-y-auto overflow-x-hidden relative hide-scrollbar">
       {/* Subtle background pattern */}
       <div className="policy-pattern" />
 
