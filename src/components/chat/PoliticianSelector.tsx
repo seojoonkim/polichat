@@ -170,20 +170,6 @@ export default function PoliticianSelector({ politicians }: Props) {
             </p>
           </div>
 
-          {/* Feature badges - glassmorphism */}
-          <div
-            className="flex items-center justify-center gap-2 mt-5 flex-wrap animate-fade-in-up"
-            style={{ animationDelay: '0.2s' }}
-          >
-            <span className="feature-badge-glass px-3 py-1.5 text-slate-700 text-xs font-semibold rounded-full">
-              📋 실제 공약 기반
-            </span>
-            <span className="feature-badge-glass px-3 py-1.5 text-slate-700 text-xs font-semibold rounded-full">
-              💬 실시간 대화
-            </span>
-            <span className="feature-badge-glass px-3 py-1.5 text-slate-700 text-xs font-semibold rounded-full">
-              🔒 프라이버시 보호
-            </span>
           </div>
         </div>
 
