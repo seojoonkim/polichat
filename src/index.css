@@ -112,16 +112,18 @@ body {
   font-family: 'Poppins', sans-serif;
   font-weight: 900;
   letter-spacing: -0.02em;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7);
+  background: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7, #6366f1);
+  background-size: 200% 200%;
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: logoBounce 2s ease-in-out infinite;
+  animation: gradient-shift 6s ease infinite;
 }
 
-@keyframes logoBounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 /* ===== LIVE Badge ===== */
