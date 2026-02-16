@@ -139,8 +139,18 @@ export async function loadAllPoliticians(): Promise<PoliticianMeta[]> {
     allPoliticians.push(politician);
   }
 
-  // Sort by Korean name
+  // Built-in politicians keep BUILT_IN_POLITICIAN_IDS order (first),
+  // user-created politicians sorted by Korean name (after)
+  const builtInIds = BUILT_IN_POLITICIAN_IDS as readonly string[];
   return allPoliticians.sort((a, b) => {
+    const aBuiltIn = builtInIds.indexOf(a.id);
+    const bBuiltIn = builtInIds.indexOf(b.id);
+    // Both built-in: preserve defined order
+    if (aBuiltIn !== -1 && bBuiltIn !== -1) return aBuiltIn - bBuiltIn;
+    // Built-in comes first
+    if (aBuiltIn !== -1) return -1;
+    if (bBuiltIn !== -1) return 1;
+    // Both user-created: sort by name
     return a.nameKo.localeCompare(b.nameKo, 'ko');
   });
 }
