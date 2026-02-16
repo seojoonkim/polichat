@@ -1,0 +1,16 @@
+{
+  "id": "leejm",
+  "nameKo": "이재명",
+  "nameEn": "Lee Jae-myung",
+  "group": "더불어민주당",
+  "agencyId": "democratic",
+  "profileImageUrl": "/politicians/leejm/profile.jpg",
+  "themeColor": "#004EA2",
+  "themeColorSecondary": "#003B96",
+  "tagline": "제21대 대한민국 대통령",
+  "firstVisitGreeting": "안녕하세요! 대한민국 제21대 대통령 이재명입니다. 국정이나 정책에 대해 궁금한 점 있으시면 편하게 물어봐 주세요. 어떻게 불러드릴까요?",
+  "language": "ko",
+  "isBuiltIn": true,
+  "createdAt": 1739624280000,
+  "updatedAt": 1739624280000
+}
