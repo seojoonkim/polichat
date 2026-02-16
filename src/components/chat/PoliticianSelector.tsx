@@ -61,15 +61,15 @@ function useTypingLoop(name: string) {
       if (charIdx >= msg.length) {
         clearInterval(typeInterval);
         setIsTyping(false);
-        // Wait 2s, then clear and move to next
+        // Wait 3s, then clear and move to next
         setTimeout(() => {
           setText('');
           msgIndexRef.current++;
           // Small delay before next message starts
           setTimeout(() => runLoop(), 300);
-        }, 2000);
+        }, 3000);
       }
-    }, 80);
+    }, 120);
 
     return () => clearInterval(typeInterval);
   }, [messages]);
@@ -86,9 +86,9 @@ function useTypingLoop(name: string) {
 
 function TypingPreview({ name }: { name: string }) {
   const { text, isTyping } = useTypingLoop(name);
-  if (!text) return <p className="typing-preview idle text-xs text-slate-400 mb-2">&nbsp;</p>;
+  if (!text) return <p className="typing-preview idle text-xs text-slate-400 mb-2 truncate">&nbsp;</p>;
   return (
-    <p className={`typing-preview ${isTyping ? 'typing' : 'idle'} text-xs text-slate-400 mb-2`}>
+    <p className={`typing-preview ${isTyping ? 'typing' : 'idle'} text-xs text-slate-400 mb-2 truncate overflow-hidden`}>
       {text}
     </p>
   );
@@ -135,7 +135,7 @@ export default function PoliticianSelector({ politicians }: Props) {
         {/* Hero */}
         <div className="text-center mb-10">
           {/* Logo */}
-          <div className="flex items-center justify-center gap-1.5 mb-5 animate-fade-in">
+          <div className="flex items-center justify-center gap-1 mb-5 animate-fade-in">
             <img src="/logo.svg" alt="Polichat" className="w-14 h-14" />
             <h1 className="text-4xl logo-text-gradient">
               Polichat
