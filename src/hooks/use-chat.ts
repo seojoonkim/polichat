@@ -24,21 +24,47 @@ export function useChat(systemPrompt: string, knowledge?: Record<KnowledgeCatego
   // 메시지 큐잉 (AI 응답 중 입력한 메시지 저장)
   const pendingMessageRef = useRef<string | null>(null);
 
-  // Add assistant message directly (for greeting/onboarding flow)
-  // Use old timestamp to skip typing animation
+  // Add assistant message with simulated typing (for greeting/onboarding flow)
+  // Shows typing indicator first, then reveals text after delay
   const addAssistantMessage = useCallback(
-    (text: string) => {
+    (text: string, options?: { skipTyping?: boolean }) => {
+      if (options?.skipTyping) {
+        // 즉시 표시 (히스토리 로드 등)
+        const { messages: currentMessages } = useChatStore.getState();
+        const newMessage = {
+          id: crypto.randomUUID(),
+          role: 'assistant' as const,
+          content: text,
+          timestamp: Date.now() - 15000,
+        };
+        useChatStore.setState({ messages: [...currentMessages, newMessage] });
+        setTimeout(() => persistMessages(), 50);
+        return;
+      }
+
+      // 1) 빈 메시지 추가 + 스트리밍 상태 ON (로딩 인디케이터 표시)
+      const msgId = crypto.randomUUID();
       const { messages: currentMessages } = useChatStore.getState();
-      const newMessage = {
-        id: crypto.randomUUID(),
-        role: 'assistant' as const,
-        content: text,
-        timestamp: Date.now() - 15000, // 15초 전으로 설정해서 애니메이션 스킵
-      };
-      useChatStore.setState({ 
-        messages: [...currentMessages, newMessage] 
+      useChatStore.setState({
+        messages: [...currentMessages, {
+          id: msgId,
+          role: 'assistant' as const,
+          content: '',
+          timestamp: Date.now(),
+        }],
+        isStreaming: true,
       });
-      setTimeout(() => persistMessages(), 50);
+
+      // 2) 0.8~1.5초 후 텍스트 채우고 스트리밍 OFF
+      const typingDelay = 800 + Math.random() * 700;
+      setTimeout(() => {
+        const { messages: latestMessages } = useChatStore.getState();
+        const updated = latestMessages.map(m =>
+          m.id === msgId ? { ...m, content: text } : m
+        );
+        useChatStore.setState({ messages: updated, isStreaming: false });
+        setTimeout(() => persistMessages(), 50);
+      }, typingDelay);
     },
     [persistMessages],
   );

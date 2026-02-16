@@ -96,7 +96,7 @@ export default function ChatLayout({ idol }: Props) {
           addAssistantMessage(getReturningGreeting(idol));
         }, delay1);
       } else {
-        // 첫 방문: 두 개로 쪼개서
+        // 첫 방문: 두 개로 쪼개서 (타이핑 시뮬레이션 포함)
         const [greeting1, greeting2] = getFirstVisitGreetings(idol);
         localStorage.setItem(visitedKey, 'true');
         
@@ -104,10 +104,10 @@ export default function ChatLayout({ idol }: Props) {
           addAssistantMessage(greeting1);
         }, delay1);
         
-        // 두 번째 메시지는 1초 후
+        // 두 번째 메시지: 첫 번째 타이핑(~1.5초) 완료 후 + 읽는 시간(1초) + 두 번째 타이핑 시작
         setTimeout(() => {
           addAssistantMessage(greeting2);
-        }, delay1 + 1000);
+        }, delay1 + 3000);
       }
     }
   }, [historyLoaded, messages.length, idol.id, addAssistantMessage]);
