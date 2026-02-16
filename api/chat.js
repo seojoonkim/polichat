@@ -132,7 +132,55 @@ async function getRelevantMemories(userId, idolId, query, openaiKey, supabase) {
   }
 }
 
-// RAG 컨텍스트 가져오기
+// ============================================================
+// 의도 분류 시스템 (키워드 기반, 비용 제로)
+// ============================================================
+
+const INTENT_KEYWORDS = {
+  policy: [
+    '공약', '정책', '예산', '법안', '세금', '복지', '교육', '경제',
+    '의료', '부동산', '연금', '국방', '외교', '환경', '노동', '규제',
+    '개혁', '입법', '의안', '안건', '찬성', '반대', '투표',
+  ],
+  issue: [
+    '최근', '요즘', '뉴스', '오늘', '어제', '이번주', '논란',
+    '사건', '속보', '화제', '이슈', '발표', '기자회견',
+  ],
+};
+
+function classifyIntent(message) {
+  const lower = message.toLowerCase();
+  
+  const policyScore = INTENT_KEYWORDS.policy.filter(kw => lower.includes(kw)).length;
+  const issueScore = INTENT_KEYWORDS.issue.filter(kw => lower.includes(kw)).length;
+
+  if (policyScore >= 1) return 'policy';
+  if (issueScore >= 1) return 'issue';
+  return 'casual';
+}
+
+// 의도별 프롬프트 접두사
+function getIntentPromptPrefix(intent, speechContext) {
+  switch (intent) {
+    case 'policy':
+      return `\n\n## 🏛️ 정책 관련 질문입니다
+아래 실제 발언/회의록을 참고하여 구체적이고 상세하게 답변하세요.
+정책 내용, 배경, 기대효과를 포함하세요.
+${speechContext}`;
+    case 'issue':
+      return `\n\n## 📰 최근 이슈 관련 질문입니다
+아래 최근 발언을 참고하여 시의성 있게 답변하세요.
+${speechContext}`;
+    case 'casual':
+    default:
+      return speechContext ? `\n\n## 💬 참고 정보\n${speechContext}` : '';
+  }
+}
+
+// ============================================================
+// RAG: 기존 idol_knowledge + 새 politician_speeches 통합 검색
+// ============================================================
+
 async function getRAGContext(query, idolId, supabase, openaiKey) {
   if (!supabase || !openaiKey) {
     return '';
@@ -157,18 +205,27 @@ async function getRAGContext(query, idolId, supabase, openaiKey) {
     const embeddingData = await embeddingRes.json();
     const queryEmbedding = embeddingData.data[0].embedding;
 
-    // 2. Supabase similarity search
-    const { data, error } = await supabase.rpc('match_idol_knowledge', {
-      query_embedding: queryEmbedding,
-      match_threshold: 0.7,
-      match_count: 3,
-      filter_idol_id: idolId || null,
-      filter_category: null,
-    });
+    // 2. 병렬로 두 테이블 검색
+    const [knowledgeResult, speechResult] = await Promise.all([
+      // 기존 idol_knowledge
+      supabase.rpc('match_idol_knowledge', {
+        query_embedding: queryEmbedding,
+        match_threshold: 0.7,
+        match_count: 3,
+        filter_idol_id: idolId || null,
+        filter_category: null,
+      }),
+      // 새 politician_speeches
+      supabase.rpc('match_politician_speeches', {
+        query_embedding: queryEmbedding,
+        filter_politician_id: idolId || null,
+        filter_source: null,
+        match_threshold: 0.65,
+        match_count: 5,
+      }).catch(() => ({ data: null, error: true })), // 테이블 없으면 graceful fail
+    ]);
 
-    if (error || !data || data.length === 0) return '';
-
-    // 3. 컨텍스트 포맷팅
+    // 3. 기존 knowledge 컨텍스트
     const categoryLabels = {
       sns: 'SNS/소셜',
       interview: '인터뷰',
@@ -179,12 +236,39 @@ async function getRAGContext(query, idolId, supabase, openaiKey) {
       general: '일반',
     };
 
-    const contextParts = data.map((r) => {
-      const label = categoryLabels[r.category] || r.category;
-      return `[${label}] ${r.content}`;
-    });
+    let contextParts = [];
 
-    return `\n\n---\n## 🔍 관련 정보 (참고해서 자연스럽게 대화하세요)\n\n${contextParts.join('\n\n')}\n\n---\n위 정보를 직접 인용하지 말고, 자연스럽게 대화에 녹여서 답변하세요.`;
+    if (knowledgeResult.data?.length > 0) {
+      contextParts.push(...knowledgeResult.data.map((r) => {
+        const label = categoryLabels[r.category] || r.category;
+        return `[${label}] ${r.content}`;
+      }));
+    }
+
+    // 4. 의도 분류 + 발언 데이터 컨텍스트
+    const intent = classifyIntent(query);
+    let speechContext = '';
+
+    if (speechResult.data?.length > 0) {
+      const speechParts = speechResult.data.map((r) => {
+        const meta = r.metadata || {};
+        const dateStr = meta.date ? ` (${meta.date})` : '';
+        const meetingStr = meta.meeting ? ` [${meta.meeting}]` : '';
+        return `[발언${dateStr}${meetingStr}] ${r.content}`;
+      });
+      speechContext = speechParts.join('\n\n');
+    }
+
+    // 5. 의도별 프롬프트 조합
+    const intentPrefix = getIntentPromptPrefix(intent, speechContext);
+
+    // 기존 knowledge context
+    let knowledgeContext = '';
+    if (contextParts.length > 0) {
+      knowledgeContext = `\n\n---\n## 🔍 관련 정보 (참고해서 자연스럽게 대화하세요)\n\n${contextParts.join('\n\n')}\n\n---\n위 정보를 직접 인용하지 말고, 자연스럽게 대화에 녹여서 답변하세요.`;
+    }
+
+    return knowledgeContext + intentPrefix;
   } catch (e) {
     console.error('RAG error:', e);
     return '';
