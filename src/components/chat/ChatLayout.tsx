@@ -13,10 +13,11 @@ interface Props {
 
 // 첫 방문용 인사말 (짧게, 두 개로 쪼개서)
 function getFirstVisitGreetings(idol: IdolMeta): [string, string] {
+  const intro = idol.tagline ? `${idol.tagline}, ` : `${idol.group} 소속 `;
   const greetings: [string, string][] = [
-    [`안녕하세요! ${idol.nameKo}입니다.`, `어떻게 불러드릴까요?`],
-    [`반갑습니다! ${idol.nameKo}입니다.`, `성함이 어떻게 되세요?`],
-    [`안녕하세요, ${idol.nameKo}입니다!`, `뭐라고 불러드릴까요?`],
+    [`안녕하세요! ${intro}${idol.nameKo}입니다.`, `어떻게 불러드릴까요?`],
+    [`반갑습니다! ${intro}${idol.nameKo}입니다.`, `성함이 어떻게 되세요?`],
+    [`안녕하세요, ${intro}${idol.nameKo}입니다!`, `뭐라고 불러드릴까요?`],
   ];
   return greetings[Math.floor(Math.random() * greetings.length)]!;
 }
