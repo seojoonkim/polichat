@@ -32,6 +32,8 @@ export default function ChatHeader({ idol }: Props) {
     clearMessages();
     resetUser();
     setOnboardingStep('name');
+    // 첫 방문 플래그 제거 → 초기화 후 첫 방문 인사 다시 표시
+    localStorage.removeItem(`polichat_visited_${idol.id}`);
     setShowResetModal(false);
   };
 

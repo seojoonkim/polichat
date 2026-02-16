@@ -65,9 +65,22 @@ export default function ChatLayout({ idol }: Props) {
   const { messages, isStreaming, error, sendMessage, addAssistantMessage, historyLoaded } = useChat(systemPrompt, knowledge);
   
   const greetingShown = useRef(false);
+  const prevMessageCount = useRef<number | null>(null);
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
 
-  // Show greeting on first load (짧게 쪼개서)
+  // Show greeting when messages are empty and history is loaded
+  // Also handles reset: when messages go from >0 to 0, re-trigger greeting
+  useEffect(() => {
+    const wasNonEmpty = prevMessageCount.current !== null && prevMessageCount.current > 0;
+    const isEmpty = messages.length === 0;
+    
+    // Reset greetingShown flag when messages are cleared (초기화)
+    if (wasNonEmpty && isEmpty) {
+      greetingShown.current = false;
+    }
+    prevMessageCount.current = messages.length;
+  }, [messages.length]);
+
   useEffect(() => {
     if (historyLoaded && messages.length === 0 && !greetingShown.current) {
       greetingShown.current = true;
