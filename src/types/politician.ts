@@ -26,6 +26,7 @@ export const KNOWLEDGE_CATEGORIES = [
   'boundaries',
   'relationships',
   'party-info',
+  'recent-news',
 ] as const;
 
 export type KnowledgeCategory = (typeof KNOWLEDGE_CATEGORIES)[number];
@@ -39,6 +40,7 @@ export const KNOWLEDGE_LABELS: Record<KnowledgeCategory, string> = {
   boundaries: '대화 경계',
   relationships: '관계/호칭',
   'party-info': '정당 정보',
+  'recent-news': '최근 뉴스/이슈',
 };
 
 export interface PoliticianKnowledgeFile {

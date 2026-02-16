@@ -6,6 +6,7 @@ import { useChatStore } from '@/stores/chat-store';
 import ChatHeader from './ChatHeader';
 import MessageList from './MessageList';
 import ChatInput from './ChatInput';
+import QuickMenu from './QuickMenu';
 
 interface Props {
   politician: PoliticianMeta;
@@ -68,6 +69,7 @@ export default function ChatLayout({ politician }: Props) {
   const greetingShown = useRef(false);
   const prevMessageCount = useRef<number | null>(null);
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
+  const [quickMenuDismissed, setQuickMenuDismissed] = useState(false);
 
   // Show greeting when messages are empty and history is loaded
   // Also handles reset: when messages go from >0 to 0, re-trigger greeting
@@ -113,13 +115,41 @@ export default function ChatLayout({ politician }: Props) {
     }
   }, [historyLoaded, messages.length, politician.id, addAssistantMessage]);
 
+  // Determine if quick menu should show:
+  // - First visit onboarding only (not returning visitors)
+  // - Messages >= 4 (greeting1 + greeting2 + user name + welcome)
+  // - Not yet dismissed
+  // - Last assistant message contains "님" + welcome pattern
+  const showQuickMenu = (() => {
+    if (quickMenuDismissed) return false;
+    if (messages.length < 4) return false;
+    // Check last assistant message for welcome pattern
+    const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant');
+    if (!lastAssistant) return false;
+    const text = lastAssistant.content;
+    return /님/.test(text) && (/반갑|환영|찾아주|잘 부탁/.test(text));
+  })();
+
+  const handleQuickMenuSelect = useCallback((text: string) => {
+    setQuickMenuDismissed(true);
+    sendMessage(text);
+  }, [sendMessage]);
+
+  const handleDirectAsk = useCallback(() => {
+    setQuickMenuDismissed(true);
+    // Focus the textarea in ChatInput
+    const textarea = document.querySelector('form textarea') as HTMLTextAreaElement | null;
+    textarea?.focus();
+  }, []);
+
   const handleSend = useCallback((text: string) => {
+    if (showQuickMenu) setQuickMenuDismissed(true);
     if (isStreaming) {
       setPendingMessage(text);
       return;
     }
     sendMessage(text);
-  }, [sendMessage, isStreaming]);
+  }, [sendMessage, isStreaming, showQuickMenu]);
 
   // Send pending message after streaming completes
   useEffect(() => {
@@ -161,6 +191,15 @@ export default function ChatLayout({ politician }: Props) {
         </div>
       )}
       
+      {showQuickMenu && (
+        <QuickMenu
+          politicianId={politician.id}
+          themeColor={politician.themeColor}
+          onSelect={handleQuickMenuSelect}
+          onDirectAsk={handleDirectAsk}
+        />
+      )}
+
       {error && (
         <div className="px-4 py-2 bg-red-50 text-red-600 text-xs text-center animate-shake">
           {error}
