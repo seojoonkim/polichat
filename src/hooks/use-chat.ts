@@ -56,7 +56,7 @@ export function useChat(systemPrompt: string, knowledge?: Record<KnowledgeCatego
       });
 
       // 2) 0.8~1.5초 후 텍스트 채우고 스트리밍 OFF
-      const typingDelay = 800 + Math.random() * 700;
+      const typingDelay = 400 + Math.random() * 350;
       setTimeout(() => {
         const { messages: latestMessages } = useChatStore.getState();
         const updated = latestMessages.map(m =>
@@ -105,7 +105,7 @@ export function useChat(systemPrompt: string, knowledge?: Record<KnowledgeCatego
       setStreaming(true);
 
       // 0.5~1.2초 랜덤 딜레이 (읽는 척 - 타이핑 인디케이터가 보이는 상태)
-      const readingDelay = 500 + Math.random() * 700;
+      const readingDelay = 250 + Math.random() * 350;
       await new Promise(resolve => setTimeout(resolve, readingDelay));
 
       const conversationMessages = [
