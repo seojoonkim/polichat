@@ -76,10 +76,10 @@ body {
   letter-spacing: -0.01em;
 }
 
-/* ===== Polichat Background ===== */
+/* ===== Polichat Background - Mesh Gradient ===== */
 .polichat-bg {
   position: relative;
-  background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 50%, #E2E8F0 100%);
+  background: #f0f4ff;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -89,10 +89,156 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: 
-    radial-gradient(circle at 25% 25%, rgba(30, 58, 95, 0.03) 0%, transparent 50%),
-    radial-gradient(circle at 75% 75%, rgba(230, 30, 43, 0.02) 0%, transparent 50%);
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(99, 102, 241, 0.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 10%, rgba(168, 85, 247, 0.10) 0%, transparent 45%),
+    radial-gradient(ellipse at 60% 60%, rgba(236, 72, 153, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 10% 80%, rgba(59, 130, 246, 0.10) 0%, transparent 45%),
+    radial-gradient(ellipse at 90% 90%, rgba(139, 92, 246, 0.06) 0%, transparent 40%);
+  animation: meshShift 12s ease-in-out infinite alternate;
   pointer-events: none;
+  will-change: transform;
+}
+
+@keyframes meshShift {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(-2%, 1%, 0) scale(1.02); }
+  100% { transform: translate3d(1%, -1%, 0) scale(1); }
+}
+
+/* ===== Logo Quicksand + Gradient ===== */
+.logo-text-gradient {
+  font-family: 'Quicksand', sans-serif;
+  font-weight: 700;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: logoBounce 2s ease-in-out infinite;
+}
+
+@keyframes logoBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+/* ===== LIVE Badge ===== */
+.live-badge {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.4); }
+}
+
+.live-dot {
+  animation: livePulse 1.5s ease-in-out infinite;
+}
+
+/* ===== Online Indicator ===== */
+@keyframes onlinePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5); }
+  50% { box-shadow: 0 0 0 4px rgba(34, 197, 94, 0); }
+}
+
+.online-indicator {
+  animation: onlinePulse 2s ease-in-out infinite;
+}
+
+/* ===== Glow Ring for Profile Images ===== */
+.glow-ring {
+  box-shadow: 0 0 16px var(--glow-color, rgba(99, 102, 241, 0.3));
+  animation: glowPulse 2.5s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 12px var(--glow-color, rgba(99, 102, 241, 0.25)); }
+  50% { box-shadow: 0 0 24px var(--glow-color, rgba(99, 102, 241, 0.45)); }
+}
+
+/* ===== Typing Preview ===== */
+@keyframes typingReveal {
+  0% { max-width: 0; }
+  100% { max-width: 300px; }
+}
+
+.typing-preview {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  max-width: 0;
+  animation: typingReveal 2.5s steps(20, end) forwards;
+  animation-delay: var(--typing-delay, 1s);
+  border-right: 2px solid rgba(100, 116, 139, 0.4);
+}
+
+.typing-preview.done {
+  border-right-color: transparent;
+}
+
+/* ===== Feature Badge Glass ===== */
+.feature-badge-glass {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+@media (hover: hover) {
+  .feature-badge-glass:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+}
+
+/* ===== Staggered Reveal (IntersectionObserver) ===== */
+.reveal-card {
+  opacity: 0;
+  transform: translate3d(0, 30px, 0);
+  transition: opacity 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: opacity, transform;
+}
+
+.reveal-card.revealed {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+/* ===== CTA Slide on Hover ===== */
+.cta-slide {
+  position: relative;
+  overflow: hidden;
+}
+
+.cta-slide .cta-default,
+.cta-slide .cta-hover {
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.cta-slide .cta-hover {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  transform: translateX(-10px);
+}
+
+@media (hover: hover) {
+  .group:hover .cta-slide .cta-default {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  .group:hover .cta-slide .cta-hover {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 /* Politician Card */
