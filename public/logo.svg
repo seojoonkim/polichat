@@ -13,6 +13,10 @@
   <path d="M12 22C12 16.477 16.477 12 22 12H38C43.523 12 48 16.477 48 22V38C48 43.523 43.523 48 38 48H26L18 56V48H22C16.477 48 12 43.523 12 38V22Z" fill="url(#g1)"/>
   <!-- Right speech bubble (pink) -->
   <path d="M32 32C32 26.477 36.477 22 42 22H58C63.523 22 68 26.477 68 32V48C68 53.523 63.523 58 58 58H54V66L46 58H42C36.477 58 32 53.523 32 48V32Z" fill="url(#g2)"/>
-  <!-- Checkmark in overlap -->
-  <path d="M38 38L42 42L50 34" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Three dots (...) in left bubble -->
+  <circle cx="24" cy="30" r="2" fill="white" opacity="0.9"/>
+  <circle cx="30" cy="30" r="2" fill="white" opacity="0.9"/>
+  <circle cx="36" cy="30" r="2" fill="white" opacity="0.9"/>
+  <!-- Checkmark in right bubble -->
+  <path d="M44 40L48 44L56 36" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
 </svg>
