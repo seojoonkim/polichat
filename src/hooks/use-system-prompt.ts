@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { PoliticianMeta, KnowledgeCategory } from '@/types/politician';
-import { loadPoliticianKnowledge, loadGroupInfo, getGroupSlug } from '@/lib/politician-loader';
+import { loadPoliticianKnowledge, loadGroupInfo, getGroupSlug, loadFewShots } from '@/lib/politician-loader';
 import { assembleSystemPrompt, type UserInfo } from '@/lib/prompt-assembler';
 import { useUserStore } from '@/stores/user-store';
 
@@ -36,10 +36,11 @@ export function useSystemPrompt(politician: PoliticianMeta | null) {
     Promise.all([
       loadPoliticianKnowledge(politician.id),
       loadGroupInfo(getGroupSlug(politician.group)),
-    ]).then(([loadedKnowledge, groupInfo]) => {
+      loadFewShots(politician.id),
+    ]).then(([loadedKnowledge, groupInfo, fewShots]) => {
       if (!cancelled) {
         setKnowledge(loadedKnowledge);
-        setSystemPrompt(assembleSystemPrompt(politician, loadedKnowledge, groupInfo, userInfo));
+        setSystemPrompt(assembleSystemPrompt(politician, loadedKnowledge, groupInfo, userInfo, fewShots));
         setLoading(false);
       }
     });
@@ -72,7 +73,8 @@ export function useSystemPromptWithOverrides(
     Promise.all([
       loadPoliticianKnowledge(politician.id),
       loadGroupInfo(getGroupSlug(politician.group)),
-    ]).then(([knowledge, groupInfo]) => {
+      loadFewShots(politician.id),
+    ]).then(([knowledge, groupInfo, fewShots]) => {
       if (!cancelled) {
         const merged = { ...knowledge } as Record<KnowledgeCategory, string>;
         if (overrides) {
@@ -80,7 +82,7 @@ export function useSystemPromptWithOverrides(
             merged[key as KnowledgeCategory] = value;
           }
         }
-        setSystemPrompt(assembleSystemPrompt(politician, merged, groupInfo));
+        setSystemPrompt(assembleSystemPrompt(politician, merged, groupInfo, undefined, fewShots));
         setLoading(false);
       }
     });

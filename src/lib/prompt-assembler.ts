@@ -70,11 +70,45 @@ function getCurrentDate(): string {
   return `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일`;
 }
 
+export interface UserMemoryData {
+  name?: string;
+  interests?: string[];
+  previousTopics?: string[];
+  totalMessages?: number;
+  facts?: Record<string, string>;
+}
+
+function formatFewShots(fewShots: string): string {
+  if (!fewShots.trim()) return '';
+  return `\n## 대화 예시 (이 말투와 스타일을 참고하세요)\n${fewShots.trim()}\n`;
+}
+
+function formatUserMemory(memory: UserMemoryData | null | undefined): string {
+  if (!memory) return '';
+  const lines: string[] = ['\n## 이 시민에 대한 기억'];
+  if (memory.name) lines.push(`- 이름: ${memory.name}`);
+  if (memory.totalMessages) {
+    const rel = memory.totalMessages < 5 ? '새로운 시민' : memory.totalMessages < 20 ? '가끔 대화하는 시민' : '자주 대화하는 시민';
+    lines.push(`- 관계: ${rel} (${memory.totalMessages}회 대화)`);
+  }
+  if (memory.interests?.length) lines.push(`- 관심 분야: ${memory.interests.join(', ')}`);
+  if (memory.previousTopics?.length) lines.push(`- 이전 대화 주제: ${memory.previousTopics.join(', ')}`);
+  if (memory.facts) {
+    for (const [k, v] of Object.entries(memory.facts)) {
+      lines.push(`- ${k}: ${v}`);
+    }
+  }
+  lines.push('위 정보를 활용해 "이전에 OO에 대해 이야기했었죠" 같은 맥락 연결을 자연스럽게 해주세요.');
+  return lines.join('\n') + '\n';
+}
+
 export function assembleSystemPrompt(
   meta: PoliticianMeta,
   knowledge: Record<KnowledgeCategory, string>,
   groupInfo?: string,
   userInfo?: UserInfo,
+  fewShots?: string,
+  userMemory?: UserMemoryData | null,
 ): string {
   let prompt = SYSTEM_PROMPT_TEMPLATE;
 
@@ -140,6 +174,10 @@ export function assembleSystemPrompt(
   }
 
   prompt = prompt.replaceAll('{{group-info}}', groupInfo || '(그룹 정보 없음)');
+
+  // Few-shots & user memory
+  prompt = prompt.replaceAll('{{few_shots}}', formatFewShots(fewShots || ''));
+  prompt = prompt.replaceAll('{{user_memory}}', formatUserMemory(userMemory));
 
   return prompt.trim();
 }

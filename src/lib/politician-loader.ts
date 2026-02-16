@@ -35,6 +35,16 @@ export async function loadPoliticianMeta(politicianId: string): Promise<Politici
   return fetchStaticMeta(politicianId);
 }
 
+export async function loadFewShots(politicianId: string): Promise<string> {
+  try {
+    const res = await fetch(`/politicians/${politicianId}/few-shots.md`);
+    if (!res.ok) return '';
+    return await res.text();
+  } catch {
+    return '';
+  }
+}
+
 export async function loadPoliticianKnowledge(
   politicianId: string,
   agencyId?: string,
