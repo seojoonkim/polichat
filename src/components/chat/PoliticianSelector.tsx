@@ -50,7 +50,8 @@ function useTypingLoop(name: string) {
   const msgIndexRef = useRef(0);
 
   const runLoop = useCallback(() => {
-    const msg = messages[msgIndexRef.current % messages.length];
+    const msg = messages![msgIndexRef.current % messages!.length];
+    if (!msg) return;
     let charIdx = 0;
     setIsTyping(true);
 
