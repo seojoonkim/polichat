@@ -1,15 +1,15 @@
 import { useEffect, useRef, useCallback } from 'react';
 import type { Message } from '@/types/chat';
-import type { IdolMeta } from '@/types/idol';
+import type { PoliticianMeta } from '@/types/politician';
 import MessageBubble from './MessageBubble';
 
 interface Props {
   messages: Message[];
-  idol: IdolMeta;
+  politician: PoliticianMeta;
   isStreaming: boolean;
 }
 
-export default function MessageList({ messages, idol, isStreaming }: Props) {
+export default function MessageList({ messages, politician, isStreaming }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -83,30 +83,30 @@ export default function MessageList({ messages, idol, isStreaming }: Props) {
           <div
             className="w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl font-bold mb-4 shadow-lg animate-scale-in overflow-hidden ring-2 ring-white/50"
             style={{
-              background: `linear-gradient(135deg, ${idol.themeColor}, ${idol.themeColorSecondary})`,
+              background: `linear-gradient(135deg, ${politician.themeColor}, ${politician.themeColorSecondary})`,
             }}
           >
-            {idol.profileImageUrl ? (
+            {politician.profileImageUrl ? (
               <img
-                src={idol.profileImageUrl}
-                alt={idol.nameKo}
+                src={politician.profileImageUrl}
+                alt={politician.nameKo}
                 className="w-full h-full rounded-full object-cover"
               />
             ) : (
-              idol.nameKo.slice(0, 1)
+              politician.nameKo.slice(0, 1)
             )}
           </div>
           <h2
             className="text-lg font-bold text-gray-700 animate-fade-in-up"
             style={{ animationDelay: '0.1s', opacity: 0 }}
           >
-            {idol.nameKo}
+            {politician.nameKo}
           </h2>
           <p
             className="text-sm text-gray-400 mt-1 animate-fade-in-up"
             style={{ animationDelay: '0.2s', opacity: 0 }}
           >
-            {idol.tagline}
+            {politician.tagline}
           </p>
           <p
             className="text-xs text-gray-300 mt-5 animate-fade-in-up"
@@ -124,7 +124,7 @@ export default function MessageList({ messages, idol, isStreaming }: Props) {
           <MessageBubble 
             key={msg.id} 
             message={msg} 
-            idol={idol} 
+            politician={politician} 
             isNew={isStreaming && idx === arr.length - 1 && msg.role === 'assistant'}
             onBubbleReveal={handleBubbleReveal}
           />

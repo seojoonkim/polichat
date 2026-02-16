@@ -1,28 +1,28 @@
-import type { IdolBundle, IdolMeta } from '@/types/idol';
-import { KNOWLEDGE_CATEGORIES } from '@/types/idol';
-import { loadIdolKnowledge } from './idol-loader';
+import type { PoliticianBundle, PoliticianMeta } from '@/types/politician';
+import { KNOWLEDGE_CATEGORIES } from '@/types/politician';
+import { loadPoliticianKnowledge } from './politician-loader';
 import * as db from './db';
 
 const BUNDLE_VERSION = 1;
 
-export async function exportIdol(idolId: string, meta: IdolMeta): Promise<IdolBundle> {
-  const knowledge = await loadIdolKnowledge(idolId);
+export async function exportPolitician(politicianId: string, meta: PoliticianMeta): Promise<PoliticianBundle> {
+  const knowledge = await loadPoliticianKnowledge(politicianId);
   return { meta, knowledge, version: BUNDLE_VERSION };
 }
 
-export async function exportAllIdols(idols: IdolMeta[]): Promise<IdolBundle[]> {
-  const bundles: IdolBundle[] = [];
-  for (const idol of idols) {
-    bundles.push(await exportIdol(idol.id, idol));
+export async function exportAllPoliticians(politicians: PoliticianMeta[]): Promise<PoliticianBundle[]> {
+  const bundles: PoliticianBundle[] = [];
+  for (const politician of politicians) {
+    bundles.push(await exportPolitician(politician.id, politician));
   }
   return bundles;
 }
 
-export async function importIdol(
-  bundle: IdolBundle,
+export async function importPolitician(
+  bundle: PoliticianBundle,
   overwrite = false,
 ): Promise<{ success: boolean; message: string }> {
-  const existing = await db.getIdolMeta(bundle.meta.id);
+  const existing = await db.getPoliticianMeta(bundle.meta.id);
   if (existing && !overwrite) {
     return {
       success: false,
@@ -31,20 +31,20 @@ export async function importIdol(
   }
 
   const now = Date.now();
-  const meta: IdolMeta = {
+  const meta: PoliticianMeta = {
     ...bundle.meta,
     isBuiltIn: false,
     updatedAt: now,
     createdAt: existing?.createdAt ?? now,
   };
 
-  await db.putIdolMeta(meta);
+  await db.putPoliticianMeta(meta);
 
   for (const category of KNOWLEDGE_CATEGORIES) {
     const content = bundle.knowledge[category];
     if (content !== undefined) {
       await db.putKnowledgeFile({
-        idolId: meta.id,
+        politicianId: meta.id,
         category,
         content,
         updatedAt: now,
@@ -67,7 +67,7 @@ export function downloadJson(data: unknown, filename: string): void {
   URL.revokeObjectURL(url);
 }
 
-export function validateBundle(data: unknown): data is IdolBundle {
+export function validateBundle(data: unknown): data is PoliticianBundle {
   if (!data || typeof data !== 'object') return false;
   const obj = data as Record<string, unknown>;
   if (!obj.meta || typeof obj.meta !== 'object') return false;

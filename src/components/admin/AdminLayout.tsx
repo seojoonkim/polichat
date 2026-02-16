@@ -1,27 +1,27 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router';
-import { useIdolStore } from '@/stores/idol-store';
+import { usePoliticianStore } from '@/stores/politician-store';
 import { useAdminStore } from '@/stores/admin-store';
-import IdolListPanel from './IdolListPanel';
-import IdolEditForm from './IdolEditForm';
+import PoliticianListPanel from './PoliticianListPanel';
+import PoliticianEditForm from './PoliticianEditForm';
 import KnowledgeEditor from './KnowledgeEditor';
 import TestChatPanel from './TestChatPanel';
 import ImportExportPanel from './ImportExportPanel';
 
 export default function AdminLayout() {
-  const idols = useIdolStore((s) => s.idols);
-  const selectedIdolId = useAdminStore((s) => s.selectedIdolId);
-  const setSelectedIdol = useAdminStore((s) => s.setSelectedIdol);
+  const politicians = usePoliticianStore((s) => s.politicians);
+  const selectedPoliticianId = useAdminStore((s) => s.selectedPoliticianId);
+  const setSelectedPolitician = useAdminStore((s) => s.setSelectedPolitician);
   const isTestChatOpen = useAdminStore((s) => s.isTestChatOpen);
 
-  const selectedIdol = idols.find((i) => i.id === selectedIdolId) ?? null;
+  const selectedPolitician = politicians.find((i) => i.id === selectedPoliticianId) ?? null;
 
-  // Auto-select first idol
+  // Auto-select first politician
   useEffect(() => {
-    if (!selectedIdolId && idols.length > 0) {
-      setSelectedIdol(idols[0]!.id);
+    if (!selectedPoliticianId && politicians.length > 0) {
+      setSelectedPolitician(politicians[0]!.id);
     }
-  }, [idols, selectedIdolId, setSelectedIdol]);
+  }, [politicians, selectedPoliticianId, setSelectedPolitician]);
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
@@ -46,15 +46,15 @@ export default function AdminLayout() {
       {/* Main content */}
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        <IdolListPanel />
+        <PoliticianListPanel />
 
         {/* Content area */}
         <div className="flex-1 overflow-y-auto">
-          {selectedIdol ? (
+          {selectedPolitician ? (
             <div className="p-6 max-w-4xl">
-              <IdolEditForm idol={selectedIdol} />
+              <PoliticianEditForm politician={selectedPolitician} />
               <div className="mt-6">
-                <KnowledgeEditor idol={selectedIdol} />
+                <KnowledgeEditor politician={selectedPolitician} />
               </div>
             </div>
           ) : (
@@ -65,8 +65,8 @@ export default function AdminLayout() {
         </div>
 
         {/* Test chat drawer */}
-        {isTestChatOpen && selectedIdol && (
-          <TestChatPanel idol={selectedIdol} />
+        {isTestChatOpen && selectedPolitician && (
+          <TestChatPanel politician={selectedPolitician} />
         )}
       </div>
     </div>

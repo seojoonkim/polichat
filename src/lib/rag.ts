@@ -2,7 +2,7 @@ import { supabase, type SimilaritySearchResult } from './supabase';
 import { createEmbedding } from './embeddings';
 
 export interface RAGSearchOptions {
-  idolId?: string;        // 특정 정치인으로 필터링
+  politicianId?: string;        // 특정 정치인으로 필터링
   category?: string;      // 특정 카테고리로 필터링
   topK?: number;          // 반환할 결과 수 (기본: 5)
   threshold?: number;     // 유사도 임계값 (기본: 0.7)
@@ -20,7 +20,7 @@ export async function searchKnowledge(
     return [];
   }
 
-  const { idolId, category, topK = 5, threshold = 0.7 } = options;
+  const { politicianId, category, topK = 5, threshold = 0.7 } = options;
 
   // 쿼리 임베딩 생성
   const queryEmbedding = await createEmbedding(query);
@@ -30,7 +30,7 @@ export async function searchKnowledge(
     query_embedding: queryEmbedding,
     match_threshold: threshold,
     match_count: topK,
-    filter_idol_id: idolId || null,
+    filter_idol_id: politicianId || null,
     filter_category: category || null,
   });
 
@@ -83,11 +83,11 @@ function getCategoryLabel(category: string): string {
  */
 export async function getRAGContext(
   userMessage: string,
-  idolId: string
+  politicianId: string
 ): Promise<string> {
   try {
     const results = await searchKnowledge(userMessage, {
-      idolId,
+      politicianId,
       topK: 3,
       threshold: 0.75,
     });

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
-import type { IdolMeta } from '@/types/idol';
+import type { PoliticianMeta } from '@/types/politician';
 import { useSystemPrompt } from '@/hooks/use-system-prompt';
 import { useChat } from '@/hooks/use-chat';
 import { useChatStore } from '@/stores/chat-store';
@@ -8,22 +8,22 @@ import MessageList from './MessageList';
 import ChatInput from './ChatInput';
 
 interface Props {
-  idol: IdolMeta;
+  politician: PoliticianMeta;
 }
 
 // 첫 방문용 인사말 (짧게, 두 개로 쪼개서)
-function getFirstVisitGreetings(idol: IdolMeta): [string, string] {
-  const intro = idol.tagline ? `${idol.tagline}, ` : `${idol.group} 소속 `;
+function getFirstVisitGreetings(politician: PoliticianMeta): [string, string] {
+  const intro = politician.tagline ? `${politician.tagline}, ` : `${politician.group} 소속 `;
   const greetings: [string, string][] = [
-    [`안녕하세요! ${intro}${idol.nameKo}입니다.`, `어떻게 불러드릴까요?`],
-    [`반갑습니다! ${intro}${idol.nameKo}입니다.`, `성함이 어떻게 되세요?`],
-    [`안녕하세요, ${intro}${idol.nameKo}입니다!`, `뭐라고 불러드릴까요?`],
+    [`안녕하세요! ${intro}${politician.nameKo}입니다.`, `어떻게 불러드릴까요?`],
+    [`반갑습니다! ${intro}${politician.nameKo}입니다.`, `성함이 어떻게 되세요?`],
+    [`안녕하세요, ${intro}${politician.nameKo}입니다!`, `뭐라고 불러드릴까요?`],
   ];
   return greetings[Math.floor(Math.random() * greetings.length)]!;
 }
 
 // 재방문용 인사말 (짧게)
-function getReturningGreeting(_idol: IdolMeta): string {
+function getReturningGreeting(_politician: PoliticianMeta): string {
   const hour = new Date().getHours();
   
   if (hour >= 6 && hour < 12) {
@@ -61,8 +61,8 @@ function getReturningGreeting(_idol: IdolMeta): string {
   return greetings[Math.floor(Math.random() * greetings.length)]!;
 }
 
-export default function ChatLayout({ idol }: Props) {
-  const { systemPrompt, knowledge } = useSystemPrompt(idol);
+export default function ChatLayout({ politician }: Props) {
+  const { systemPrompt, knowledge } = useSystemPrompt(politician);
   const { messages, isStreaming, error, sendMessage, addAssistantMessage, historyLoaded } = useChat(systemPrompt, knowledge);
   
   const greetingShown = useRef(false);
@@ -86,7 +86,7 @@ export default function ChatLayout({ idol }: Props) {
     if (historyLoaded && messages.length === 0 && !greetingShown.current) {
       greetingShown.current = true;
       
-      const visitedKey = `polichat_visited_${idol.id}`;
+      const visitedKey = `polichat_visited_${politician.id}`;
       const hasVisited = localStorage.getItem(visitedKey) === 'true';
       
       const delay1 = 300 + Math.random() * 200;
@@ -94,11 +94,11 @@ export default function ChatLayout({ idol }: Props) {
       if (hasVisited) {
         // 재방문: 짧은 인사 하나만
         setTimeout(() => {
-          addAssistantMessage(getReturningGreeting(idol));
+          addAssistantMessage(getReturningGreeting(politician));
         }, delay1);
       } else {
         // 첫 방문: 두 개로 쪼개서 (타이핑 시뮬레이션 포함)
-        const [greeting1, greeting2] = getFirstVisitGreetings(idol);
+        const [greeting1, greeting2] = getFirstVisitGreetings(politician);
         localStorage.setItem(visitedKey, 'true');
         
         setTimeout(() => {
@@ -111,7 +111,7 @@ export default function ChatLayout({ idol }: Props) {
         }, delay1 + 3000);
       }
     }
-  }, [historyLoaded, messages.length, idol.id, addAssistantMessage]);
+  }, [historyLoaded, messages.length, politician.id, addAssistantMessage]);
 
   const handleSend = useCallback((text: string) => {
     if (isStreaming) {
@@ -147,11 +147,11 @@ export default function ChatLayout({ idol }: Props) {
       style={{ maxWidth: '600px', margin: '0 auto', height: '100svh' }}
     >
       {/* 헤더: 절대 스크롤 안 됨 */}
-      <ChatHeader idol={idol} />
+      <ChatHeader politician={politician} />
       
       {/* 메시지 영역: 이 영역만 내부 스크롤 */}
       {historyLoaded ? (
-        <MessageList messages={messages} idol={idol} isStreaming={isStreaming} />
+        <MessageList messages={messages} politician={politician} isStreaming={isStreaming} />
       ) : (
         <div className="flex-1 flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
@@ -171,8 +171,8 @@ export default function ChatLayout({ idol }: Props) {
       <ChatInput
         onSend={handleSend}
         disabled={!historyLoaded}
-        themeColor={idol.themeColor}
-        language={idol.language}
+        themeColor={politician.themeColor}
+        language={politician.language}
       />
     </div>
   );

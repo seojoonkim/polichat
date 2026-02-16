@@ -1,6 +1,6 @@
 import { useCallback, useRef, useEffect } from 'react';
 import { useUserStore, type RelationType, type OnboardingStep } from '@/stores/user-store';
-import type { IdolMeta } from '@/types/idol';
+import type { PoliticianMeta } from '@/types/politician';
 
 export type { OnboardingStep };
 
@@ -107,11 +107,11 @@ export function parseBirthday(text: string): string {
   return '';
 }
 
-export function useOnboardingChat(idol: IdolMeta) {
+export function useOnboardingChat(politician: PoliticianMeta) {
   const profile = useUserStore((s) => s.profile);
-  const isIdolRelationSet = useUserStore((s) => s.isIdolRelationSet(idol.id));
+  const isPoliticianRelationSet = useUserStore((s) => s.isPoliticianRelationSet(politician.id));
   const setProfile = useUserStore((s) => s.setProfile);
-  const setIdolRelation = useUserStore((s) => s.setIdolRelation);
+  const setPoliticianRelation = useUserStore((s) => s.setPoliticianRelation);
   
   // Zustand store for step (동기적 업데이트)
   const step = useUserStore((s) => s.onboardingStep);
@@ -127,17 +127,17 @@ export function useOnboardingChat(idol: IdolMeta) {
       initialized.current = true;
       if (!profile?.name) {
         setStep('name');
-      } else if (!isIdolRelationSet) {
+      } else if (!isPoliticianRelationSet) {
         setStep('relation');
       } else {
         setStep('complete');
       }
     }
-  }, [profile, isIdolRelationSet, setStep]);
+  }, [profile, isPoliticianRelationSet, setStep]);
 
   const isOnboarding = step !== 'complete';
 
-  // Get the initial message idol should say
+  // Get the initial message politician should say
   const getInitialMessage = useCallback((): string => {
     switch (step) {
       case 'name':
@@ -152,7 +152,7 @@ export function useOnboardingChat(idol: IdolMeta) {
   // Process user response and advance to next step
   const processResponse = useCallback((userMessage: string): { 
     nextStep: OnboardingStep; 
-    idolResponse: string;
+    politicianResponse: string;
     shouldSendToAI: boolean;
   } => {
     // ✅ 항상 최신 값을 store에서 직접 읽기 (stale closure 방지)
@@ -185,13 +185,13 @@ export function useOnboardingChat(idol: IdolMeta) {
         
         return {
           nextStep: 'relation',
-          idolResponse: `${callName}~ 이름 너무 예쁘다! 😊||근데 나한테 뭐라고 불러줄 거야?||1.오빠 2.언니 3.형 4.누나 5.동생 6.팬`,
+          politicianResponse: `${callName}~ 이름 너무 예쁘다! 😊||근데 나한테 뭐라고 불러줄 거야?||1.오빠 2.언니 3.형 4.누나 5.동생 6.팬`,
           shouldSendToAI: false,
         };
       }
       return {
         nextStep: 'name',
-        idolResponse: `앗 이름이 잘 안들렸어 ㅠㅠ||다시 알려줄래?`,
+        politicianResponse: `앗 이름이 잘 안들렸어 ㅠㅠ||다시 알려줄래?`,
         shouldSendToAI: false,
       };
     }
@@ -202,7 +202,7 @@ export function useOnboardingChat(idol: IdolMeta) {
     if (currentStep === 'relation') {
       const relation = parseRelation(userMessage);
       if (relation) {
-        setIdolRelation(idol.id, {
+        setPoliticianRelation(politician.id, {
           relationType: relation,
           startDate: Date.now(),
         });
@@ -229,13 +229,13 @@ export function useOnboardingChat(idol: IdolMeta) {
         // 더 자연스러운 온보딩 완료 메시지 (생일 안 물어봄)
         return {
           nextStep: 'complete',
-          idolResponse: `좋아 ${callName}~! 💕||앞으로 폴리챗에서 자주 얘기하자!||오늘 하루 어땠어?`,
+          politicianResponse: `좋아 ${callName}~! 💕||앞으로 폴리챗에서 자주 얘기하자!||오늘 하루 어땠어?`,
           shouldSendToAI: false,
         };
       }
       return {
         nextStep: 'relation',
-        idolResponse: `음... 뭐라고? 😅||1~6 중에 하나 골라줘!||1.오빠 2.언니 3.형 4.누나 5.동생 6.팬`,
+        politicianResponse: `음... 뭐라고? 😅||1~6 중에 하나 골라줘!||1.오빠 2.언니 3.형 4.누나 5.동생 6.팬`,
         shouldSendToAI: false,
       };
     }
@@ -243,10 +243,10 @@ export function useOnboardingChat(idol: IdolMeta) {
     // If complete, send to AI
     return {
       nextStep: 'complete',
-      idolResponse: '',
+      politicianResponse: '',
       shouldSendToAI: true,
     };
-  }, [idol.id, setProfile, setIdolRelation, setStep, setTempName]);
+  }, [politician.id, setProfile, setPoliticianRelation, setStep, setTempName]);
 
   return {
     isOnboarding,

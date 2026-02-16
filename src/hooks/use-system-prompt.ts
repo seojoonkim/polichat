@@ -1,21 +1,21 @@
 import { useEffect, useState } from 'react';
-import type { IdolMeta, KnowledgeCategory } from '@/types/idol';
-import { loadIdolKnowledge, loadGroupInfo, getGroupSlug } from '@/lib/idol-loader';
+import type { PoliticianMeta, KnowledgeCategory } from '@/types/politician';
+import { loadPoliticianKnowledge, loadGroupInfo, getGroupSlug } from '@/lib/politician-loader';
 import { assembleSystemPrompt, type UserInfo } from '@/lib/prompt-assembler';
 import { useUserStore } from '@/stores/user-store';
 
-export function useSystemPrompt(idol: IdolMeta | null) {
+export function useSystemPrompt(politician: PoliticianMeta | null) {
   const [systemPrompt, setSystemPrompt] = useState('');
   const [knowledge, setKnowledge] = useState<Record<KnowledgeCategory, string> | null>(null);
   const [loading, setLoading] = useState(false);
   
   const profile = useUserStore((s) => s.profile);
   // Watch the actual relation object, not the getter function (for proper reactivity)
-  const idolRelations = useUserStore((s) => s.idolRelations);
-  const relation = idol ? idolRelations[idol.id] : null;
+  const politicianRelations = useUserStore((s) => s.politicianRelations);
+  const relation = politician ? politicianRelations[politician.id] : null;
 
   useEffect(() => {
-    if (!idol) {
+    if (!politician) {
       setSystemPrompt('');
       setKnowledge(null);
       return;
@@ -34,12 +34,12 @@ export function useSystemPrompt(idol: IdolMeta | null) {
     console.log('[SystemPrompt] Building with userInfo:', userInfo);
 
     Promise.all([
-      loadIdolKnowledge(idol.id),
-      loadGroupInfo(getGroupSlug(idol.group)),
+      loadPoliticianKnowledge(politician.id),
+      loadGroupInfo(getGroupSlug(politician.group)),
     ]).then(([loadedKnowledge, groupInfo]) => {
       if (!cancelled) {
         setKnowledge(loadedKnowledge);
-        setSystemPrompt(assembleSystemPrompt(idol, loadedKnowledge, groupInfo, userInfo));
+        setSystemPrompt(assembleSystemPrompt(politician, loadedKnowledge, groupInfo, userInfo));
         setLoading(false);
       }
     });
@@ -47,21 +47,21 @@ export function useSystemPrompt(idol: IdolMeta | null) {
     return () => {
       cancelled = true;
     };
-  }, [idol?.id, idol?.updatedAt, profile, relation]);
+  }, [politician?.id, politician?.updatedAt, profile, relation]);
 
   return { systemPrompt, knowledge, loading };
 }
 
 /** Build system prompt with optional unsaved overrides (for admin test chat) */
 export function useSystemPromptWithOverrides(
-  idol: IdolMeta | null,
+  politician: PoliticianMeta | null,
   overrides?: Record<string, string>,
 ) {
   const [systemPrompt, setSystemPrompt] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!idol) {
+    if (!politician) {
       setSystemPrompt('');
       return;
     }
@@ -70,8 +70,8 @@ export function useSystemPromptWithOverrides(
     setLoading(true);
 
     Promise.all([
-      loadIdolKnowledge(idol.id),
-      loadGroupInfo(getGroupSlug(idol.group)),
+      loadPoliticianKnowledge(politician.id),
+      loadGroupInfo(getGroupSlug(politician.group)),
     ]).then(([knowledge, groupInfo]) => {
       if (!cancelled) {
         const merged = { ...knowledge } as Record<KnowledgeCategory, string>;
@@ -80,7 +80,7 @@ export function useSystemPromptWithOverrides(
             merged[key as KnowledgeCategory] = value;
           }
         }
-        setSystemPrompt(assembleSystemPrompt(idol, merged, groupInfo));
+        setSystemPrompt(assembleSystemPrompt(politician, merged, groupInfo));
         setLoading(false);
       }
     });
@@ -88,7 +88,7 @@ export function useSystemPromptWithOverrides(
     return () => {
       cancelled = true;
     };
-  }, [idol?.id, idol?.updatedAt, overrides]);
+  }, [politician?.id, politician?.updatedAt, overrides]);
 
   return { systemPrompt, loading };
 }

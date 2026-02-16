@@ -1,6 +1,6 @@
 import { SYSTEM_PROMPT_TEMPLATE } from '@/constants/prompt-template';
-import type { IdolMeta, KnowledgeCategory } from '@/types/idol';
-import { KNOWLEDGE_CATEGORIES } from '@/types/idol';
+import type { PoliticianMeta, KnowledgeCategory } from '@/types/politician';
+import { KNOWLEDGE_CATEGORIES } from '@/types/politician';
 import type { RelationType } from '@/stores/user-store';
 
 export interface UserInfo {
@@ -9,7 +9,7 @@ export interface UserInfo {
   relationType: RelationType;
 }
 
-// Helper to determine how idol calls the user
+// Helper to determine how politician calls the user
 function getUserCallName(userName: string, relationType: RelationType): string {
   // Check if name ends with 받침 (final consonant)
   const lastChar = userName.charAt(userName.length - 1);
@@ -71,7 +71,7 @@ function getCurrentDate(): string {
 }
 
 export function assembleSystemPrompt(
-  meta: IdolMeta,
+  meta: PoliticianMeta,
   knowledge: Record<KnowledgeCategory, string>,
   groupInfo?: string,
   userInfo?: UserInfo,

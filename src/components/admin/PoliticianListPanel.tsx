@@ -1,50 +1,50 @@
 import { useState } from 'react';
-import { useIdolStore } from '@/stores/idol-store';
+import { usePoliticianStore } from '@/stores/politician-store';
 import { useAdminStore } from '@/stores/admin-store';
-import type { IdolMeta } from '@/types/idol';
+import type { PoliticianMeta } from '@/types/politician';
 
-export default function IdolListPanel() {
-  const idols = useIdolStore((s) => s.idols);
-  const addIdol = useIdolStore((s) => s.addIdol);
-  const deleteIdol = useIdolStore((s) => s.deleteIdol);
-  const resetBuiltInIdol = useIdolStore((s) => s.resetBuiltInIdol);
-  const selectedIdolId = useAdminStore((s) => s.selectedIdolId);
-  const setSelectedIdol = useAdminStore((s) => s.setSelectedIdol);
+export default function PoliticianListPanel() {
+  const politicians = usePoliticianStore((s) => s.politicians);
+  const addPolitician = usePoliticianStore((s) => s.addPolitician);
+  const deletePolitician = usePoliticianStore((s) => s.deletePolitician);
+  const resetBuiltInPolitician = usePoliticianStore((s) => s.resetBuiltInPolitician);
+  const selectedPoliticianId = useAdminStore((s) => s.selectedPoliticianId);
+  const setSelectedPolitician = useAdminStore((s) => s.setSelectedPolitician);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [newIdolId, setNewIdolId] = useState('');
-  const [newIdolName, setNewIdolName] = useState('');
-  const [newIdolGroup, setNewIdolGroup] = useState('');
+  const [newPoliticianId, setNewIdolId] = useState('');
+  const [newPoliticianName, setNewIdolName] = useState('');
+  const [newPoliticianGroup, setNewIdolGroup] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   const handleAdd = async () => {
-    if (!newIdolId.trim() || !newIdolName.trim()) return;
-    const id = newIdolId.trim().toLowerCase().replace(/\s+/g, '-');
-    await addIdol({
+    if (!newPoliticianId.trim() || !newPoliticianName.trim()) return;
+    const id = newPoliticianId.trim().toLowerCase().replace(/\s+/g, '-');
+    await addPolitician({
       id,
-      nameKo: newIdolName.trim(),
+      nameKo: newPoliticianName.trim(),
       nameEn: '',
-      group: newIdolGroup.trim(),
+      group: newPoliticianGroup.trim(),
       profileImageUrl: '',
       themeColor: '#6366F1',
       themeColorSecondary: '#A5B4FC',
       tagline: '',
     });
-    setSelectedIdol(id);
+    setSelectedPolitician(id);
     setShowAddForm(false);
     setNewIdolId('');
     setNewIdolName('');
     setNewIdolGroup('');
   };
 
-  const handleDelete = async (idol: IdolMeta) => {
-    if (idol.isBuiltIn) {
-      await resetBuiltInIdol(idol.id);
+  const handleDelete = async (politician: PoliticianMeta) => {
+    if (politician.isBuiltIn) {
+      await resetBuiltInPolitician(politician.id);
     } else {
-      await deleteIdol(idol.id);
+      await deletePolitician(politician.id);
     }
     setDeleteConfirm(null);
-    if (selectedIdolId === idol.id) {
-      setSelectedIdol(null);
+    if (selectedPoliticianId === politician.id) {
+      setSelectedPolitician(null);
     }
   };
 
@@ -65,21 +65,21 @@ export default function IdolListPanel() {
         <div className="p-3 border-b border-gray-100 space-y-2 bg-gray-50">
           <input
             type="text"
-            value={newIdolId}
+            value={newPoliticianId}
             onChange={(e) => setNewIdolId(e.target.value)}
             placeholder="ID (영문, 예: irene)"
             className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-sm outline-none focus:border-purple-300"
           />
           <input
             type="text"
-            value={newIdolName}
+            value={newPoliticianName}
             onChange={(e) => setNewIdolName(e.target.value)}
             placeholder="이름 (예: 아이린)"
             className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-sm outline-none focus:border-purple-300"
           />
           <input
             type="text"
-            value={newIdolGroup}
+            value={newPoliticianGroup}
             onChange={(e) => setNewIdolGroup(e.target.value)}
             placeholder="그룹 (예: Red Velvet)"
             className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-sm outline-none focus:border-purple-300"
@@ -87,7 +87,7 @@ export default function IdolListPanel() {
           <div className="flex gap-2">
             <button
               onClick={handleAdd}
-              disabled={!newIdolId.trim() || !newIdolName.trim()}
+              disabled={!newPoliticianId.trim() || !newPoliticianName.trim()}
               className="flex-1 py-1.5 rounded-lg bg-purple-600 text-white text-xs font-medium disabled:opacity-40"
             >
               추가
@@ -102,39 +102,39 @@ export default function IdolListPanel() {
         </div>
       )}
 
-      {/* Idol list */}
+      {/* Politician list */}
       <div className="flex-1 overflow-y-auto custom-scrollbar">
-        {idols.map((idol) => (
+        {politicians.map((politician) => (
           <div
-            key={idol.id}
+            key={politician.id}
             className={`flex items-center gap-3 px-3 py-3 cursor-pointer border-b border-gray-50 hover:bg-gray-50 transition-colors ${
-              selectedIdolId === idol.id ? 'bg-purple-50' : ''
+              selectedPoliticianId === politician.id ? 'bg-purple-50' : ''
             }`}
-            onClick={() => setSelectedIdol(idol.id)}
+            onClick={() => setSelectedPolitician(politician.id)}
           >
             <div
               className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
               style={{
-                background: `linear-gradient(135deg, ${idol.themeColor}, ${idol.themeColorSecondary})`,
+                background: `linear-gradient(135deg, ${politician.themeColor}, ${politician.themeColorSecondary})`,
               }}
             >
-              {idol.profileImageUrl ? (
+              {politician.profileImageUrl ? (
                 <img
-                  src={idol.profileImageUrl}
-                  alt={idol.nameKo}
+                  src={politician.profileImageUrl}
+                  alt={politician.nameKo}
                   className="w-full h-full rounded-full object-cover"
                 />
               ) : (
-                idol.nameKo.slice(0, 1)
+                politician.nameKo.slice(0, 1)
               )}
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-sm font-medium text-gray-800 truncate">
-                {idol.nameKo}
+                {politician.nameKo}
               </div>
               <div className="text-xs text-gray-400 truncate">
-                {idol.group}
-                {idol.isBuiltIn && (
+                {politician.group}
+                {politician.isBuiltIn && (
                   <span className="ml-1 text-purple-400">(기본 제공)</span>
                 )}
               </div>
@@ -143,23 +143,23 @@ export default function IdolListPanel() {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                if (deleteConfirm === idol.id) {
-                  handleDelete(idol);
+                if (deleteConfirm === politician.id) {
+                  handleDelete(politician);
                 } else {
-                  setDeleteConfirm(idol.id);
+                  setDeleteConfirm(politician.id);
                   setTimeout(() => setDeleteConfirm(null), 3000);
                 }
               }}
               className={`text-xs px-2 py-1 rounded shrink-0 transition-colors ${
-                deleteConfirm === idol.id
+                deleteConfirm === politician.id
                   ? 'bg-red-500 text-white'
                   : 'text-gray-300 hover:text-red-400'
               }`}
-              title={idol.isBuiltIn ? '초기화' : '삭제'}
+              title={politician.isBuiltIn ? '초기화' : '삭제'}
             >
-              {deleteConfirm === idol.id
+              {deleteConfirm === politician.id
                 ? '확인?'
-                : idol.isBuiltIn
+                : politician.isBuiltIn
                   ? '초기화'
                   : '삭제'}
             </button>

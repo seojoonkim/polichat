@@ -1,57 +1,57 @@
 import { create } from 'zustand';
-import type { KnowledgeCategory } from '@/types/idol';
+import type { KnowledgeCategory } from '@/types/politician';
 
 interface AdminStore {
-  selectedIdolId: string | null;
+  selectedPoliticianId: string | null;
   activeKnowledgeTab: KnowledgeCategory;
   isTestChatOpen: boolean;
   unsavedChanges: Record<string, Record<string, string>>;
 
-  setSelectedIdol: (id: string | null) => void;
+  setSelectedPolitician: (id: string | null) => void;
   setActiveKnowledgeTab: (tab: KnowledgeCategory) => void;
   toggleTestChat: () => void;
   setTestChatOpen: (open: boolean) => void;
   setUnsavedContent: (
-    idolId: string,
+    politicianId: string,
     category: KnowledgeCategory,
     content: string,
   ) => void;
-  clearUnsavedChanges: (idolId: string) => void;
+  clearUnsavedChanges: (politicianId: string) => void;
   getUnsavedContent: (
-    idolId: string,
+    politicianId: string,
     category: KnowledgeCategory,
   ) => string | undefined;
 }
 
 export const useAdminStore = create<AdminStore>((set, get) => ({
-  selectedIdolId: null,
+  selectedPoliticianId: null,
   activeKnowledgeTab: 'personality',
   isTestChatOpen: false,
   unsavedChanges: {},
 
-  setSelectedIdol: (id) => set({ selectedIdolId: id }),
+  setSelectedPolitician: (id) => set({ selectedPoliticianId: id }),
   setActiveKnowledgeTab: (tab) => set({ activeKnowledgeTab: tab }),
   toggleTestChat: () => set((s) => ({ isTestChatOpen: !s.isTestChatOpen })),
   setTestChatOpen: (open) => set({ isTestChatOpen: open }),
 
-  setUnsavedContent: (idolId, category, content) =>
+  setUnsavedContent: (politicianId, category, content) =>
     set((state) => ({
       unsavedChanges: {
         ...state.unsavedChanges,
-        [idolId]: {
-          ...state.unsavedChanges[idolId],
+        [politicianId]: {
+          ...state.unsavedChanges[politicianId],
           [category]: content,
         },
       },
     })),
 
-  clearUnsavedChanges: (idolId) =>
+  clearUnsavedChanges: (politicianId) =>
     set((state) => {
-      const { [idolId]: _, ...rest } = state.unsavedChanges;
+      const { [politicianId]: _, ...rest } = state.unsavedChanges;
       return { unsavedChanges: rest };
     }),
 
-  getUnsavedContent: (idolId, category) => {
-    return get().unsavedChanges[idolId]?.[category];
+  getUnsavedContent: (politicianId, category) => {
+    return get().unsavedChanges[politicianId]?.[category];
   },
 }));

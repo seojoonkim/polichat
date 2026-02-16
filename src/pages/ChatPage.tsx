@@ -1,93 +1,93 @@
 import { useChatStore } from '@/stores/chat-store';
-import { useIdolStore } from '@/stores/idol-store';
+import { usePoliticianStore } from '@/stores/politician-store';
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import IdolSelector from '@/components/chat/IdolSelector';
+import PoliticianSelector from '@/components/chat/PoliticianSelector';
 import ChatLayout from '@/components/chat/ChatLayout';
 
 type TransitionPhase = 'idle' | 'exit' | 'enter';
 
 export default function ChatPage() {
-  const { idolId: urlIdolId } = useParams<{ idolId: string }>();
+  const { politicianId: urlPoliticianId } = useParams<{ politicianId: string }>();
   const navigate = useNavigate();
 
-  const currentIdolId = useChatStore((s) => s.currentIdolId);
-  const setCurrentIdol = useChatStore((s) => s.setCurrentIdol);
-  const loadIdols = useIdolStore((s) => s.loadIdols);
-  const idols = useIdolStore((s) => s.idols);
-  const loading = useIdolStore((s) => s.loading);
+  const currentPoliticianId = useChatStore((s) => s.currentPoliticianId);
+  const setCurrentPolitician = useChatStore((s) => s.setCurrentPolitician);
+  const loadPoliticians = usePoliticianStore((s) => s.loadPoliticians);
+  const politicians = usePoliticianStore((s) => s.politicians);
+  const loading = usePoliticianStore((s) => s.loading);
 
   const [phase, setPhase] = useState<TransitionPhase>('idle');
-  const [displayedIdolId, setDisplayedIdolId] = useState<string | null>(null);
-  const pendingIdolId = useRef<string | null>(null);
+  const [displayedPoliticianId, setDisplayedPoliticianId] = useState<string | null>(null);
+  const pendingPoliticianId = useRef<string | null>(null);
   const initialSynced = useRef(false);
 
-  // Load idol list on mount
+  // Load politician list on mount
   useEffect(() => {
-    loadIdols();
-  }, [loadIdols]);
+    loadPoliticians();
+  }, [loadPoliticians]);
 
   // Sync URL param → store (only on first load)
   useEffect(() => {
-    if (loading || idols.length === 0 || initialSynced.current) return;
+    if (loading || politicians.length === 0 || initialSynced.current) return;
     initialSynced.current = true;
 
-    if (urlIdolId) {
-      const exists = idols.some((i) => i.id === urlIdolId);
-      if (exists && currentIdolId !== urlIdolId) {
+    if (urlPoliticianId) {
+      const exists = politicians.some((i) => i.id === urlPoliticianId);
+      if (exists && currentPoliticianId !== urlPoliticianId) {
         // Skip transition on initial load — go straight to chat
-        setCurrentIdol(urlIdolId);
-        setDisplayedIdolId(urlIdolId);
+        setCurrentPolitician(urlPoliticianId);
+        setDisplayedPoliticianId(urlPoliticianId);
       } else if (!exists) {
         navigate('/', { replace: true });
       }
     }
-  }, [urlIdolId, loading, idols, currentIdolId, setCurrentIdol, navigate]);
+  }, [urlPoliticianId, loading, politicians, currentPoliticianId, setCurrentPolitician, navigate]);
 
   // Sync store → URL (after initial sync)
   useEffect(() => {
     if (loading || !initialSynced.current) return;
 
-    if (currentIdolId && currentIdolId !== urlIdolId) {
-      navigate(`/chat/${currentIdolId}`, { replace: true });
-    } else if (!currentIdolId && urlIdolId) {
+    if (currentPoliticianId && currentPoliticianId !== urlPoliticianId) {
+      navigate(`/chat/${currentPoliticianId}`, { replace: true });
+    } else if (!currentPoliticianId && urlPoliticianId) {
       navigate('/', { replace: true });
     }
-  }, [currentIdolId, urlIdolId, navigate, loading]);
+  }, [currentPoliticianId, urlPoliticianId, navigate, loading]);
 
-  // Handle transitions when idol changes
+  // Handle transitions when politician changes
   useEffect(() => {
-    // Going from no idol to idol (enter chat)
-    if (currentIdolId && !displayedIdolId) {
+    // Going from no politician to politician (enter chat)
+    if (currentPoliticianId && !displayedPoliticianId) {
       setPhase('enter');
-      setDisplayedIdolId(currentIdolId);
+      setDisplayedPoliticianId(currentPoliticianId);
       const timer = setTimeout(() => setPhase('idle'), 450);
       return () => clearTimeout(timer);
     }
 
-    // Going from idol to no idol (back to selector)
-    if (!currentIdolId && displayedIdolId) {
+    // Going from politician to no politician (back to selector)
+    if (!currentPoliticianId && displayedPoliticianId) {
       setPhase('exit');
       const timer = setTimeout(() => {
-        setDisplayedIdolId(null);
+        setDisplayedPoliticianId(null);
         setPhase('idle');
       }, 300);
       return () => clearTimeout(timer);
     }
 
-    // Switching between idols
-    if (currentIdolId && displayedIdolId && currentIdolId !== displayedIdolId) {
-      pendingIdolId.current = currentIdolId;
+    // Switching between politicians
+    if (currentPoliticianId && displayedPoliticianId && currentPoliticianId !== displayedPoliticianId) {
+      pendingPoliticianId.current = currentPoliticianId;
       setPhase('exit');
       const timer = setTimeout(() => {
-        setDisplayedIdolId(pendingIdolId.current);
-        pendingIdolId.current = null;
+        setDisplayedPoliticianId(pendingPoliticianId.current);
+        pendingPoliticianId.current = null;
         setPhase('enter');
         setTimeout(() => setPhase('idle'), 450);
       }, 250);
       return () => clearTimeout(timer);
     }
-  }, [currentIdolId, displayedIdolId]);
+  }, [currentPoliticianId, displayedPoliticianId]);
 
   if (loading) {
     return (
@@ -100,12 +100,12 @@ export default function ChatPage() {
     );
   }
 
-  const activeIdol = displayedIdolId
-    ? idols.find((i) => i.id === displayedIdolId)
+  const activePolitician = displayedPoliticianId
+    ? politicians.find((i) => i.id === displayedPoliticianId)
     : null;
 
   // Show chat view (no banner in chat)
-  if (activeIdol) {
+  if (activePolitician) {
     return (
       <div className="min-h-screen bg-gray-100 flex justify-center">
         <div
@@ -118,7 +118,7 @@ export default function ChatPage() {
           }`}
           style={{ maxWidth: '600px' }}
         >
-          <ChatLayout idol={activeIdol} />
+          <ChatLayout politician={activePolitician} />
         </div>
       </div>
     );
@@ -127,7 +127,7 @@ export default function ChatPage() {
   // Show selector view
   return (
     <div className={phase === 'exit' ? 'animate-page-zoom-out' : ''}>
-      <IdolSelector idols={idols} />
+      <PoliticianSelector politicians={politicians} />
     </div>
   );
 }

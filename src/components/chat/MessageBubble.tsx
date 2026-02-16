@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import type { Message } from '@/types/chat';
-import type { IdolMeta } from '@/types/idol';
+import type { PoliticianMeta } from '@/types/politician';
 
 interface Props {
   message: Message;
-  idol: IdolMeta;
+  politician: PoliticianMeta;
   isNew?: boolean; // 스트리밍 중인 메시지인지
   onBubbleReveal?: () => void; // 새 버블이 나타날 때 호출 (스크롤용)
 }
@@ -108,7 +108,7 @@ function TypingBubble({
   );
 }
 
-export default function MessageBubble({ message, idol, isNew = false, onBubbleReveal }: Props) {
+export default function MessageBubble({ message, politician, isNew = false, onBubbleReveal }: Props) {
   const isUser = message.role === 'user';
   const isSystem = message.role === 'system';
 
@@ -119,9 +119,9 @@ export default function MessageBubble({ message, idol, isNew = false, onBubbleRe
         <div 
           className="px-4 py-1.5 rounded-full text-xs font-medium shadow-sm"
           style={{
-            background: `linear-gradient(135deg, ${idol.themeColor}15, ${idol.themeColorSecondary}15)`,
-            color: idol.themeColor,
-            border: `1px solid ${idol.themeColor}25`,
+            background: `linear-gradient(135deg, ${politician.themeColor}15, ${politician.themeColorSecondary}15)`,
+            color: politician.themeColor,
+            border: `1px solid ${politician.themeColor}25`,
           }}
         >
           {message.content}
@@ -201,7 +201,7 @@ export default function MessageBubble({ message, idol, isNew = false, onBubbleRe
             <div
               className="max-w-[78%] px-4 py-2.5 rounded-2xl rounded-br-sm text-white text-[15px] leading-relaxed shadow-sm"
               style={{
-                background: `linear-gradient(135deg, ${idol.themeColor}, ${idol.themeColorSecondary})`,
+                background: `linear-gradient(135deg, ${politician.themeColor}, ${politician.themeColorSecondary})`,
               }}
             >
               {message.content}
@@ -220,7 +220,7 @@ export default function MessageBubble({ message, idol, isNew = false, onBubbleRe
           <div className="flex items-center gap-1.5 mr-1">
             {message.isRead && (
               <span className="text-[10px] text-gray-400">
-                {idol.language === 'ja' ? '既読' : '읽음'}
+                {politician.language === 'ja' ? '既読' : '읽음'}
               </span>
             )}
           </div>
@@ -244,25 +244,25 @@ export default function MessageBubble({ message, idol, isNew = false, onBubbleRe
         <div
           className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 mt-1 shadow-sm overflow-hidden ring-1 ring-black/5"
           style={{
-            background: `linear-gradient(135deg, ${idol.themeColor}, ${idol.themeColorSecondary})`,
+            background: `linear-gradient(135deg, ${politician.themeColor}, ${politician.themeColorSecondary})`,
           }}
         >
-          {idol.profileImageUrl ? (
-            <img src={idol.profileImageUrl} alt={idol.nameKo} className="w-full h-full object-cover" />
+          {politician.profileImageUrl ? (
+            <img src={politician.profileImageUrl} alt={politician.nameKo} className="w-full h-full object-cover" />
           ) : (
-            idol.nameKo.slice(0, 1)
+            politician.nameKo.slice(0, 1)
           )}
         </div>
         <div className="max-w-[78%]">
-          <div className="text-[11px] text-gray-400 mb-0.5 ml-1 font-medium">{idol.nameKo}</div>
+          <div className="text-[11px] text-gray-400 mb-0.5 ml-1 font-medium">{politician.nameKo}</div>
           <div className="flex flex-col gap-1.5 items-start">
             {displayParts.map((part, idx) => (
               <div
                 key={idx}
                 className="w-fit max-w-full px-4 py-2.5 rounded-2xl rounded-tl-sm text-[15px] leading-relaxed shadow-sm text-gray-800"
                 style={{
-                  backgroundColor: `${idol.themeColor}08`,
-                  border: `1px solid ${idol.themeColor}18`,
+                  backgroundColor: `${politician.themeColor}08`,
+                  border: `1px solid ${politician.themeColor}18`,
                 }}
               >
                 {parseInstagramHandles(part)}
@@ -281,25 +281,25 @@ export default function MessageBubble({ message, idol, isNew = false, onBubbleRe
         <div
           className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 mt-1 shadow-sm overflow-hidden ring-1 ring-black/5"
           style={{
-            background: `linear-gradient(135deg, ${idol.themeColor}, ${idol.themeColorSecondary})`,
+            background: `linear-gradient(135deg, ${politician.themeColor}, ${politician.themeColorSecondary})`,
           }}
         >
-          {idol.profileImageUrl ? (
-            <img src={idol.profileImageUrl} alt={idol.nameKo} className="w-full h-full object-cover" />
+          {politician.profileImageUrl ? (
+            <img src={politician.profileImageUrl} alt={politician.nameKo} className="w-full h-full object-cover" />
           ) : (
-            idol.nameKo.slice(0, 1)
+            politician.nameKo.slice(0, 1)
           )}
         </div>
         <div className="max-w-[78%]">
-          <div className="text-[11px] text-gray-400 mb-0.5 ml-1 font-medium">{idol.nameKo}</div>
+          <div className="text-[11px] text-gray-400 mb-0.5 ml-1 font-medium">{politician.nameKo}</div>
           <div
             className="w-fit px-4 py-2.5 rounded-2xl rounded-tl-sm shadow-sm"
             style={{
-              backgroundColor: `${idol.themeColor}08`,
-              border: `1px solid ${idol.themeColor}18`,
+              backgroundColor: `${politician.themeColor}08`,
+              border: `1px solid ${politician.themeColor}18`,
             }}
           >
-            <TypingDots color={idol.themeColor} />
+            <TypingDots color={politician.themeColor} />
           </div>
         </div>
       </div>
@@ -315,17 +315,17 @@ export default function MessageBubble({ message, idol, isNew = false, onBubbleRe
       <div
         className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 mt-1 shadow-sm overflow-hidden ring-1 ring-black/5"
         style={{
-          background: `linear-gradient(135deg, ${idol.themeColor}, ${idol.themeColorSecondary})`,
+          background: `linear-gradient(135deg, ${politician.themeColor}, ${politician.themeColorSecondary})`,
         }}
       >
-        {idol.profileImageUrl ? (
-          <img src={idol.profileImageUrl} alt={idol.nameKo} className="w-full h-full object-cover" />
+        {politician.profileImageUrl ? (
+          <img src={politician.profileImageUrl} alt={politician.nameKo} className="w-full h-full object-cover" />
         ) : (
-          idol.nameKo.slice(0, 1)
+          politician.nameKo.slice(0, 1)
         )}
       </div>
       <div className="max-w-[78%]">
-        <div className="text-[11px] text-gray-400 mb-0.5 ml-1 font-medium">{idol.nameKo}</div>
+        <div className="text-[11px] text-gray-400 mb-0.5 ml-1 font-medium">{politician.nameKo}</div>
         <div className="flex flex-col gap-1.5 items-start">
           {/* 완료된 버블들 */}
           {completedBubbles.map((part, idx) => (
@@ -333,8 +333,8 @@ export default function MessageBubble({ message, idol, isNew = false, onBubbleRe
               key={`completed-${idx}`}
               className="w-fit max-w-full px-4 py-2.5 rounded-2xl rounded-tl-sm text-[15px] leading-relaxed shadow-sm text-gray-800"
               style={{
-                backgroundColor: `${idol.themeColor}08`,
-                border: `1px solid ${idol.themeColor}18`,
+                backgroundColor: `${politician.themeColor}08`,
+                border: `1px solid ${politician.themeColor}18`,
               }}
             >
               {parseInstagramHandles(part)}
@@ -346,7 +346,7 @@ export default function MessageBubble({ message, idol, isNew = false, onBubbleRe
             <TypingBubble
               key={`typing-${currentTypingIndex}`}
               text={parts[currentTypingIndex]!}
-              color={idol.themeColor}
+              color={politician.themeColor}
               onComplete={() => handleBubbleComplete(currentTypingIndex)}
               onProgress={onBubbleReveal}
             />
@@ -357,11 +357,11 @@ export default function MessageBubble({ message, idol, isNew = false, onBubbleRe
             <div
               className="w-fit px-4 py-2.5 rounded-2xl rounded-tl-sm shadow-sm animate-bubble-in"
               style={{
-                backgroundColor: `${idol.themeColor}08`,
-                border: `1px solid ${idol.themeColor}18`,
+                backgroundColor: `${politician.themeColor}08`,
+                border: `1px solid ${politician.themeColor}18`,
               }}
             >
-              <TypingDots color={idol.themeColor} />
+              <TypingDots color={politician.themeColor} />
             </div>
           )}
         </div>

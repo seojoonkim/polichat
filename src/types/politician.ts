@@ -1,4 +1,4 @@
-export interface IdolMeta {
+export interface PoliticianMeta {
   id: string;
   nameKo: string;
   nameEn: string;
@@ -41,15 +41,15 @@ export const KNOWLEDGE_LABELS: Record<KnowledgeCategory, string> = {
   'party-info': '정당 정보',
 };
 
-export interface IdolKnowledgeFile {
-  idolId: string;
+export interface PoliticianKnowledgeFile {
+  politicianId: string;
   category: KnowledgeCategory;
   content: string;
   updatedAt: number;
 }
 
-export interface IdolBundle {
-  meta: IdolMeta;
+export interface PoliticianBundle {
+  meta: PoliticianMeta;
   knowledge: Record<KnowledgeCategory, string>;
   version: number;
 }

@@ -1,18 +1,18 @@
 import { useState } from 'react';
 import { useUserStore, type RelationType } from '@/stores/user-store';
-import type { IdolMeta } from '@/types/idol';
+import type { PoliticianMeta } from '@/types/politician';
 
 interface OnboardingModalProps {
-  idol: IdolMeta;
+  politician: PoliticianMeta;
   onComplete: () => void;
 }
 
 type Step = 'profile' | 'relation';
 
-export default function OnboardingModal({ idol, onComplete }: OnboardingModalProps) {
+export default function OnboardingModal({ politician, onComplete }: OnboardingModalProps) {
   const profile = useUserStore((s) => s.profile);
   const setProfile = useUserStore((s) => s.setProfile);
-  const setIdolRelation = useUserStore((s) => s.setIdolRelation);
+  const setPoliticianRelation = useUserStore((s) => s.setPoliticianRelation);
 
   // Skip profile step if already set
   const initialStep: Step = profile ? 'relation' : 'profile';
@@ -35,15 +35,15 @@ export default function OnboardingModal({ idol, onComplete }: OnboardingModalPro
 
   const handleComplete = () => {
     if (!relationType) return;
-    setIdolRelation(idol.id, {
+    setPoliticianRelation(politician.id, {
       relationType,
       startDate: Date.now(),
     });
     onComplete();
   };
 
-  // Get idol's theme color for styling
-  const themeColor = idol.themeColor || '#FF6B9D';
+  // Get politician's theme color for styling
+  const themeColor = politician.themeColor || '#FF6B9D';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -58,12 +58,12 @@ export default function OnboardingModal({ idol, onComplete }: OnboardingModalPro
               <div 
                 className="w-20 h-20 mx-auto rounded-full bg-cover bg-center ring-4 ring-white shadow-lg"
                 style={{ 
-                  backgroundImage: `url(${idol.profileImageUrl})`,
+                  backgroundImage: `url(${politician.profileImageUrl})`,
                   boxShadow: `0 0 20px ${themeColor}40`
                 }}
               />
               <h2 className="mt-4 text-xl font-bold text-gray-800">
-                안녕! 나 {idol.nameKo}야 💕
+                안녕! 나 {politician.nameKo}야 💕
               </h2>
               <p className="text-gray-500 text-sm mt-1">
                 우리 친해지자! 이름이 뭐야?
@@ -116,7 +116,7 @@ export default function OnboardingModal({ idol, onComplete }: OnboardingModalPro
               <div 
                 className="w-20 h-20 mx-auto rounded-full bg-cover bg-center ring-4 ring-white shadow-lg"
                 style={{ 
-                  backgroundImage: `url(${idol.profileImageUrl})`,
+                  backgroundImage: `url(${politician.profileImageUrl})`,
                   boxShadow: `0 0 20px ${themeColor}40`
                 }}
               />

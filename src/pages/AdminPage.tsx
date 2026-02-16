@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useIdolStore } from '@/stores/idol-store';
+import { usePoliticianStore } from '@/stores/politician-store';
 import AdminLayout from '@/components/admin/AdminLayout';
 
 const ADMIN_PASSWORD = 'admin';
@@ -74,11 +74,11 @@ function AdminGate({ children }: { children: React.ReactNode }) {
 }
 
 export default function AdminPage() {
-  const loadIdols = useIdolStore((s) => s.loadIdols);
+  const loadPoliticians = usePoliticianStore((s) => s.loadPoliticians);
 
   useEffect(() => {
-    loadIdols();
-  }, [loadIdols]);
+    loadPoliticians();
+  }, [loadPoliticians]);
 
   return (
     <AdminGate>

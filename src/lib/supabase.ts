@@ -12,7 +12,7 @@ export const supabase = supabaseUrl && supabaseAnonKey
   : null;
 
 // Types for idol_knowledge table
-export interface IdolKnowledge {
+export interface PoliticianKnowledge {
   id?: number;
   idol_id: string;
   category: 'sns' | 'interview' | 'lyrics' | 'bubble' | 'profile' | 'relationship' | 'general';
@@ -22,6 +22,6 @@ export interface IdolKnowledge {
   created_at?: string;
 }
 
-export interface SimilaritySearchResult extends IdolKnowledge {
+export interface SimilaritySearchResult extends PoliticianKnowledge {
   similarity: number;
 }

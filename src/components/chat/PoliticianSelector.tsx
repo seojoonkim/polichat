@@ -1,16 +1,16 @@
-import type { IdolMeta } from '@/types/idol';
+import type { PoliticianMeta } from '@/types/politician';
 import { useChatStore } from '@/stores/chat-store';
 
 interface Props {
-  idols: IdolMeta[];
+  politicians: PoliticianMeta[];
 }
 
 function getInitials(name: string): string {
   return name.slice(0, 1);
 }
 
-export default function IdolSelector({ idols }: Props) {
-  const setCurrentIdol = useChatStore((s) => s.setCurrentIdol);
+export default function PoliticianSelector({ politicians }: Props) {
+  const setCurrentPolitician = useChatStore((s) => s.setCurrentPolitician);
 
   return (
     <div className="polichat-bg min-h-[100dvh] overflow-y-auto overflow-x-hidden relative hide-scrollbar">
@@ -69,18 +69,18 @@ export default function IdolSelector({ idols }: Props) {
 
         {/* Politician Cards */}
         <div className="space-y-4">
-          {idols.map((idol, index) => (
+          {politicians.map((politician, index) => (
             <button
-              key={idol.id}
-              onClick={() => setCurrentIdol(idol.id)}
+              key={politician.id}
+              onClick={() => setCurrentPolitician(politician.id)}
               className="w-full text-left animate-slide-up-bounce group"
               style={{ animationDelay: `${0.2 + index * 0.08}s` }}
             >
               <div 
                 className="politician-card rounded-2xl overflow-hidden shadow-sm border border-slate-200 bg-white hover:shadow-md transition-shadow"
                 style={{
-                  ['--pol-color' as string]: idol.themeColor,
-                  ['--pol-color-secondary' as string]: idol.themeColorSecondary,
+                  ['--pol-color' as string]: politician.themeColor,
+                  ['--pol-color-secondary' as string]: politician.themeColorSecondary,
                 }}
               >
                 <div className="flex items-stretch">
@@ -88,13 +88,13 @@ export default function IdolSelector({ idols }: Props) {
                   <div
                     className="politician-image w-28 aspect-square flex items-center justify-center text-white text-2xl font-bold shrink-0"
                     style={{
-                      background: `linear-gradient(145deg, ${idol.themeColor}, ${idol.themeColorSecondary})`,
+                      background: `linear-gradient(145deg, ${politician.themeColor}, ${politician.themeColorSecondary})`,
                     }}
                   >
-                    {idol.profileImageUrl ? (
+                    {politician.profileImageUrl ? (
                       <img
-                        src={idol.profileImageUrl}
-                        alt={idol.nameKo}
+                        src={politician.profileImageUrl}
+                        alt={politician.nameKo}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none';
@@ -102,8 +102,8 @@ export default function IdolSelector({ idols }: Props) {
                         }}
                       />
                     ) : null}
-                    <span className={idol.profileImageUrl ? 'hidden' : ''}>
-                      {getInitials(idol.nameKo)}
+                    <span className={politician.profileImageUrl ? 'hidden' : ''}>
+                      {getInitials(politician.nameKo)}
                     </span>
                   </div>
 
@@ -111,21 +111,21 @@ export default function IdolSelector({ idols }: Props) {
                   <div className="flex-1 p-4 flex flex-col justify-center min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-bold text-lg text-slate-900 truncate">
-                        {idol.nameKo}
+                        {politician.nameKo}
                       </h3>
                       <span 
                         className="px-2 py-0.5 text-xs font-semibold rounded-full shrink-0"
                         style={{
-                          backgroundColor: `${idol.themeColor}20`,
-                          color: idol.themeColor,
+                          backgroundColor: `${politician.themeColor}20`,
+                          color: politician.themeColor,
                         }}
                       >
-                        {idol.group}
+                        {politician.group}
                       </span>
                     </div>
                     
                     <p className="text-sm text-slate-600 line-clamp-2 mb-2">
-                      {idol.tagline}
+                      {politician.tagline}
                     </p>
                     
                     {/* CTA hint */}

@@ -1,15 +1,15 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import type { IdolMeta } from '@/types/idol';
-import { useIdolStore } from '@/stores/idol-store';
+import type { PoliticianMeta } from '@/types/politician';
+import { usePoliticianStore } from '@/stores/politician-store';
 import { useAdminStore } from '@/stores/admin-store';
 import ImageCropEditor from './ImageCropEditor';
 
 interface Props {
-  idol: IdolMeta;
+  politician: PoliticianMeta;
 }
 
-export default function IdolEditForm({ idol }: Props) {
-  const updateIdolMeta = useIdolStore((s) => s.updateIdolMeta);
+export default function PoliticianEditForm({ politician }: Props) {
+  const updatePoliticianMeta = usePoliticianStore((s) => s.updatePoliticianMeta);
   const toggleTestChat = useAdminStore((s) => s.toggleTestChat);
   const [form, setForm] = useState({
     nameKo: '',
@@ -29,16 +29,16 @@ export default function IdolEditForm({ idol }: Props) {
 
   useEffect(() => {
     setForm({
-      nameKo: idol.nameKo,
-      nameEn: idol.nameEn,
-      group: idol.group,
-      profileImageUrl: idol.profileImageUrl,
-      themeColor: idol.themeColor,
-      themeColorSecondary: idol.themeColorSecondary,
-      tagline: idol.tagline,
+      nameKo: politician.nameKo,
+      nameEn: politician.nameEn,
+      group: politician.group,
+      profileImageUrl: politician.profileImageUrl,
+      themeColor: politician.themeColor,
+      themeColorSecondary: politician.themeColorSecondary,
+      tagline: politician.tagline,
     });
     setSaved(false);
-  }, [idol.id]);
+  }, [politician.id]);
 
   const handleImageFile = useCallback((file: File) => {
     if (!file.type.startsWith('image/')) return;
@@ -63,7 +63,7 @@ export default function IdolEditForm({ idol }: Props) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          idolId: idol.id,
+          politicianId: politician.id,
           imageData: base64,
           contentType: croppedBlob.type || 'image/jpeg',
         }),
@@ -108,7 +108,7 @@ export default function IdolEditForm({ idol }: Props) {
   };
 
   const handleSave = async () => {
-    await updateIdolMeta(idol.id, form);
+    await updatePoliticianMeta(politician.id, form);
     
     // Upload to server (background)
     try {
@@ -116,8 +116,8 @@ export default function IdolEditForm({ idol }: Props) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          idolId: idol.id, 
-          meta: { ...idol, ...form, updatedAt: Date.now() }
+          politicianId: politician.id, 
+          meta: { ...politician, ...form, updatedAt: Date.now() }
         }),
       });
     } catch (error) {
@@ -152,7 +152,7 @@ export default function IdolEditForm({ idol }: Props) {
         <h2 className="text-base font-bold text-gray-800">
           정치인 정보
           <span className="ml-2 text-sm font-normal text-gray-400">
-            ({idol.id})
+            ({politician.id})
           </span>
         </h2>
         <button

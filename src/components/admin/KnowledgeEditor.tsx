@@ -1,19 +1,19 @@
 import { useEffect, useState, useCallback } from 'react';
-import type { IdolMeta, KnowledgeCategory } from '@/types/idol';
-import { KNOWLEDGE_CATEGORIES, KNOWLEDGE_LABELS } from '@/types/idol';
-import { useIdolStore } from '@/stores/idol-store';
+import type { PoliticianMeta, KnowledgeCategory } from '@/types/politician';
+import { KNOWLEDGE_CATEGORIES, KNOWLEDGE_LABELS } from '@/types/politician';
+import { usePoliticianStore } from '@/stores/politician-store';
 import { useAdminStore } from '@/stores/admin-store';
 import MarkdownFileTab from './MarkdownFileTab';
 
 interface Props {
-  idol: IdolMeta;
+  politician: PoliticianMeta;
 }
 
-export default function KnowledgeEditor({ idol }: Props) {
+export default function KnowledgeEditor({ politician }: Props) {
   const activeTab = useAdminStore((s) => s.activeKnowledgeTab);
   const setActiveTab = useAdminStore((s) => s.setActiveKnowledgeTab);
-  const getKnowledge = useIdolStore((s) => s.getKnowledge);
-  const saveKnowledgeFile = useIdolStore((s) => s.saveKnowledgeFile);
+  const getKnowledge = usePoliticianStore((s) => s.getKnowledge);
+  const saveKnowledgeFile = usePoliticianStore((s) => s.saveKnowledgeFile);
   const setUnsavedContent = useAdminStore((s) => s.setUnsavedContent);
   const clearUnsavedChanges = useAdminStore((s) => s.clearUnsavedChanges);
 
@@ -26,7 +26,7 @@ export default function KnowledgeEditor({ idol }: Props) {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    getKnowledge(idol.id).then((data) => {
+    getKnowledge(politician.id).then((data) => {
       if (!cancelled) {
         setKnowledge(data);
         setLoading(false);
@@ -35,14 +35,14 @@ export default function KnowledgeEditor({ idol }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [idol.id, getKnowledge]);
+  }, [politician.id, getKnowledge]);
 
   const handleContentChange = useCallback(
     (category: KnowledgeCategory, content: string) => {
       setKnowledge((prev) => ({ ...prev, [category]: content }));
-      setUnsavedContent(idol.id, category, content);
+      setUnsavedContent(politician.id, category, content);
     },
-    [idol.id, setUnsavedContent],
+    [politician.id, setUnsavedContent],
   );
 
   const uploadToServer = async (category: KnowledgeCategory, content: string) => {
@@ -50,7 +50,7 @@ export default function KnowledgeEditor({ idol }: Props) {
       const response = await fetch('/api/upload-knowledge', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idolId: idol.id, category, content }),
+        body: JSON.stringify({ politicianId: politician.id, category, content }),
       });
       if (!response.ok) throw new Error('Upload failed');
       return true;
@@ -64,23 +64,23 @@ export default function KnowledgeEditor({ idol }: Props) {
     async (category: KnowledgeCategory) => {
       const content = knowledge[category] ?? '';
       // Save to IndexedDB
-      await saveKnowledgeFile(idol.id, category, content);
+      await saveKnowledgeFile(politician.id, category, content);
       // Upload to server (background, don't block)
       uploadToServer(category, content);
       setSavedTab(category);
       setTimeout(() => setSavedTab(null), 2000);
     },
-    [idol.id, knowledge, saveKnowledgeFile],
+    [politician.id, knowledge, saveKnowledgeFile],
   );
 
   const handleSaveAll = async () => {
     for (const category of KNOWLEDGE_CATEGORIES) {
       const content = knowledge[category] ?? '';
-      await saveKnowledgeFile(idol.id, category, content);
+      await saveKnowledgeFile(politician.id, category, content);
       // Upload to server in parallel
       uploadToServer(category, content);
     }
-    clearUnsavedChanges(idol.id);
+    clearUnsavedChanges(politician.id);
     setSavedTab('all');
     setTimeout(() => setSavedTab(null), 2000);
   };
@@ -133,7 +133,7 @@ export default function KnowledgeEditor({ idol }: Props) {
       {/* Editor */}
       <div className="p-5">
         <MarkdownFileTab
-          key={`${idol.id}-${activeTab}`}
+          key={`${politician.id}-${activeTab}`}
           category={activeTab}
           content={knowledge[activeTab] ?? ''}
           onChange={(content) => handleContentChange(activeTab, content)}

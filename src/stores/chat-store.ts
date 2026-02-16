@@ -4,14 +4,14 @@ import { getChatHistory, saveChatHistory } from '@/lib/db';
 
 interface ChatStore {
   messages: Message[];
-  currentIdolId: string | null;
+  currentPoliticianId: string | null;
   isStreaming: boolean;
   error: string | null;
   historyLoaded: boolean;
   lastMessageTime: number | null; // 마지막 메시지 시간
 
-  setCurrentIdol: (idolId: string | null) => void;
-  loadHistory: (idolId: string) => Promise<void>;
+  setCurrentPolitician: (politicianId: string | null) => void;
+  loadHistory: (politicianId: string) => Promise<void>;
   addMessage: (role: 'user' | 'assistant', content: string) => void;
   updateLastAssistantMessage: (content: string) => void;
   setStreaming: (streaming: boolean) => void;
@@ -24,37 +24,37 @@ interface ChatStore {
 
 export const useChatStore = create<ChatStore>((set, get) => ({
   messages: [],
-  currentIdolId: null,
+  currentPoliticianId: null,
   isStreaming: false,
   error: null,
   historyLoaded: false,
   lastMessageTime: null,
 
-  setCurrentIdol: (idolId) => {
+  setCurrentPolitician: (politicianId) => {
     // Save current conversation before switching
-    const { currentIdolId, messages } = get();
-    if (currentIdolId && messages.length > 0) {
-      saveChatHistory(currentIdolId, messages).catch(() => {});
+    const { currentPoliticianId, messages } = get();
+    if (currentPoliticianId && messages.length > 0) {
+      saveChatHistory(currentPoliticianId, messages).catch(() => {});
     }
     set({
-      currentIdolId: idolId,
+      currentPoliticianId: politicianId,
       messages: [],
       error: null,
       historyLoaded: false,
       isStreaming: false, // 새 채팅 시작 시 로딩 상태 초기화
       lastMessageTime: null,
     });
-    // Load history for the new idol
-    if (idolId) {
-      get().loadHistory(idolId);
+    // Load history for the new politician
+    if (politicianId) {
+      get().loadHistory(politicianId);
     }
   },
 
-  loadHistory: async (idolId) => {
+  loadHistory: async (politicianId) => {
     try {
-      const messages = await getChatHistory(idolId);
-      // Only set if we're still on the same idol
-      if (get().currentIdolId === idolId) {
+      const messages = await getChatHistory(politicianId);
+      // Only set if we're still on the same politician
+      if (get().currentPoliticianId === politicianId) {
         // 마지막 메시지 시간 계산
         const lastTime = messages.length > 0 
           ? Math.max(...messages.map(m => m.timestamp))
@@ -97,17 +97,17 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   setError: (error) => set({ error }),
 
   clearMessages: () => {
-    const { currentIdolId } = get();
+    const { currentPoliticianId } = get();
     set({ messages: [], error: null });
-    if (currentIdolId) {
-      saveChatHistory(currentIdolId, []).catch(() => {});
+    if (currentPoliticianId) {
+      saveChatHistory(currentPoliticianId, []).catch(() => {});
     }
   },
 
   persistMessages: () => {
-    const { currentIdolId, messages } = get();
-    if (currentIdolId && messages.length > 0) {
-      saveChatHistory(currentIdolId, messages).catch(() => {});
+    const { currentPoliticianId, messages } = get();
+    if (currentPoliticianId && messages.length > 0) {
+      saveChatHistory(currentPoliticianId, messages).catch(() => {});
     }
   },
 

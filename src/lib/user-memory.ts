@@ -44,7 +44,7 @@ function getSupabase() {
  */
 export async function getUserMemory(
   userId: string,
-  idolId: string
+  politicianId: string
 ): Promise<UserMemory | null> {
   const supabase = getSupabase();
   if (!supabase) return null;
@@ -54,7 +54,7 @@ export async function getUserMemory(
       .from('user_memory')
       .select('*')
       .eq('user_id', userId)
-      .eq('idol_id', idolId)
+      .eq('idol_id', politicianId)
       .single();
 
     if (error && error.code !== 'PGRST116') {
@@ -75,7 +75,7 @@ export async function getUserMemory(
  */
 export async function saveUserMemory(
   userId: string,
-  idolId: string,
+  politicianId: string,
   updates: Partial<UserMemory>
 ): Promise<boolean> {
   const supabase = getSupabase();
@@ -85,7 +85,7 @@ export async function saveUserMemory(
     const { error } = await supabase.from('user_memory').upsert(
       {
         user_id: userId,
-        idol_id: idolId,
+        idol_id: politicianId,
         ...updates,
         facts: updates.facts || {},
       },
@@ -109,24 +109,24 @@ export async function saveUserMemory(
  */
 export async function incrementMessageCount(
   userId: string,
-  idolId: string
+  politicianId: string
 ): Promise<void> {
   const supabase = getSupabase();
   if (!supabase) return;
 
   try {
     // 기존 메모리 가져오기
-    const existing = await getUserMemory(userId, idolId);
+    const existing = await getUserMemory(userId, politicianId);
 
     if (existing) {
       await supabase
         .from('user_memory')
         .update({ total_messages: existing.total_messages + 1 })
         .eq('user_id', userId)
-        .eq('idol_id', idolId);
+        .eq('idol_id', politicianId);
     } else {
       // 새 유저 - 첫 대화
-      await saveUserMemory(userId, idolId, {
+      await saveUserMemory(userId, politicianId, {
         total_messages: 1,
         affinity_score: 0.5,
         facts: {},
@@ -143,7 +143,7 @@ export async function incrementMessageCount(
  */
 export async function extractMemoriesFromConversation(
   userId: string,
-  idolId: string,
+  politicianId: string,
   userMessage: string,
   assistantResponse: string
 ): Promise<ConversationMemory[]> {
@@ -201,7 +201,7 @@ JSON 배열로 응답하세요. 추출할 정보가 없으면 빈 배열 []을 �
       .filter((m) => m.type && m.content && m.importance >= 0.5)
       .map((m) => ({
         user_id: userId,
-        idol_id: idolId,
+        idol_id: politicianId,
         memory_type: m.type as ConversationMemory['memory_type'],
         content: m.content,
         importance: m.importance,
@@ -268,7 +268,7 @@ async function saveConversationMemories(
  */
 export async function getRelevantMemories(
   userId: string,
-  idolId: string,
+  politicianId: string,
   query: string,
   limit = 3
 ): Promise<ConversationMemory[]> {
@@ -299,7 +299,7 @@ export async function getRelevantMemories(
     const { data, error } = await supabase.rpc('match_conversation_memory', {
       query_embedding: queryEmbedding,
       filter_user_id: userId,
-      filter_idol_id: idolId,
+      filter_idol_id: politicianId,
       match_threshold: 0.6,
       match_count: limit,
     });

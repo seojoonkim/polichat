@@ -1,4 +1,4 @@
-import { supabase, type IdolKnowledge } from './supabase';
+import { supabase, type PoliticianKnowledge } from './supabase';
 
 /**
  * 텍스트를 임베딩 벡터로 변환 (서버 API 호출)
@@ -40,8 +40,8 @@ export async function createEmbeddings(texts: string[]): Promise<number[][]> {
  * 지식을 Supabase에 저장 (임베딩 포함)
  */
 export async function storeKnowledge(
-  idolId: string,
-  category: IdolKnowledge['category'],
+  politicianId: string,
+  category: PoliticianKnowledge['category'],
   content: string,
   metadata?: Record<string, unknown>
 ): Promise<void> {
@@ -52,7 +52,7 @@ export async function storeKnowledge(
   const embedding = await createEmbedding(content);
 
   const { error } = await supabase.from('idol_knowledge').insert({
-    idol_id: idolId,
+    idol_id: politicianId,
     category,
     content,
     embedding,
@@ -69,8 +69,8 @@ export async function storeKnowledge(
  */
 export async function storeKnowledgeBatch(
   items: Array<{
-    idolId: string;
-    category: IdolKnowledge['category'];
+    politicianId: string;
+    category: PoliticianKnowledge['category'];
     content: string;
     metadata?: Record<string, unknown>;
   }>
@@ -85,7 +85,7 @@ export async function storeKnowledgeBatch(
 
   // 데이터 준비
   const records = items.map((item, index) => ({
-    idol_id: item.idolId,
+    idol_id: item.politicianId,
     category: item.category,
     content: item.content,
     embedding: embeddings[index],

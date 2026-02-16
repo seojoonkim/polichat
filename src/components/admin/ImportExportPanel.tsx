@@ -1,33 +1,33 @@
 import { useRef, useState } from 'react';
-import { useIdolStore } from '@/stores/idol-store';
+import { usePoliticianStore } from '@/stores/politician-store';
 import {
-  exportIdol,
-  exportAllIdols,
-  importIdol,
+  exportPolitician,
+  exportAllPoliticians,
+  importPolitician,
   downloadJson,
   validateBundle,
-} from '@/lib/idol-export';
-import type { IdolBundle } from '@/types/idol';
+} from '@/lib/politician-export';
+import type { PoliticianBundle } from '@/types/politician';
 import { useAdminStore } from '@/stores/admin-store';
 
 export default function ImportExportPanel() {
-  const idols = useIdolStore((s) => s.idols);
-  const loadIdols = useIdolStore((s) => s.loadIdols);
-  const selectedIdolId = useAdminStore((s) => s.selectedIdolId);
+  const politicians = usePoliticianStore((s) => s.politicians);
+  const loadPoliticians = usePoliticianStore((s) => s.loadPoliticians);
+  const selectedPoliticianId = useAdminStore((s) => s.selectedPoliticianId);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importing, setImporting] = useState(false);
   const [message, setMessage] = useState('');
 
-  const selectedIdol = idols.find((i) => i.id === selectedIdolId);
+  const selectedPolitician = politicians.find((i) => i.id === selectedPoliticianId);
 
   const handleExportCurrent = async () => {
-    if (!selectedIdol) return;
-    const bundle = await exportIdol(selectedIdol.id, selectedIdol);
-    downloadJson(bundle, `${selectedIdol.id}-export.json`);
+    if (!selectedPolitician) return;
+    const bundle = await exportPolitician(selectedPolitician.id, selectedPolitician);
+    downloadJson(bundle, `${selectedPolitician.id}-export.json`);
   };
 
   const handleExportAll = async () => {
-    const bundles = await exportAllIdols(idols);
+    const bundles = await exportAllPoliticians(politicians);
     downloadJson(bundles, 'mimchat-all-export.json');
   };
 
@@ -43,7 +43,7 @@ export default function ImportExportPanel() {
       const data = JSON.parse(text);
 
       // Check if it's a single bundle or array
-      const bundles: IdolBundle[] = Array.isArray(data) ? data : [data];
+      const bundles: PoliticianBundle[] = Array.isArray(data) ? data : [data];
 
       let successCount = 0;
       for (const bundle of bundles) {
@@ -51,11 +51,11 @@ export default function ImportExportPanel() {
           setMessage('올바르지 않은 형식의 파일입니다.');
           continue;
         }
-        const result = await importIdol(bundle, true);
+        const result = await importPolitician(bundle, true);
         if (result.success) successCount++;
       }
 
-      await loadIdols();
+      await loadPoliticians();
       setMessage(`${successCount}개 정치인 가져오기 완료!`);
     } catch {
       setMessage('파일 읽기에 실패했습니다.');
@@ -74,7 +74,7 @@ export default function ImportExportPanel() {
         </span>
       )}
 
-      {selectedIdol && (
+      {selectedPolitician && (
         <button
           onClick={handleExportCurrent}
           className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"

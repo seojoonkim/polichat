@@ -1,7 +1,7 @@
 export interface StreamChatOptions {
   systemPrompt: string;
   messages: { role: 'user' | 'assistant'; content: string }[];
-  idolId?: string; // RAG 검색용
+  politicianId?: string; // RAG 검색용
   onChunk: (fullText: string) => void;
   onComplete: (fullText: string) => void;
   onError: (error: Error) => void;
@@ -26,7 +26,7 @@ const STREAM_TIMEOUT_MS = 45000; // 45초 타임아웃
 export async function streamChat({
   systemPrompt,
   messages,
-  idolId,
+  politicianId,
   onChunk,
   onComplete,
   onError,
@@ -48,7 +48,7 @@ export async function streamChat({
           messages,
           model: 'moonshotai/kimi-k2.5', // 기존: 'claude-opus-4-6'
           max_tokens: 1024,
-          idolId,
+          politicianId,
         }),
       });
 

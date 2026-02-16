@@ -1,20 +1,20 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import type { IdolMeta } from '@/types/idol';
+import type { PoliticianMeta } from '@/types/politician';
 import type { Message } from '@/types/chat';
 import { useAdminStore } from '@/stores/admin-store';
 import { useSystemPromptWithOverrides } from '@/hooks/use-system-prompt';
 import { streamChat } from '@/lib/anthropic-client';
 
 interface Props {
-  idol: IdolMeta;
+  politician: PoliticianMeta;
 }
 
-export default function TestChatPanel({ idol }: Props) {
+export default function TestChatPanel({ politician }: Props) {
   const setTestChatOpen = useAdminStore((s) => s.setTestChatOpen);
   const unsavedChanges = useAdminStore((s) => s.unsavedChanges);
 
-  const overrides = unsavedChanges[idol.id];
-  const { systemPrompt } = useSystemPromptWithOverrides(idol, overrides);
+  const overrides = unsavedChanges[politician.id];
+  const { systemPrompt } = useSystemPromptWithOverrides(politician, overrides);
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -26,10 +26,10 @@ export default function TestChatPanel({ idol }: Props) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Reset messages when idol changes
+  // Reset messages when politician changes
   useEffect(() => {
     setMessages([]);
-  }, [idol.id]);
+  }, [politician.id]);
 
   const handleSend = useCallback(async () => {
     if (!input.trim() || isStreaming || !systemPrompt) return;
@@ -101,7 +101,7 @@ export default function TestChatPanel({ idol }: Props) {
           <div className="text-sm font-bold text-gray-800">
             테스트 채팅
           </div>
-          <div className="text-xs text-gray-400">{idol.nameKo}</div>
+          <div className="text-xs text-gray-400">{politician.nameKo}</div>
         </div>
         <div className="flex items-center gap-2">
           <button

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Markdown from 'react-markdown';
-import type { KnowledgeCategory } from '@/types/idol';
-import { KNOWLEDGE_LABELS } from '@/types/idol';
+import type { KnowledgeCategory } from '@/types/politician';
+import { KNOWLEDGE_LABELS } from '@/types/politician';
 
 interface Props {
   category: KnowledgeCategory;

@@ -8,7 +8,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<ChatPage />} />
-      <Route path="/chat/:idolId" element={<ChatPage />} />
+      <Route path="/chat/:politicianId" element={<ChatPage />} />
       <Route
         path="/admin/*"
         element={

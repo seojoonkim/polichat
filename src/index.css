@@ -17,13 +17,13 @@
   --color-lavender-soft: #F5F3FF;
   --color-lavender-mist: #EDE9FE;
   
-  /* Legacy idol colors */
+  /* Legacy politician colors */
   --color-wonyoung: #FF6B9D;
   --color-wonyoung-light: #FFD4E8;
   --color-mingyu: #1B365D;
   --color-mingyu-light: #B8D4E3;
-  --color-idol-primary: var(--idol-primary, #9F7AEA);
-  --color-idol-secondary: var(--idol-secondary, #E9D5FF);
+  --color-politician-primary: var(--politician-primary, #9F7AEA);
+  --color-politician-secondary: var(--politician-secondary, #E9D5FF);
 }
 
 * {
@@ -617,29 +617,29 @@ body {
 }
 
 /* ===== Smooth hover transitions ===== */
-.idol-card {
+.politician-card {
   transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
               box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1),
               background 0.4s ease,
               border-color 0.4s ease;
 }
 
-.idol-card:hover {
+.politician-card:hover {
   transform: translateY(-3px) scale(1.01);
 }
 
-.idol-card:active {
+.politician-card:active {
   transform: translateY(-2px) scale(0.99);
   transition-duration: 0.15s;
 }
 
 /* Image hover effect */
-.idol-image-wrapper {
+.politician-image-wrapper {
   position: relative;
   overflow: hidden;
 }
 
-.idol-image-wrapper::after {
+.politician-image-wrapper::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -648,18 +648,18 @@ body {
   transition: opacity 0.4s ease;
 }
 
-.idol-card:hover .idol-image-wrapper::after {
+.politician-card:hover .politician-image-wrapper::after {
   opacity: 1;
 }
 
 /* Arrow animation */
-.idol-arrow {
+.politician-arrow {
   opacity: 0;
   transform: translateX(-8px);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.idol-card:hover .idol-arrow {
+.politician-card:hover .politician-arrow {
   opacity: 1;
   transform: translateX(0);
 }

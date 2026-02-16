@@ -1,11 +1,11 @@
-import type { IdolMeta, KnowledgeCategory } from '@/types/idol';
-import { KNOWLEDGE_CATEGORIES } from '@/types/idol';
-import { BUILT_IN_IDOL_IDS } from '@/constants/idol-defaults';
+import type { PoliticianMeta, KnowledgeCategory } from '@/types/politician';
+import { KNOWLEDGE_CATEGORIES } from '@/types/politician';
+import { BUILT_IN_POLITICIAN_IDS } from '@/constants/politician-defaults';
 import * as db from './db';
 
-async function fetchStaticMeta(idolId: string): Promise<IdolMeta | null> {
+async function fetchStaticMeta(politicianId: string): Promise<PoliticianMeta | null> {
   try {
-    const res = await fetch(`/politicians/${idolId}/meta.json`);
+    const res = await fetch(`/politicians/${politicianId}/meta.json`);
     if (!res.ok) return null;
     return await res.json();
   } catch {
@@ -14,11 +14,11 @@ async function fetchStaticMeta(idolId: string): Promise<IdolMeta | null> {
 }
 
 async function fetchStaticKnowledge(
-  idolId: string,
+  politicianId: string,
   category: KnowledgeCategory,
 ): Promise<string | null> {
   try {
-    const res = await fetch(`/politicians/${idolId}/${category}.md`);
+    const res = await fetch(`/politicians/${politicianId}/${category}.md`);
     if (!res.ok) return null;
     return await res.text();
   } catch {
@@ -26,21 +26,21 @@ async function fetchStaticKnowledge(
   }
 }
 
-export async function loadIdolMeta(idolId: string): Promise<IdolMeta | null> {
+export async function loadPoliticianMeta(politicianId: string): Promise<PoliticianMeta | null> {
   // IndexedDB first
-  const dbMeta = await db.getIdolMeta(idolId);
+  const dbMeta = await db.getPoliticianMeta(politicianId);
   if (dbMeta) return dbMeta;
 
-  // Static file fallback for built-in idols
-  return fetchStaticMeta(idolId);
+  // Static file fallback for built-in politicians
+  return fetchStaticMeta(politicianId);
 }
 
-export async function loadIdolKnowledge(
-  idolId: string,
+export async function loadPoliticianKnowledge(
+  politicianId: string,
   agencyId?: string,
 ): Promise<Record<KnowledgeCategory, string>> {
   const result = {} as Record<KnowledgeCategory, string>;
-  const dbFiles = await db.getAllKnowledgeForIdol(idolId);
+  const dbFiles = await db.getAllKnowledgeForPolitician(politicianId);
   const dbMap = new Map(dbFiles.map((f) => [f.category, f.content]));
 
   for (const category of KNOWLEDGE_CATEGORIES) {
@@ -62,7 +62,7 @@ export async function loadIdolKnowledge(
     }
 
     // Fall back to static file
-    const staticContent = await fetchStaticKnowledge(idolId, category);
+    const staticContent = await fetchStaticKnowledge(politicianId, category);
     result[category] = staticContent ?? '';
   }
 
@@ -113,34 +113,34 @@ export async function loadPartyInfo(partyId: string): Promise<string> {
   }
 }
 
-export async function loadAllIdols(): Promise<IdolMeta[]> {
-  const dbIdols = await db.getAllIdolMeta();
-  const dbIdolMap = new Map(dbIdols.map((i) => [i.id, i]));
+export async function loadAllPoliticians(): Promise<PoliticianMeta[]> {
+  const dbPoliticians = await db.getAllPoliticianMeta();
+  const dbPoliticianMap = new Map(dbPoliticians.map((i) => [i.id, i]));
 
-  const allIdols: IdolMeta[] = [];
+  const allPoliticians: PoliticianMeta[] = [];
 
-  // Load built-in idols - always use static meta, merge with DB overrides
-  for (const id of BUILT_IN_IDOL_IDS) {
+  // Load built-in politicians - always use static meta, merge with DB overrides
+  for (const id of BUILT_IN_POLITICIAN_IDS) {
     const staticMeta = await fetchStaticMeta(id);
-    const dbMeta = dbIdolMap.get(id);
+    const dbMeta = dbPoliticianMap.get(id);
     if (staticMeta) {
-      allIdols.push({
+      allPoliticians.push({
         ...staticMeta,
       });
-      dbIdolMap.delete(id);
+      dbPoliticianMap.delete(id);
     } else if (dbMeta) {
-      allIdols.push(dbMeta);
-      dbIdolMap.delete(id);
+      allPoliticians.push(dbMeta);
+      dbPoliticianMap.delete(id);
     }
   }
 
-  // Add user-created idols (not built-in)
-  for (const idol of dbIdolMap.values()) {
-    allIdols.push(idol);
+  // Add user-created politicians (not built-in)
+  for (const politician of dbPoliticianMap.values()) {
+    allPoliticians.push(politician);
   }
 
   // Sort by Korean name
-  return allIdols.sort((a, b) => {
+  return allPoliticians.sort((a, b) => {
     return a.nameKo.localeCompare(b.nameKo, 'ko');
   });
 }

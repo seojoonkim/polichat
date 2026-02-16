@@ -8,7 +8,7 @@ export interface UserProfile {
   birthday: string; // YYYY-MM-DD
 }
 
-export interface IdolRelation {
+export interface PoliticianRelation {
   relationType: RelationType;
   startDate: number; // timestamp when chat started
 }
@@ -17,19 +17,19 @@ export type OnboardingStep = 'name' | 'birthday' | 'relation' | 'complete';
 
 interface UserStore {
   profile: UserProfile | null;
-  idolRelations: Record<string, IdolRelation>; // idolId -> relation
+  politicianRelations: Record<string, PoliticianRelation>; // politicianId -> relation
   onboardingStep: OnboardingStep; // 현재 onboarding 단계
   tempName: string; // 임시 저장 (birthday 입력 전까지)
 
   setProfile: (profile: UserProfile) => void;
   setOnboardingStep: (step: OnboardingStep) => void;
   setTempName: (name: string) => void;
-  setIdolRelation: (idolId: string, relation: IdolRelation) => void;
-  getIdolRelation: (idolId: string) => IdolRelation | null;
-  getDayCount: (idolId: string) => number;
-  getHonorific: (idolId: string, idolBirthYear?: number) => string;
+  setPoliticianRelation: (politicianId: string, relation: PoliticianRelation) => void;
+  getPoliticianRelation: (politicianId: string) => PoliticianRelation | null;
+  getDayCount: (politicianId: string) => number;
+  getHonorific: (politicianId: string, politicianBirthYear?: number) => string;
   isOnboarded: () => boolean;
-  isIdolRelationSet: (idolId: string) => boolean;
+  isPoliticianRelationSet: (politicianId: string) => boolean;
   reset: () => void;
 }
 
@@ -37,7 +37,7 @@ export const useUserStore = create<UserStore>()(
   persist(
     (set, get) => ({
       profile: null,
-      idolRelations: {},
+      politicianRelations: {},
       onboardingStep: 'name' as OnboardingStep,
       tempName: '',
 
@@ -45,26 +45,26 @@ export const useUserStore = create<UserStore>()(
       setOnboardingStep: (step) => set({ onboardingStep: step }),
       setTempName: (name) => set({ tempName: name }),
 
-      setIdolRelation: (idolId, relation) =>
+      setPoliticianRelation: (politicianId, relation) =>
         set((state) => ({
-          idolRelations: {
-            ...state.idolRelations,
-            [idolId]: relation,
+          politicianRelations: {
+            ...state.politicianRelations,
+            [politicianId]: relation,
           },
         })),
 
-      getIdolRelation: (idolId) => get().idolRelations[idolId] ?? null,
+      getPoliticianRelation: (politicianId) => get().politicianRelations[politicianId] ?? null,
 
-      getDayCount: (idolId) => {
-        const relation = get().idolRelations[idolId];
+      getDayCount: (politicianId) => {
+        const relation = get().politicianRelations[politicianId];
         if (!relation) return 0;
         const now = Date.now();
         const diff = now - relation.startDate;
         return Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
       },
 
-      getHonorific: (idolId) => {
-        const relation = get().idolRelations[idolId];
+      getHonorific: (politicianId) => {
+        const relation = get().politicianRelations[politicianId];
         if (!relation) return '';
         
         const profile = get().profile;
@@ -109,9 +109,9 @@ export const useUserStore = create<UserStore>()(
 
       isOnboarded: () => get().profile !== null,
 
-      isIdolRelationSet: (idolId) => idolId in get().idolRelations,
+      isPoliticianRelationSet: (politicianId) => politicianId in get().politicianRelations,
 
-      reset: () => set({ profile: null, idolRelations: {} }),
+      reset: () => set({ profile: null, politicianRelations: {} }),
     }),
     {
       name: 'mimchat-user',

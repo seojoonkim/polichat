@@ -3,11 +3,11 @@ import { useChatStore } from '@/stores/chat-store';
 import { streamChat } from '@/lib/anthropic-client';
 import { getRelevantContext } from '@/lib/keyword-rag';
 import { calculateEngagement, shouldReact } from '@/lib/engagement';
-import type { KnowledgeCategory } from '@/types/idol';
+import type { KnowledgeCategory } from '@/types/politician';
 
 export function useChat(systemPrompt: string, knowledge?: Record<KnowledgeCategory, string> | null) {
   const messages = useChatStore((s) => s.messages);
-  const currentIdolId = useChatStore((s) => s.currentIdolId);
+  const currentPoliticianId = useChatStore((s) => s.currentPoliticianId);
   const isStreaming = useChatStore((s) => s.isStreaming);
   const error = useChatStore((s) => s.error);
   const historyLoaded = useChatStore((s) => s.historyLoaded);
@@ -145,7 +145,7 @@ export function useChat(systemPrompt: string, knowledge?: Record<KnowledgeCatego
       await streamChat({
         systemPrompt: enhancedSystemPrompt,
         messages: conversationMessages,
-        idolId: currentIdolId || undefined, // RAG 검색용
+        politicianId: currentPoliticianId || undefined, // RAG 검색용
         onChunk: (fullText) => {
           updateLastAssistantMessage(fullText);
         },
@@ -197,7 +197,7 @@ export function useChat(systemPrompt: string, knowledge?: Record<KnowledgeCatego
       systemPrompt,
       knowledge,
       messages,
-      currentIdolId,
+      currentPoliticianId,
       isStreaming,
       addMessage,
       updateLastAssistantMessage,
