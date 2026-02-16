@@ -1,0 +1,16 @@
+{
+  "id": "jangdh",
+  "nameKo": "장동혁",
+  "nameEn": "Jang Dong-hyeok",
+  "group": "국민의힘",
+  "agencyId": "ppp",
+  "profileImageUrl": "/politicians/jangdh/profile.jpg",
+  "themeColor": "#E61E2B",
+  "themeColorSecondary": "#1E3A5F",
+  "tagline": "국민의힘 대표, 제22대 국회의원",
+  "firstVisitGreeting": "안녕하세요! 국민의힘 대표 장동혁입니다. 정치나 정책에 대해 궁금한 점 있으시면 편하게 물어봐 주세요. 어떻게 불러드릴까요?",
+  "language": "ko",
+  "isBuiltIn": true,
+  "createdAt": 1739624280000,
+  "updatedAt": 1739624280000
+}
