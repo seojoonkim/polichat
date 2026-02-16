@@ -241,26 +241,30 @@ body {
   }
 }
 
-/* Politician Card */
+/* Politician Card - Glassmorphism */
 .politician-card {
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.35);
   box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.06);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, box-shadow;
 }
 
-.politician-card:hover {
-  background: rgba(255, 255, 255, 0.98);
-  border-color: var(--pol-color, #1E3A5F);
-  box-shadow: 
-    0 12px 32px -8px rgba(0, 0, 0, 0.12),
-    0 0 0 1px var(--pol-color, #1E3A5F);
-  transform: translateY(-2px);
+@media (hover: hover) {
+  .politician-card:hover {
+    background: rgba(255, 255, 255, 0.8);
+    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow:
+      0 16px 40px -8px rgba(0, 0, 0, 0.1),
+      0 0 20px var(--pol-glow, rgba(99, 102, 241, 0.15));
+    transform: translate3d(0, -3px, 0) scale(1.02);
+  }
 }
 
 .politician-card:active {
-  transform: translateY(0);
+  transform: translate3d(0, 0, 0) scale(0.99);
   transition-duration: 0.1s;
 }
 
@@ -762,22 +766,7 @@ body {
   display: none; /* Chrome, Safari, Opera */
 }
 
-/* ===== Smooth hover transitions ===== */
-.politician-card {
-  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-              box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-              background 0.4s ease,
-              border-color 0.4s ease;
-}
-
-.politician-card:hover {
-  transform: translateY(-3px) scale(1.01);
-}
-
-.politician-card:active {
-  transform: translateY(-2px) scale(0.99);
-  transition-duration: 0.15s;
-}
+/* ===== Smooth hover transitions (handled in .politician-card above) ===== */
 
 /* Image hover effect */
 .politician-image-wrapper {
