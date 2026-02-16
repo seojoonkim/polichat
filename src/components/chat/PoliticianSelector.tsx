@@ -170,7 +170,6 @@ export default function PoliticianSelector({ politicians }: Props) {
             </p>
           </div>
 
-          </div>
         </div>
 
         {/* Section title */}
