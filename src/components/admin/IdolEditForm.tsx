@@ -150,7 +150,7 @@ export default function IdolEditForm({ idol }: Props) {
     <div className="bg-white rounded-xl border border-gray-200 p-5">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-base font-bold text-gray-800">
-          아이돌 정보
+          정치인 정보
           <span className="ml-2 text-sm font-normal text-gray-400">
             ({idol.id})
           </span>

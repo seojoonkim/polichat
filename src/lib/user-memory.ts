@@ -1,6 +1,6 @@
 /**
  * User Memory Service
- * 유저별 기억 시스템 - 아이돌이 팬을 기억하는 것처럼
+ * 유저별 기억 시스템 - 정치인이 시민을 기억하는 것처럼
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -155,7 +155,7 @@ export async function extractMemoriesFromConversation(
 중요한 정보만 추출하고, 일상적인 인사나 일반적인 대화는 무시하세요.
 
 유저 메시지: "${userMessage}"
-아이돌 응답: "${assistantResponse}"
+정치인 응답: "${assistantResponse}"
 
 추출할 정보 유형:
 - preference: 좋아하는 것, 싫어하는 것

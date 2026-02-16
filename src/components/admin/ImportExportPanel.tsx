@@ -56,7 +56,7 @@ export default function ImportExportPanel() {
       }
 
       await loadIdols();
-      setMessage(`${successCount}개 아이돌 가져오기 완료!`);
+      setMessage(`${successCount}개 정치인 가져오기 완료!`);
     } catch {
       setMessage('파일 읽기에 실패했습니다.');
     } finally {
@@ -78,7 +78,7 @@ export default function ImportExportPanel() {
         <button
           onClick={handleExportCurrent}
           className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
-          title="선택한 아이돌 내보내기"
+          title="선택한 정치인 내보내기"
         >
           내보내기
         </button>

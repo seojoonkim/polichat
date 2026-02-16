@@ -2,7 +2,7 @@ import { supabase, type SimilaritySearchResult } from './supabase';
 import { createEmbedding } from './embeddings';
 
 export interface RAGSearchOptions {
-  idolId?: string;        // 특정 아이돌로 필터링
+  idolId?: string;        // 특정 정치인으로 필터링
   category?: string;      // 특정 카테고리로 필터링
   topK?: number;          // 반환할 결과 수 (기본: 5)
   threshold?: number;     // 유사도 임계값 (기본: 0.7)

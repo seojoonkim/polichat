@@ -30,7 +30,7 @@ const identityCache = new Map<string, { data: IdolIdentity; cachedAt: number }>(
 const CACHE_TTL = 5 * 60 * 1000; // 5분
 
 /**
- * 아이돌 코어 아이덴티티 로드 (캐시 우선)
+ * 정치인 코어 아이덴티티 로드 (캐시 우선)
  */
 export async function getIdolIdentity(idolId: string): Promise<IdolIdentity | null> {
   // 1. 캐시 확인
@@ -138,7 +138,7 @@ export function identityToPrompt(identity: IdolIdentity): string {
 }
 
 /**
- * 아이돌 아이덴티티 저장/업데이트
+ * 정치인 아이덴티티 저장/업데이트
  */
 export async function saveIdolIdentity(identity: IdolIdentity): Promise<boolean> {
   const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;

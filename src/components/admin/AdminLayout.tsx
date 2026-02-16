@@ -59,7 +59,7 @@ export default function AdminLayout() {
             </div>
           ) : (
             <div className="flex items-center justify-center h-full text-gray-400">
-              왼쪽에서 아이돌을 선택하세요
+              왼쪽에서 정치인을 선택하세요
             </div>
           )}
         </div>

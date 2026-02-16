@@ -56,7 +56,7 @@ export default function IdolListPanel() {
           onClick={() => setShowAddForm(!showAddForm)}
           className="w-full py-2 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 transition-colors"
         >
-          + 아이돌 추가
+          + 정치인 추가
         </button>
       </div>
 
@@ -135,7 +135,7 @@ export default function IdolListPanel() {
               <div className="text-xs text-gray-400 truncate">
                 {idol.group}
                 {idol.isBuiltIn && (
-                  <span className="ml-1 text-purple-400">(빌트인)</span>
+                  <span className="ml-1 text-purple-400">(기본 제공)</span>
                 )}
               </div>
             </div>

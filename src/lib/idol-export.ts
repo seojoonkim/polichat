@@ -26,7 +26,7 @@ export async function importIdol(
   if (existing && !overwrite) {
     return {
       success: false,
-      message: `아이돌 "${bundle.meta.nameKo}" (${bundle.meta.id})이(가) 이미 존재합니다.`,
+      message: `정치인 "${bundle.meta.nameKo}" (${bundle.meta.id})이(가) 이미 존재합니다.`,
     };
   }
 

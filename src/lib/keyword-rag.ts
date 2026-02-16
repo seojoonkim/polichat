@@ -9,7 +9,7 @@ export interface KeywordMatch {
 }
 
 // 키워드 → 관련 정보 매핑
-// 각 아이돌별로 다르게 설정 가능하지만, 일단 공통 키워드로 시작
+// 각 정치인별로 다르게 설정 가능하지만, 일단 공통 키워드로 시작
 const KEYWORD_MAP: Record<string, { section: string; keywords: string[] }[]> = {
   // 회사/투자 관련
   hashed: [
