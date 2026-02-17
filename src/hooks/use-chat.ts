@@ -112,9 +112,13 @@ export function useChat(systemPrompt: string, knowledge?: Record<KnowledgeCatego
             content: text,
             timestamp: Date.now(),
           }],
-          isStreaming: false,
+          isStreaming: true,  // 잠깐 true → isNew=true → 타이핑 애니메이션 트리거
         });
-        setTimeout(() => persistMessages(), 50);
+        // 80ms 후 false 전환 → MessageBubble이 isNew: true→false 감지하고 타이핑 시작
+        setTimeout(() => {
+          useChatStore.setState({ isStreaming: false });
+          setTimeout(() => persistMessages(), 50);
+        }, 80);
       }, typingDelay);
     },
     [persistMessages],
