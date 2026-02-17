@@ -14,10 +14,10 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
   const { topic, opponentLastMessage, speaker } = req.body;
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.OPENROUTER_API_KEY;
 
   if (!apiKey) {
-    return res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured' });
+    return res.status(500).json({ error: 'OPENROUTER_API_KEY not configured' });
   }
 
   const PERSONAS = {
@@ -62,25 +62,31 @@ export default async function handler(req, res) {
   res.setHeader('X-Accel-Buffering', 'no');
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    // OpenRouter API (OpenAI 호환 포맷)
+    const openaiMessages = [
+      { role: 'system', content: persona.system },
+      ...messages,
+    ];
+
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
+        'Authorization': `Bearer ${apiKey}`,
+        'HTTP-Referer': 'https://polichat.kr',
+        'X-Title': 'PoliChat Debate',
       },
       body: JSON.stringify({
-        model: 'claude-3-5-haiku-20241022',
+        model: 'openai/gpt-4o-mini',
         max_tokens: 150,
         stream: true,
-        system: persona.system,
-        messages,
+        messages: openaiMessages,
       }),
     });
 
     if (!response.ok) {
       const err = await response.text();
-      console.error('[debate] Anthropic API error:', response.status, err);
+      console.error('[debate] OpenRouter API error:', response.status, err);
       res.write(`data: ${JSON.stringify({ error: `API error ${response.status}` })}\n\n`);
       res.end();
       return;
@@ -104,11 +110,9 @@ export default async function handler(req, res) {
         if (!data || data === '[DONE]') continue;
         try {
           const json = JSON.parse(data);
-          if (json.type === 'content_block_delta' && json.delta?.type === 'text_delta') {
-            res.write(`data: ${JSON.stringify({ text: json.delta.text })}\n\n`);
-          }
-          if (json.type === 'message_stop') {
-            break;
+          const delta = json.choices?.[0]?.delta;
+          if (delta?.content) {
+            res.write(`data: ${JSON.stringify({ text: delta.content })}\n\n`);
           }
         } catch {
           // skip malformed

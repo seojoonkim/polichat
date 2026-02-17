@@ -11,10 +11,10 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
   const { topic, messages } = req.body;
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.OPENROUTER_API_KEY;
 
   if (!apiKey) {
-    return res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured' });
+    return res.status(500).json({ error: 'OPENROUTER_API_KEY not configured' });
   }
 
   if (!topic || !messages || !Array.isArray(messages)) {
@@ -50,29 +50,32 @@ export default async function handler(req, res) {
   const userMessage = `주제: ${topic}\n\n=== 토론 내용 ===\n\n${debateText}`;
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
+        'Authorization': `Bearer ${apiKey}`,
+        'HTTP-Referer': 'https://polichat.kr',
+        'X-Title': 'PoliChat Judge',
       },
       body: JSON.stringify({
-        model: 'claude-3-5-haiku-20241022',
+        model: 'openai/gpt-4o-mini',
         max_tokens: 512,
-        system: JUDGE_SYSTEM,
-        messages: [{ role: 'user', content: userMessage }],
+        messages: [
+          { role: 'system', content: JUDGE_SYSTEM },
+          { role: 'user', content: userMessage },
+        ],
       }),
     });
 
     if (!response.ok) {
       const err = await response.text();
-      console.error('[debate-judge] Anthropic API error:', response.status, err);
+      console.error('[debate-judge] OpenRouter API error:', response.status, err);
       return res.status(500).json({ error: `API error ${response.status}` });
     }
 
     const data = await response.json();
-    const text = data.content?.[0]?.text || '';
+    const text = data.choices?.[0]?.message?.content || '';
 
     // JSON 파싱 (마크다운 제거)
     let cleanText = text.trim();
