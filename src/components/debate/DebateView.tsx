@@ -176,7 +176,7 @@ export default function DebateView() {
                   for (const char of json.text) {
                     fullText += char;
                     setCurrentText(fullText);
-                    await sleep(30);
+                    await sleep(60);
                   }
                 }
               } catch {
@@ -522,47 +522,52 @@ function MessageBubble({
   const imgSrc = isOsh
     ? '/politicians/ohsehoon/profile.jpg'
     : '/politicians/jungwono/profile.jpg';
+  const bubbleBg = isOsh ? 'rgba(229,62,62,0.25)' : 'rgba(0,78,162,0.25)';
 
   return (
     <div
-      className="rounded-2xl p-4 border transition-all duration-300"
-      style={{
-        background: isActive
-          ? `linear-gradient(135deg, ${color}18, ${color}08)`
-          : 'rgba(255,255,255,0.04)',
-        borderColor: isActive ? `${color}60` : 'rgba(255,255,255,0.08)',
-        boxShadow: isActive ? `0 0 20px ${color}20` : 'none',
-      }}
+      className={`flex items-end gap-2 ${isOsh ? 'flex-row-reverse' : 'flex-row'}`}
     >
-      {/* 발언자 정보 */}
-      <div className="flex items-center gap-2 mb-2">
-        <img
-          src={imgSrc}
-          alt={name}
-          className="w-7 h-7 rounded-full object-cover border"
-          style={{ borderColor: `${color}60` }}
-          onError={(e) => {
-            e.currentTarget.style.display = 'none';
-          }}
-        />
-        <span className="text-xs font-bold" style={{ color }}>
-          {name}
-        </span>
-        {isActive && (
-          <span className="text-xs text-white/40 animate-pulse ml-1">💬</span>
-        )}
-      </div>
+      {/* 아바타 */}
+      <img
+        src={imgSrc}
+        alt={name}
+        className="w-8 h-8 rounded-full object-cover border flex-shrink-0"
+        style={{ borderColor: `${color}60` }}
+        onError={(e) => {
+          e.currentTarget.style.display = 'none';
+        }}
+      />
 
-      {/* 발언 내용 */}
-      <p className="text-white/90 text-base leading-relaxed">
-        {msg.text || '\u00A0'}
-        {isActive && (
-          <span
-            className="inline-block w-0.5 h-4 ml-0.5 align-middle animate-pulse"
-            style={{ background: color }}
-          />
-        )}
-      </p>
+      {/* 말풍선 */}
+      <div className="max-w-[75%]">
+        <span
+          className={`text-[11px] font-bold block mb-1 ${isOsh ? 'text-right' : 'text-left'}`}
+          style={{ color }}
+        >
+          {name}
+          {isActive && (
+            <span className="text-white/40 animate-pulse ml-1">💬</span>
+          )}
+        </span>
+        <div
+          className="rounded-2xl px-4 py-3 transition-all duration-300"
+          style={{
+            background: bubbleBg,
+            boxShadow: isActive ? `0 0 16px ${color}30` : 'none',
+          }}
+        >
+          <p className="text-white/90 text-[15px] leading-relaxed">
+            {msg.text || '\u00A0'}
+            {isActive && (
+              <span
+                className="inline-block w-0.5 h-4 ml-0.5 align-middle animate-pulse"
+                style={{ background: color }}
+              />
+            )}
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
