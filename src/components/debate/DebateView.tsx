@@ -327,6 +327,7 @@ export default function DebateView() {
               style={{ borderColor: JWO_COLOR }}
             />
             <span className="text-white text-xs font-bold">정원오</span>
+            <span className="text-white/40 text-[10px]">출마 선언</span>
           </div>
         </div>
 
@@ -503,7 +504,7 @@ function MessageBubble({
 }) {
   const isOsh = msg.speaker === 'ohsehoon';
   const color = isOsh ? OSH_COLOR : JWO_COLOR;
-  const name = isOsh ? '오세훈' : '정원오';
+  const name = isOsh ? '오세훈 시장' : '정원오 (출마 선언)';
   const imgSrc = isOsh
     ? '/politicians/ohsehoon/profile.jpg'
     : '/politicians/jungwono/profile.jpg';

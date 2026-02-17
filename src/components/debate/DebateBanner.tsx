@@ -87,7 +87,7 @@ export default function DebateBanner() {
             className="text-xs px-2 py-0.5 rounded-full font-semibold"
             style={{ background: '#004EA240', color: '#99bbff', border: '1px solid #004EA260' }}
           >
-            더불어민주당
+            민주 · 출마 선언
           </span>
         </div>
       </div>
