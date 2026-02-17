@@ -173,8 +173,11 @@ export default function DebateView() {
                   return;
                 }
                 if (json.text) {
-                  fullText += json.text;
-                  setCurrentText(fullText);
+                  for (const char of json.text) {
+                    fullText += char;
+                    setCurrentText(fullText);
+                    await sleep(30);
+                  }
                 }
               } catch {
                 // skip
@@ -522,7 +525,7 @@ function MessageBubble({
 
   return (
     <div
-      className="rounded-2xl p-3 border transition-all duration-300"
+      className="rounded-2xl p-4 border transition-all duration-300"
       style={{
         background: isActive
           ? `linear-gradient(135deg, ${color}18, ${color}08)`
@@ -551,7 +554,7 @@ function MessageBubble({
       </div>
 
       {/* 발언 내용 */}
-      <p className="text-white/90 text-sm leading-relaxed">
+      <p className="text-white/90 text-base leading-relaxed">
         {msg.text || '\u00A0'}
         {isActive && (
           <span
