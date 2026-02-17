@@ -68,12 +68,15 @@ export default function DebateView() {
 
   // ─── 캐시 조회 ─────────────────────────────────────────────────────────────
 
-  const fetchCache = async (topic: string): Promise<DebateMessage[] | null> => {
+  const fetchCache = async (topic: string): Promise<{ messages: DebateMessage[]; judgment: Judgment | null } | null> => {
     try {
       const res = await fetch(`/api/debate-cache?topic=${encodeURIComponent(topic)}&style=free`);
       const data = await res.json();
       if (data.cached?.messages?.length > 0) {
-        return data.cached.messages as DebateMessage[];
+        return {
+          messages: data.cached.messages as DebateMessage[],
+          judgment: data.cached.judgment as Judgment | null,
+        };
       }
       return null;
     } catch {
@@ -83,7 +86,7 @@ export default function DebateView() {
 
   // ─── 캐시 재생 ─────────────────────────────────────────────────────────────
 
-  const replayDebate = async (cachedMessages: DebateMessage[]) => {
+  const replayDebate = async (cachedMessages: DebateMessage[], cachedJudgment?: Judgment | null) => {
     abortRef.current = false;
     setMessages([]);
     setCurrentText('');
@@ -111,7 +114,7 @@ export default function DebateView() {
       if (abortRef.current) break;
 
       // 완료된 메시지를 목록에 추가
-      setMessages((prev) => [...prev, { speaker: msg.speaker, text: displayed, timestamp: msg.timestamp }]);
+      setMessages((prev) => [...prev, { speaker: msg.speaker, text: msg.text, timestamp: msg.timestamp }]);
       setCurrentText('');
       scrollToBottom();
       await sleep(900);
@@ -119,7 +122,12 @@ export default function DebateView() {
 
     if (!abortRef.current) {
       setCurrentSpeaker(null);
-      await requestJudgment(cachedMessages);
+      if (cachedJudgment) {
+        setJudgment(cachedJudgment);
+        setPhase('result');
+      } else {
+        await requestJudgment(cachedMessages);
+      }
     }
   };
 
@@ -223,20 +231,21 @@ export default function DebateView() {
     setCurrentSpeaker(null);
 
     if (!abortRef.current && allMessages.length > 0) {
-      // 캐시 저장 (비동기, 실패해도 무시)
+      // 판정 먼저 받고 캐시에 함께 저장
+      const judgeResult = await requestJudgment(allMessages);
+
+      // 캐시 저장 (판정 포함, 비동기, 실패해도 무시)
       fetch('/api/debate-cache', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic, style: 'free', messages: allMessages }),
+        body: JSON.stringify({ topic, style: 'free', messages: allMessages, judgment: judgeResult }),
       }).catch(() => {});
-
-      await requestJudgment(allMessages);
     }
   };
 
   // ─── 판정 요청 ─────────────────────────────────────────────────────────────
 
-  const requestJudgment = async (msgs: DebateMessage[]) => {
+  const requestJudgment = async (msgs: DebateMessage[]): Promise<Judgment | null> => {
     setPhase('judging');
     try {
       const topicLabel =
@@ -248,8 +257,10 @@ export default function DebateView() {
       });
       const data = await res.json();
       setJudgment(data);
+      return data as Judgment;
     } catch (e) {
       console.error('[debate-judge] Error:', e);
+      return null;
     } finally {
       setPhase('result');
     }
@@ -272,7 +283,7 @@ export default function DebateView() {
     // 캐시 확인
     const cached = await fetchCache(topicLabel);
     if (cached) {
-      await replayDebate(cached);
+      await replayDebate(cached.messages, cached.judgment);
     } else {
       await runLiveDebate(topicLabel);
     }
