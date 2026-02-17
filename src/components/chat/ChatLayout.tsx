@@ -91,15 +91,6 @@ export default function ChatLayout({ politician }: Props) {
     if (historyLoaded && messages.length === 0 && !greetingShown.current) {
       greetingShown.current = true;
       
-      // hadHistory가 true면 DB에 데이터가 있었지만 빈 content로 전부 필터링됨
-      // 이 경우 재방문 인사만 간단히
-      if (hadHistory) {
-        setTimeout(() => {
-          addAssistantMessage(getReturningGreeting(politician));
-        }, 300);
-        return;
-      }
-      
       const visitedKey = `polichat_visited_${politician.id}`;
       const hasVisited = localStorage.getItem(visitedKey) === 'true';
       
