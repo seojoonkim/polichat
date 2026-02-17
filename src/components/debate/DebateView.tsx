@@ -42,6 +42,24 @@ type Phase = 'setup' | 'running' | 'judging' | 'result';
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+function splitIntoBubbles(text: string): string[] {
+  const sentences = text.split(/(?<=[.!?。])\s+/).filter(s => s.trim().length > 5);
+  if (sentences.length <= 1) return [text];
+
+  const bubbles: string[] = [];
+  let current = '';
+  for (const s of sentences) {
+    if (current.length > 0 && current.length + s.length > 60) {
+      bubbles.push(current.trim());
+      current = s;
+    } else {
+      current += (current ? ' ' : '') + s;
+    }
+  }
+  if (current) bubbles.push(current.trim());
+  return bubbles.slice(0, 3);
+}
+
 // ─── 메인 컴포넌트 ─────────────────────────────────────────────────────────────
 
 export default function DebateView() {
@@ -173,11 +191,7 @@ export default function DebateView() {
                   return;
                 }
                 if (json.text) {
-                  for (const char of json.text) {
-                    fullText += char;
-                    setCurrentText(fullText);
-                    await sleep(60);
-                  }
+                  fullText += json.text;
                 }
               } catch {
                 // skip
@@ -217,14 +231,35 @@ export default function DebateView() {
         const text = await streamRound(speaker, topic, lastText);
         if (abortRef.current) break;
 
-        const msg: DebateMessage = { speaker, text, timestamp: Date.now() };
-        allMessages.push(msg);
-        setMessages((prev) => [...prev, msg]);
-        setCurrentText('');
-        scrollToBottom();
+        const bubbles = splitIntoBubbles(text);
+
+        for (const bubbleText of bubbles) {
+          if (abortRef.current) break;
+          setCurrentSpeaker(speaker);
+          setCurrentText('');
+
+          let displayed = '';
+          for (const char of bubbleText) {
+            if (abortRef.current) break;
+            displayed += char;
+            setCurrentText(displayed);
+            await sleep(120);
+          }
+
+          if (abortRef.current) break;
+
+          const msg: DebateMessage = { speaker, text: bubbleText, timestamp: Date.now() };
+          allMessages.push(msg);
+          setMessages((prev) => [...prev, msg]);
+          setCurrentText('');
+          scrollToBottom();
+
+          await sleep(400);
+        }
+
         lastText = text;
 
-        await sleep(800);
+        await sleep(400);
       } catch (e) {
         console.error('[debate] Stream error:', e);
         break;
