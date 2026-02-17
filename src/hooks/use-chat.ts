@@ -9,11 +9,18 @@ import type { Message } from '@/types/chat';
 /**
  * AI 응답을 파싱해서 말풍선 배열로 변환
  * 1. ** 마크다운 제거
- * 2. 번호 리스트 (1. 2. 3. ...) → 각 번호별 말풍선으로 분리
+ * 2. || 구분자로 분리 (시스템 프롬프트에서 지시)
+ * 3. 번호 리스트 (1. 2. 3. ...) → 각 번호별 말풍선으로 분리
+ * 4. 긴 응답 → 문장 단위로 2~3문장씩 자동 분리
  */
 function parseAIResponse(text: string): string[] {
   // ** 마크다운 제거
   const cleaned = text.replace(/\*\*(.*?)\*\*/g, '$1');
+
+  // || 구분자로 분리 (최우선)
+  if (cleaned.includes('||')) {
+    return cleaned.split('||').map(s => s.trim()).filter(s => s.length > 0);
+  }
 
   // 번호 리스트 패턴 감지: "1. " "2. " 등이 2개 이상 있을 때
   const allNumbers = cleaned.match(/\d+\.\s/g);
@@ -27,6 +34,25 @@ function parseAIResponse(text: string): string[] {
       if (part) bubbles.push(part);
     }
     return bubbles;
+  }
+
+  // 긴 응답 자동 분리 (150자 이상이면 문장 단위로 2~3문장씩)
+  if (cleaned.length > 150) {
+    const sentences = cleaned.split(/(?<=[.!?])\s+/);
+    const bubbles: string[] = [];
+    let current = '';
+    let count = 0;
+    for (const sentence of sentences) {
+      current += (current ? ' ' : '') + sentence;
+      count++;
+      if (count >= 2 && current.length >= 60) {
+        bubbles.push(current.trim());
+        current = '';
+        count = 0;
+      }
+    }
+    if (current.trim()) bubbles.push(current.trim());
+    if (bubbles.length > 1) return bubbles;
   }
 
   // 리스트 없으면 그냥 ** 제거한 텍스트 반환
