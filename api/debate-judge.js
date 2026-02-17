@@ -1,5 +1,3 @@
-import Anthropic from '@anthropic-ai/sdk';
-
 export const config = {
   maxDuration: 30,
 };
@@ -52,15 +50,29 @@ export default async function handler(req, res) {
   const userMessage = `주제: ${topic}\n\n=== 토론 내용 ===\n\n${debateText}`;
 
   try {
-    const anthropic = new Anthropic({ apiKey });
-    const response = await anthropic.messages.create({
-      model: 'claude-3-5-haiku-20241022',
-      max_tokens: 512,
-      system: JUDGE_SYSTEM,
-      messages: [{ role: 'user', content: userMessage }],
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-3-5-haiku-20241022',
+        max_tokens: 512,
+        system: JUDGE_SYSTEM,
+        messages: [{ role: 'user', content: userMessage }],
+      }),
     });
 
-    const text = response.content[0]?.text || '';
+    if (!response.ok) {
+      const err = await response.text();
+      console.error('[debate-judge] Anthropic API error:', response.status, err);
+      return res.status(500).json({ error: `API error ${response.status}` });
+    }
+
+    const data = await response.json();
+    const text = data.content?.[0]?.text || '';
 
     // JSON 파싱 (마크다운 제거)
     let cleanText = text.trim();

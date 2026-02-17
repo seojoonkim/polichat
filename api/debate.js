@@ -1,5 +1,3 @@
-import Anthropic from '@anthropic-ai/sdk';
-
 export const config = {
   supportsResponseStreaming: true,
   maxDuration: 60,
@@ -63,22 +61,58 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('X-Accel-Buffering', 'no');
 
-  const anthropic = new Anthropic({ apiKey });
-
   try {
-    const stream = anthropic.messages.stream({
-      model: 'claude-3-5-haiku-20241022',
-      max_tokens: 150,
-      system: persona.system,
-      messages,
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-3-5-haiku-20241022',
+        max_tokens: 150,
+        stream: true,
+        system: persona.system,
+        messages,
+      }),
     });
 
-    for await (const chunk of stream) {
-      if (
-        chunk.type === 'content_block_delta' &&
-        chunk.delta.type === 'text_delta'
-      ) {
-        res.write(`data: ${JSON.stringify({ text: chunk.delta.text })}\n\n`);
+    if (!response.ok) {
+      const err = await response.text();
+      console.error('[debate] Anthropic API error:', response.status, err);
+      res.write(`data: ${JSON.stringify({ error: `API error ${response.status}` })}\n\n`);
+      res.end();
+      return;
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop() || '';
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const data = line.slice(6).trim();
+        if (!data || data === '[DONE]') continue;
+        try {
+          const json = JSON.parse(data);
+          if (json.type === 'content_block_delta' && json.delta?.type === 'text_delta') {
+            res.write(`data: ${JSON.stringify({ text: json.delta.text })}\n\n`);
+          }
+          if (json.type === 'message_stop') {
+            break;
+          }
+        } catch {
+          // skip malformed
+        }
       }
     }
 
