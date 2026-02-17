@@ -3,17 +3,30 @@ import { useNavigate } from 'react-router';
 
 // ─── 상수 ───────────────────────────────────────────────────────────────────
 
+const TOPIC_ICONS: Record<string, React.ReactNode> = {
+  redevelopment: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="10" width="7" height="11" rx="1"/><rect x="14" y="4" width="7" height="17" rx="1"/><path d="M17.5 1v3M15.5 2h4M6.5 7v3M5 8.5h3"/></svg>,
+  gentrification: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21V9l6-5 6 5v12H3z"/><path d="M9 21v-6h0"/><path d="M18 9l4 4M22 9l-4 4"/><path d="M18 3h4v4"/></svg>,
+  housing: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21V9l9-7 9 7v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9 21v-6h6v6"/></svg>,
+  welfare: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7 7-7z"/><path d="M12 21C7 17 4 12 8 8"/></svg>,
+  gap: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v18"/><circle cx="12" cy="12" r="1"/><path d="M4 8h4l1.5 3L8 14H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><path d="M20 8h-4l-1.5 3 1.5 3h4a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1z"/></svg>,
+  transport: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="3" width="16" height="16" rx="3"/><path d="M4 11h16"/><path d="M12 3v16"/><circle cx="7.5" cy="15.5" r="1"/><circle cx="16.5" cy="15.5" r="1"/><path d="M7 19l-2 2M17 19l2 2"/></svg>,
+  environment: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22c-4-3-8-7.5-8-12a8 8 0 0 1 16 0c0 4.5-4 9-8 12z"/><path d="M12 10c-2 0-3 1.5-3 3s2 4 3 5c1-1 3-2.5 3-5s-1-3-3-3z"/></svg>,
+  youth: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="10" cy="8" r="4"/><path d="M10 12c-4 0-7 2-7 5v2h14v-2c0-3-3-5-7-5z"/><path d="M19 2l1 2.5L22 6l-2 1.5L19 10l-1-2.5L16 6l2-1.5z"/></svg>,
+  admin: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>,
+  branding: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22c-1-4-1-8 0-12"/><path d="M10 22h4"/><ellipse cx="12" cy="8" rx="3" ry="5"/><path d="M9.5 3C8 4 7 6 7 8M14.5 3c1.5 1 2.5 3 2.5 5"/><circle cx="12" cy="2" r="1"/></svg>,
+};
+
 const TOPICS = [
-  { id: 'redevelopment', emoji: '🏗️', label: '재개발 vs 도시재생' },
-  { id: 'gentrification', emoji: '🏘️', label: '젠트리피케이션 대응' },
-  { id: 'housing', emoji: '🏠', label: '주거 정책 방향' },
-  { id: 'welfare', emoji: '🤝', label: '복지: 선별 vs 보편' },
-  { id: 'gap', emoji: '📊', label: '강남북 격차 해소' },
-  { id: 'transport', emoji: '🚇', label: '교통 인프라' },
-  { id: 'environment', emoji: '🌿', label: '환경·탄소중립' },
-  { id: 'youth', emoji: '🧑‍💼', label: '청년 정책' },
-  { id: 'admin', emoji: '🏛️', label: '행정 혁신' },
-  { id: 'branding', emoji: '🎨', label: '도시 브랜딩' },
+  { id: 'redevelopment', label: '재개발 vs 도시재생' },
+  { id: 'gentrification', label: '젠트리피케이션 대응' },
+  { id: 'housing', label: '주거 정책 방향' },
+  { id: 'welfare', label: '복지: 선별 vs 보편' },
+  { id: 'gap', label: '강남북 격차 해소' },
+  { id: 'transport', label: '교통 인프라' },
+  { id: 'environment', label: '환경·탄소중립' },
+  { id: 'youth', label: '청년 정책' },
+  { id: 'admin', label: '행정 혁신' },
+  { id: 'branding', label: '도시 브랜딩' },
 ];
 
 const OSH_COLOR = '#C9151E';
@@ -357,40 +370,40 @@ export default function DebateView() {
         </div>
 
         {/* 후보 미리보기 */}
-        <div className="flex items-center justify-center gap-4 px-4 mb-6">
-          <div className="flex flex-col items-center gap-1">
+        <div className="flex items-center justify-center gap-4 px-4 mb-3">
+          <div className="flex flex-col items-center gap-0.5">
             <img
               src="/politicians/ohsehoon/profile.jpg"
               alt="오세훈"
-              className="w-14 h-14 rounded-full object-cover border-2"
+              className="w-11 h-11 rounded-full object-cover border-2"
               style={{ borderColor: OSH_COLOR }}
             />
-            <span className="text-white text-xs font-bold">오세훈</span>
+            <span className="text-white text-[11px] font-bold">오세훈</span>
           </div>
-          <div className="text-yellow-400 font-black text-2xl">VS</div>
-          <div className="flex flex-col items-center gap-1">
+          <div className="text-yellow-400 font-black text-xl">VS</div>
+          <div className="flex flex-col items-center gap-0.5">
             <img
               src="/politicians/jungwono/profile.jpg"
               alt="정원오"
-              className="w-14 h-14 rounded-full object-cover border-2"
+              className="w-11 h-11 rounded-full object-cover border-2"
               style={{ borderColor: JWO_COLOR }}
             />
-            <span className="text-white text-xs font-bold">정원오</span>
-            <span className="text-white/40 text-[10px]">더불어민주</span>
+            <span className="text-white text-[11px] font-bold">정원오</span>
+            <span className="text-white/40 text-[9px]">더불어민주</span>
           </div>
         </div>
 
-        <div className="px-4 mb-3">
+        <div className="px-4 mb-2">
           <p className="text-white/70 text-sm font-semibold">📌 토론 주제를 선택하세요</p>
         </div>
 
         {/* 주제 그리드 */}
-        <div className="px-4 grid grid-cols-2 gap-2 flex-1">
+        <div className="px-4 grid grid-cols-2 gap-2">
           {TOPICS.map((topic) => (
             <button
               key={topic.id}
               onClick={() => setSelectedTopic(topic.id)}
-              className="relative rounded-xl p-3 text-left transition-all duration-200 border"
+              className="relative rounded-xl p-2.5 text-left transition-all duration-200 border flex items-center gap-2"
               style={{
                 background:
                   selectedTopic === topic.id
@@ -398,12 +411,13 @@ export default function DebateView() {
                     : 'rgba(255,255,255,0.05)',
                 borderColor:
                   selectedTopic === topic.id ? 'rgba(255,215,0,0.6)' : 'rgba(255,255,255,0.1)',
+                color: selectedTopic === topic.id ? 'rgba(255,215,0,0.9)' : 'rgba(255,255,255,0.5)',
               }}
             >
-              <div className="text-xl mb-1">{topic.emoji}</div>
-              <div className="text-white text-xs font-semibold leading-tight">{topic.label}</div>
+              <span className="flex-shrink-0">{TOPIC_ICONS[topic.id]}</span>
+              <span className="text-white text-[15px] font-semibold leading-tight">{topic.label}</span>
               {selectedTopic === topic.id && (
-                <div className="absolute top-2 right-2 text-yellow-400 text-xs">✓</div>
+                <span className="absolute top-1.5 right-1.5 text-yellow-400 text-xs">✓</span>
               )}
             </button>
           ))}
