@@ -66,7 +66,6 @@ function getReturningGreeting(_politician: PoliticianMeta): string {
 export default function ChatLayout({ politician }: Props) {
   const { systemPrompt, knowledge } = useSystemPrompt(politician);
   const { messages, isStreaming, error, sendMessage, addAssistantMessage, historyLoaded } = useChat(systemPrompt, knowledge);
-  const hadHistory = useChatStore((s) => s.hadHistory);
   const clearSuggestedQuestions = useChatStore((s) => s.clearSuggestedQuestions);
   
   const greetingShown = useRef(false);
