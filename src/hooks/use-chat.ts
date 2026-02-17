@@ -38,21 +38,25 @@ function parseAIResponse(text: string): string[] {
 
   // 긴 응답 자동 분리 (150자 이상이면 문장 단위로 2~3문장씩)
   if (cleaned.length > 150) {
-    const sentences = cleaned.split(/(?<=[.!?])\s+/);
-    const bubbles: string[] = [];
-    let current = '';
-    let count = 0;
-    for (const sentence of sentences) {
-      current += (current ? ' ' : '') + sentence;
-      count++;
-      if (count >= 2 && current.length >= 60) {
-        bubbles.push(current.trim());
-        current = '';
-        count = 0;
+    // 한국어 문장 끝 패턴 (습니다. 해요. 있어요. 거예요. 등) + 영문 .!?
+    const sentences = cleaned.split(/(?<=[다요죠네요\.!?])\s+/).filter(s => s.trim());
+    if (sentences.length >= 2) {
+      const bubbles: string[] = [];
+      let current = '';
+      let count = 0;
+      for (const sentence of sentences) {
+        current += (current ? ' ' : '') + sentence;
+        count++;
+        if (count >= 2 && current.length >= 50) {
+          bubbles.push(current.trim());
+          current = '';
+          count = 0;
+        }
       }
+      if (current.trim()) bubbles.push(current.trim());
+      const validBubbles = bubbles.filter(b => b.trim().length > 0);
+      if (validBubbles.length > 1) return validBubbles;
     }
-    if (current.trim()) bubbles.push(current.trim());
-    if (bubbles.length > 1) return bubbles;
   }
 
   // 리스트 없으면 그냥 ** 제거한 텍스트 반환
