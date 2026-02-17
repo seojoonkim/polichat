@@ -7,6 +7,7 @@ import ChatHeader from './ChatHeader';
 import MessageList from './MessageList';
 import ChatInput from './ChatInput';
 import QuickMenu from './QuickMenu';
+import SuggestedQuestions from './SuggestedQuestions';
 
 interface Props {
   politician: PoliticianMeta;
@@ -65,6 +66,7 @@ function getReturningGreeting(_politician: PoliticianMeta): string {
 export default function ChatLayout({ politician }: Props) {
   const { systemPrompt, knowledge } = useSystemPrompt(politician);
   const { messages, isStreaming, error, sendMessage, addAssistantMessage, historyLoaded } = useChat(systemPrompt, knowledge);
+  const clearSuggestedQuestions = useChatStore((s) => s.clearSuggestedQuestions);
   
   const greetingShown = useRef(false);
   const prevMessageCount = useRef<number | null>(null);
@@ -142,6 +144,19 @@ export default function ChatLayout({ politician }: Props) {
     textarea?.focus();
   }, []);
 
+  // 추천 질문 클릭 → 바로 전송 + 질문 목록 초기화
+  const handleSuggestedSelect = useCallback((question: string) => {
+    clearSuggestedQuestions();
+    sendMessage(question);
+  }, [clearSuggestedQuestions, sendMessage]);
+
+  // 직접 입력하기 → 입력창 포커스 + 질문 목록 초기화
+  const handleSuggestedDirectInput = useCallback(() => {
+    clearSuggestedQuestions();
+    const textarea = document.querySelector('form textarea') as HTMLTextAreaElement | null;
+    textarea?.focus();
+  }, [clearSuggestedQuestions]);
+
   const handleSend = useCallback((text: string) => {
     if (showQuickMenu) setQuickMenuDismissed(true);
     if (isStreaming) {
@@ -205,6 +220,13 @@ export default function ChatLayout({ politician }: Props) {
           {error}
         </div>
       )}
+
+      {/* 추천 질문 버튼: AI 답변 완료 후 자동 표시 */}
+      <SuggestedQuestions
+        onSelect={handleSuggestedSelect}
+        onDirectInput={handleSuggestedDirectInput}
+        themeColor={politician.themeColor}
+      />
       
       {/* 입력창: 절대 스크롤 안 됨 */}
       <ChatInput

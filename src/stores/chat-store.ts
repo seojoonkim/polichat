@@ -9,6 +9,7 @@ interface ChatStore {
   error: string | null;
   historyLoaded: boolean;
   lastMessageTime: number | null; // 마지막 메시지 시간
+  suggestedQuestions: string[]; // 추천 질문 버튼
 
   setCurrentPolitician: (politicianId: string | null) => void;
   loadHistory: (politicianId: string) => Promise<void>;
@@ -20,6 +21,8 @@ interface ChatStore {
   persistMessages: () => void;
   markUserMessagesAsRead: () => void; // 읽음 처리
   addReactionToLastUserMessage: (reaction: string) => void; // 리액션 추가
+  setSuggestedQuestions: (questions: string[]) => void; // 추천 질문 설정
+  clearSuggestedQuestions: () => void; // 추천 질문 초기화
 }
 
 export const useChatStore = create<ChatStore>((set, get) => ({
@@ -29,6 +32,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   error: null,
   historyLoaded: false,
   lastMessageTime: null,
+  suggestedQuestions: [],
 
   setCurrentPolitician: (politicianId) => {
     // Save current conversation before switching
@@ -132,4 +136,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       }
       return { messages: msgs };
     }),
+
+  // 추천 질문 설정/초기화
+  setSuggestedQuestions: (questions) => set({ suggestedQuestions: questions }),
+  clearSuggestedQuestions: () => set({ suggestedQuestions: [] }),
 }));

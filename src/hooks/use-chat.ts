@@ -3,6 +3,7 @@ import { useChatStore } from '@/stores/chat-store';
 import { streamChat } from '@/lib/anthropic-client';
 import { getRelevantContext } from '@/lib/keyword-rag';
 import { calculateEngagement, shouldReact } from '@/lib/engagement';
+import { generateSuggestedQuestions } from '@/lib/suggest-questions';
 import type { KnowledgeCategory } from '@/types/politician';
 import type { Message } from '@/types/chat';
 
@@ -147,6 +148,8 @@ export function useChat(systemPrompt: string, knowledge?: Record<KnowledgeCatego
       }
 
       setError(null);
+      // 새 질문 시작 시 추천 질문 즉시 초기화
+      useChatStore.getState().clearSuggestedQuestions();
       addMessage('user', text.trim());
 
       // If skipAI, just add user message and return
@@ -252,6 +255,21 @@ export function useChat(systemPrompt: string, knowledge?: Record<KnowledgeCatego
                       }
                     }
                     setTimeout(() => persistMessages(), 50);
+                    // 추천 질문 생성
+                    const { messages: suggMsgs } = useChatStore.getState();
+                    const lastUserMsg = [...suggMsgs].reverse().find(m => m.role === 'user');
+                    const lastAiMsg = [...suggMsgs].reverse().find(m => m.role === 'assistant');
+                    if (lastUserMsg && lastAiMsg && lastAiMsg.content.trim()) {
+                      generateSuggestedQuestions(
+                        lastUserMsg.content,
+                        lastAiMsg.content,
+                        currentPoliticianId || '정치인',
+                      ).then(questions => {
+                        if (questions.length > 0) {
+                          useChatStore.getState().setSuggestedQuestions(questions);
+                        }
+                      });
+                    }
                     // 큐에 대기중인 메시지가 있으면 자동 전송
                     if (pendingMessageRef.current) {
                       const pendingText = pendingMessageRef.current;
@@ -277,6 +295,21 @@ export function useChat(systemPrompt: string, knowledge?: Record<KnowledgeCatego
                 addReactionToLastUserMessage('❤️');
               }
               setTimeout(() => persistMessages(), 50);
+              // 추천 질문 생성
+              const { messages: suggMsgs } = useChatStore.getState();
+              const lastUserMsg = [...suggMsgs].reverse().find(m => m.role === 'user');
+              const lastAiMsg = [...suggMsgs].reverse().find(m => m.role === 'assistant');
+              if (lastUserMsg && lastAiMsg && lastAiMsg.content.trim()) {
+                generateSuggestedQuestions(
+                  lastUserMsg.content,
+                  lastAiMsg.content,
+                  currentPoliticianId || '정치인',
+                ).then(questions => {
+                  if (questions.length > 0) {
+                    useChatStore.getState().setSuggestedQuestions(questions);
+                  }
+                });
+              }
               if (pendingMessageRef.current) {
                 const pendingText = pendingMessageRef.current;
                 pendingMessageRef.current = null;
