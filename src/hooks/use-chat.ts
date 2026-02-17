@@ -4,6 +4,34 @@ import { streamChat } from '@/lib/anthropic-client';
 import { getRelevantContext } from '@/lib/keyword-rag';
 import { calculateEngagement, shouldReact } from '@/lib/engagement';
 import type { KnowledgeCategory } from '@/types/politician';
+import type { Message } from '@/types/chat';
+
+/**
+ * AI 응답을 파싱해서 말풍선 배열로 변환
+ * 1. ** 마크다운 제거
+ * 2. 번호 리스트 (1. 2. 3. ...) → 각 번호별 말풍선으로 분리
+ */
+function parseAIResponse(text: string): string[] {
+  // ** 마크다운 제거
+  const cleaned = text.replace(/\*\*(.*?)\*\*/g, '$1');
+
+  // 번호 리스트 패턴 감지: "1. " "2. " 등이 2개 이상 있을 때
+  const allNumbers = cleaned.match(/\d+\.\s/g);
+
+  if (allNumbers && allNumbers.length >= 2) {
+    // 번호 앞에서 분리 (lookahead)
+    const parts = cleaned.split(/(?=\d+\.\s)/).map(s => s.trim()).filter(s => s);
+
+    const bubbles: string[] = [];
+    for (const part of parts) {
+      if (part) bubbles.push(part);
+    }
+    return bubbles;
+  }
+
+  // 리스트 없으면 그냥 ** 제거한 텍스트 반환
+  return [cleaned];
+}
 
 export function useChat(systemPrompt: string, knowledge?: Record<KnowledgeCategory, string> | null) {
   const messages = useChatStore((s) => s.messages);
@@ -150,31 +178,85 @@ export function useChat(systemPrompt: string, knowledge?: Record<KnowledgeCatego
           updateLastAssistantMessage(fullText);
         },
         onComplete: () => {
-          setStreaming(false);
-          // 읽음 표시 처리
-          markUserMessagesAsRead();
-          
-          // AI 몰입도 기반 리액션: 응답의 감정/참여도를 분석해서 결정
+          // 1. 스트리밍 완료 후 마지막 assistant 메시지 가져오기
           const { messages: latestMsgs } = useChatStore.getState();
-          const lastAssistantMsg = latestMsgs.filter(m => m.role === 'assistant').pop();
-          if (lastAssistantMsg) {
-            const engagement = calculateEngagement(lastAssistantMsg.content);
-            if (shouldReact(engagement)) {
-              addReactionToLastUserMessage('❤️');
+          const lastMsg = latestMsgs.filter(m => m.role === 'assistant').pop();
+
+          if (lastMsg) {
+            const bubbles = parseAIResponse(lastMsg.content);
+
+            if (bubbles.length > 1) {
+              // 여러 말풍선으로 분리
+              // 1) 마지막 assistant 메시지를 첫 번째 버블로 교체
+              const firstBubble = bubbles[0];
+              useChatStore.setState(state => ({
+                messages: state.messages.map(m =>
+                  m.id === lastMsg.id ? { ...m, content: firstBubble } : m
+                ) as Message[],
+                isStreaming: true, // 계속 스트리밍 상태로
+              }));
+
+              // 2) 나머지 버블을 순차적으로 추가 (타이핑 딜레이 포함)
+              bubbles.slice(1).forEach((bubble, index) => {
+                setTimeout(() => {
+                  const isLast = index === bubbles.length - 2;
+                  const newMsg = {
+                    id: crypto.randomUUID(),
+                    role: 'assistant' as const,
+                    content: bubble,
+                    timestamp: Date.now(),
+                  };
+                  useChatStore.setState(state => ({
+                    messages: [...state.messages, newMsg],
+                    isStreaming: !isLast,
+                  }));
+                  if (isLast) {
+                    markUserMessagesAsRead();
+                    // engagement 처리
+                    const { messages: finalMsgs } = useChatStore.getState();
+                    const lastAssistantMsg = finalMsgs.filter(m => m.role === 'assistant').pop();
+                    if (lastAssistantMsg) {
+                      const engagement = calculateEngagement(lastAssistantMsg.content);
+                      if (shouldReact(engagement)) {
+                        addReactionToLastUserMessage('❤️');
+                      }
+                    }
+                    setTimeout(() => persistMessages(), 50);
+                    // 큐에 대기중인 메시지가 있으면 자동 전송
+                    if (pendingMessageRef.current) {
+                      const pendingText = pendingMessageRef.current;
+                      pendingMessageRef.current = null;
+                      setTimeout(() => { sendMessage(pendingText); }, 100);
+                    }
+                  }
+                }, (index + 1) * 600); // 각 말풍선 600ms 간격
+              });
+            } else {
+              // 단일 말풍선: ** 제거만 적용
+              if (bubbles[0] !== lastMsg.content) {
+                useChatStore.setState(state => ({
+                  messages: state.messages.map(m =>
+                    m.id === lastMsg.id ? { ...m, content: bubbles[0] } : m
+                  ) as Message[],
+                }));
+              }
+              setStreaming(false);
+              markUserMessagesAsRead();
+              const engagement = calculateEngagement(lastMsg.content);
+              if (shouldReact(engagement)) {
+                addReactionToLastUserMessage('❤️');
+              }
+              setTimeout(() => persistMessages(), 50);
+              if (pendingMessageRef.current) {
+                const pendingText = pendingMessageRef.current;
+                pendingMessageRef.current = null;
+                setTimeout(() => { sendMessage(pendingText); }, 100);
+              }
             }
-          }
-          // Save conversation to IndexedDB after each response
-          // Use setTimeout to ensure state is updated first
-          setTimeout(() => persistMessages(), 50);
-          
-          // 큐에 대기중인 메시지가 있으면 자동 전송
-          if (pendingMessageRef.current) {
-            const pendingText = pendingMessageRef.current;
-            pendingMessageRef.current = null;
-            // 잠시 딜레이 후 전송 (자연스러운 흐름을 위해)
-            setTimeout(() => {
-              sendMessage(pendingText);
-            }, 100);
+          } else {
+            setStreaming(false);
+            markUserMessagesAsRead();
+            setTimeout(() => persistMessages(), 50);
           }
         },
         onError: (err) => {
