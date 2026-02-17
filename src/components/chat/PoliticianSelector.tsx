@@ -197,8 +197,10 @@ export default function PoliticianSelector({ politicians }: Props) {
                   <div className="flex items-stretch">
                     {/* Avatar with glow ring */}
                     <div
-                      className="politician-image glow-ring w-28 aspect-square flex items-center justify-center text-white text-2xl font-bold shrink-0"
+                      className="politician-image glow-ring flex items-center justify-center text-white text-2xl font-bold shrink-0"
                       style={{
+                        width: '100px',
+                        height: '100px',
                         background: `linear-gradient(145deg, ${politician.themeColor}, ${politician.themeColorSecondary})`,
                         ['--glow-color' as string]: `${politician.themeColor}40`,
                       }}
