@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import type { PoliticianMeta } from '@/types/politician';
 import { useChatStore } from '@/stores/chat-store';
+import DebateBanner from '@/components/debate/DebateBanner';
 
 interface Props {
   politicians: PoliticianMeta[];
@@ -164,6 +165,11 @@ export default function PoliticianSelector({ politicians }: Props) {
             </p>
           </div>
 
+        </div>
+
+        {/* 토론 배틀 배너 */}
+        <div className="animate-fade-in-up" style={{ animationDelay: '0.12s' }}>
+          <DebateBanner />
         </div>
 
         {/* Section title */}
