@@ -65,6 +65,10 @@ export const useChatStore = create<ChatStore>((set, get) => ({
           : null;
         // 빈 content 메시지 제외하고 로드
         const validMessages = messages.filter((m: Message) => m.content?.trim());
+        // 빈 메시지가 있었다면 Supabase도 즉시 정리
+        if (validMessages.length < messages.length) {
+          saveChatHistory(politicianId, validMessages).catch(() => {});
+        }
         set({ messages: validMessages, historyLoaded: true, lastMessageTime: lastTime });
       }
     } catch {
