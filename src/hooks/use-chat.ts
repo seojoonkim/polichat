@@ -101,27 +101,19 @@ export function useChat(systemPrompt: string, knowledge?: Record<KnowledgeCatego
         return;
       }
 
-      // 1) 빈 메시지 추가 + 스트리밍 상태 ON (로딩 인디케이터 표시)
-      const msgId = crypto.randomUUID();
-      const { messages: currentMessages } = useChatStore.getState();
-      useChatStore.setState({
-        messages: [...currentMessages, {
-          id: msgId,
-          role: 'assistant' as const,
-          content: '',
-          timestamp: Date.now(),
-        }],
-        isStreaming: true,
-      });
-
-      // 2) 0.8~1.5초 후 텍스트 채우고 스트리밍 OFF
+      // 딜레이 후 텍스트 바로 추가 (빈 content 단계 없이)
       const typingDelay = 400 + Math.random() * 350;
       setTimeout(() => {
-        const { messages: latestMessages } = useChatStore.getState();
-        const updated = latestMessages.map(m =>
-          m.id === msgId ? { ...m, content: text } : m
-        );
-        useChatStore.setState({ messages: updated, isStreaming: false });
+        const { messages: currentMessages } = useChatStore.getState();
+        useChatStore.setState({
+          messages: [...currentMessages, {
+            id: crypto.randomUUID(),
+            role: 'assistant' as const,
+            content: text,
+            timestamp: Date.now(),
+          }],
+          isStreaming: false,
+        });
         setTimeout(() => persistMessages(), 50);
       }, typingDelay);
     },
