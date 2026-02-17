@@ -8,6 +8,7 @@ interface ChatStore {
   isStreaming: boolean;
   error: string | null;
   historyLoaded: boolean;
+  hadHistory: boolean; // Supabase/IDB에 데이터가 있었는지
   lastMessageTime: number | null; // 마지막 메시지 시간
   suggestedQuestions: string[]; // 추천 질문 버튼
 
@@ -31,6 +32,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   isStreaming: false,
   error: null,
   historyLoaded: false,
+  hadHistory: false,
   lastMessageTime: null,
   suggestedQuestions: [],
 
@@ -45,6 +47,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       messages: [],
       error: null,
       historyLoaded: false,
+      hadHistory: false,
       isStreaming: false, // 새 채팅 시작 시 로딩 상태 초기화
       lastMessageTime: null,
     });
@@ -59,17 +62,19 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       const messages = await getChatHistory(politicianId);
       // Only set if we're still on the same politician
       if (get().currentPoliticianId === politicianId) {
+        // 필터링 전에 히스토리 존재 여부 기록
+        const hadHistory = messages.length > 0;
         // 마지막 메시지 시간 계산
         const lastTime = messages.length > 0 
           ? Math.max(...messages.map(m => m.timestamp))
           : null;
         // 빈 content 메시지 제외하고 로드
         const validMessages = messages.filter((m: Message) => m.content?.trim());
-        // 빈 메시지가 있었다면 Supabase도 즉시 정리
+        // 빈 메시지가 있었다면 DB도 즉시 정리
         if (validMessages.length < messages.length) {
           saveChatHistory(politicianId, validMessages).catch(() => {});
         }
-        set({ messages: validMessages, historyLoaded: true, lastMessageTime: lastTime });
+        set({ messages: validMessages, historyLoaded: true, hadHistory, lastMessageTime: lastTime });
       }
     } catch {
       set({ historyLoaded: true });

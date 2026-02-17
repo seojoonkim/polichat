@@ -149,7 +149,7 @@ export default function MessageBubble({ message, politician, isNew = false, onBu
     if (isUser) return 'complete';
     if (!shouldAnimate) return 'complete';
     if (isNew) return 'streaming';
-    return 'start'; // 스트리밍 완료 직후
+    return 'complete'; // 히스토리에서 로드된 메시지는 즉시 표시
   });
 
   const [completedBubbles, setCompletedBubbles] = useState<string[]>([]);
