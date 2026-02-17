@@ -192,6 +192,7 @@ export default function PoliticianSelector({ politicians }: Props) {
                     ['--pol-color' as string]: politician.themeColor,
                     ['--pol-color-secondary' as string]: politician.themeColorSecondary,
                     ['--pol-glow' as string]: `${politician.themeColor}25`,
+                    height: '100px',
                   }}
                 >
                   <div className="flex items-stretch">
@@ -222,7 +223,7 @@ export default function PoliticianSelector({ politicians }: Props) {
                     </div>
 
                     {/* Info */}
-                    <div className="flex-1 p-4 flex flex-col justify-center min-w-0">
+                    <div className="flex-1 px-4 py-2 flex flex-col justify-center min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="font-bold text-lg text-slate-900 truncate">
                           {politician.nameKo}
@@ -240,7 +241,7 @@ export default function PoliticianSelector({ politicians }: Props) {
                         <span className="online-indicator w-2.5 h-2.5 rounded-full bg-green-500 shrink-0" />
                       </div>
 
-                      <p className="text-sm text-slate-600 line-clamp-1 mb-1.5">
+                      <p className="text-sm text-slate-600 line-clamp-1 mb-1">
                         {politician.tagline}
                       </p>
 
