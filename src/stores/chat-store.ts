@@ -63,7 +63,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         const lastTime = messages.length > 0 
           ? Math.max(...messages.map(m => m.timestamp))
           : null;
-        set({ messages, historyLoaded: true, lastMessageTime: lastTime });
+        // 빈 content 메시지 제외하고 로드
+        const validMessages = messages.filter((m: Message) => m.content?.trim());
+        set({ messages: validMessages, historyLoaded: true, lastMessageTime: lastTime });
       }
     } catch {
       set({ historyLoaded: true });
@@ -110,8 +112,10 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
   persistMessages: () => {
     const { currentPoliticianId, messages } = get();
-    if (currentPoliticianId && messages.length > 0) {
-      saveChatHistory(currentPoliticianId, messages).catch(() => {});
+    // 빈 content 메시지 제외하고 저장
+    const validMessages = messages.filter(m => m.content?.trim());
+    if (currentPoliticianId && validMessages.length > 0) {
+      saveChatHistory(currentPoliticianId, validMessages).catch(() => {});
     }
   },
 
