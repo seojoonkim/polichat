@@ -623,14 +623,14 @@ export default function DebateView() {
         )}
       </div>
 
-      {/* 진행률 바 */}
+      {/* 진행률 바 — 시간 경과 표시 (6분 = 360초) */}
       {phase === 'running' && (
         <div className="h-1 bg-white/10">
           <div
-            className="h-full transition-all duration-500"
+            className="h-full transition-all duration-1000"
             style={{
-              width: `${((round + 1) / 10) * 100}%`,
-              background: 'linear-gradient(90deg, #C9151E, #004EA2)',
+              width: `${((360 - timeLeft) / 360) * 100}%`,
+              background: 'linear-gradient(90deg, #A78BFA, #7C3AED)',
             }}
           />
         </div>
