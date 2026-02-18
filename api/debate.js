@@ -3,6 +3,23 @@ export const config = {
   maxDuration: 60,
 };
 
+function getStylePrompt(style, speaker, opponentLastMessage, topicLabel) {
+  const speakerName = speaker === 'ohsehoon' ? '오세훈 서울시장' : '정원오 성동구청장';
+  const opponentName = speaker === 'ohsehoon' ? '정원오 구청장' : '오세훈 시장';
+
+  const baseContext = `당신은 ${speakerName}입니다. 주제: ${topicLabel}. 상대방(${opponentName})의 마지막 발언: "${opponentLastMessage}"`;
+
+  if (style === 'policy') {
+    return `${baseContext}\n\n정책 토론 방식: 구체적인 수치, 통계, 정책 공약, 예산 규모 등 데이터 기반으로 발언하세요. 감정보다 논리와 근거 중심으로 2-3문장으로 답변하세요.`;
+  } else if (style === 'emotional') {
+    return `${baseContext}\n\n감정 토론 방식: 상대방 주장의 허점을 날카롭게 공격하고 감정적으로 반응하세요. 격렬하고 직접적으로 반박하되 정치인답게 2-3문장으로 답변하세요.`;
+  } else if (style === 'consensus') {
+    return `${baseContext}\n\n합의 도출 방식: 상대방의 의견에서 공통점을 찾고, 양측이 동의할 수 있는 접점과 타협안을 제시하세요. 협력적 톤으로 2-3문장으로 답변하세요.`;
+  }
+  // 기본값
+  return `${baseContext}\n\n자유롭게 토론하세요. 2-3문장으로 답변하세요.`;
+}
+
 export default async function handler(req, res) {
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -13,7 +30,7 @@ export default async function handler(req, res) {
 
   if (req.method !== 'POST') return res.status(405).end();
 
-  const { topic, opponentLastMessage, speaker } = req.body;
+  const { topic, opponentLastMessage, speaker, style } = req.body;
   const apiKey = process.env.OPENROUTER_API_KEY;
 
   if (!apiKey) {
@@ -23,22 +40,28 @@ export default async function handler(req, res) {
   const PERSONAS = {
     ohsehoon: {
       name: '오세훈',
-      system: `당신은 오세훈 서울시장입니다. 국민의힘 소속, 보수 성향.
+      baseSystem: `당신은 오세훈 서울시장입니다. 국민의힘 소속, 보수 성향.
 특성: 법조인 출신의 논리적·체계적 화법, 경제성장·개발 중시, 데이터와 수치 근거 자주 인용, 공식적·당당한 어조.
 주제 "${topic}"에 대해 서울시장으로서 입장을 밝히세요.
-규칙: 1~2문장으로 아주 짧게. **반드시 완성된 문장으로 끝내야 함.** 상대방 발언이 있으면 직접 반박하거나, 없으면 자신의 정책을 먼저 강조하세요. 실제 오세훈 시장 스타일로.`,
+규칙: 2-3문장으로 아주 짧게. **반드시 완성된 문장으로 끝내야 함.** 상대방 발언이 있으면 직접 반박하거나, 없으면 자신의 정책을 먼저 강조하세요. 실제 오세훈 시장 스타일로.`,
     },
     jungwono: {
       name: '정원오',
-      system: `당신은 정원오 성동구청장입니다. 더불어민주당 소속, 진보 성향. 서울시장 출마를 선언한 상태입니다.
+      baseSystem: `당신은 정원오 성동구청장입니다. 더불어민주당 소속, 진보 성향. 서울시장 출마를 선언한 상태입니다.
 특성: 서민·현장 중심 화법, 젠트리피케이션 방지 전문가, 공동체·주민 강조, 따뜻하지만 단호한 어조.
 주제 "${topic}"에 대해 서울시장 후보(출마 선언)로서 입장을 밝히세요. 현직 시장에 도전하는 후보의 자세로, 성동구에서 쌓은 검증된 경험을 앞세워 말하세요.
-규칙: 1~2문장으로 아주 짧게. **반드시 완성된 문장으로 끝내야 함.** 상대방 발언이 있으면 직접 반박하거나, 없으면 자신의 정책을 먼저 강조하세요. 실제 정원오 스타일로.`,
+규칙: 2-3문장으로 아주 짧게. **반드시 완성된 문장으로 끝내야 함.** 상대방 발언이 있으면 직접 반박하거나, 없으면 자신의 정책을 먼저 강조하세요. 실제 정원오 스타일로.`,
     },
   };
 
   const persona = PERSONAS[speaker];
   if (!persona) return res.status(400).json({ error: 'Invalid speaker' });
+
+  // 스타일에 따른 시스템 프롬프트 결정
+  let systemPrompt = persona.baseSystem;
+  if (style && style !== 'free') {
+    systemPrompt = getStylePrompt(style, speaker, opponentLastMessage, topic);
+  }
 
   const messages = opponentLastMessage
     ? [
@@ -64,7 +87,7 @@ export default async function handler(req, res) {
   try {
     // OpenRouter API (OpenAI 호환 포맷)
     const openaiMessages = [
-      { role: 'system', content: persona.system },
+      { role: 'system', content: systemPrompt },
       ...messages,
     ];
 

@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 
 // ─── 상수 ───────────────────────────────────────────────────────────────────
@@ -80,14 +80,16 @@ export default function DebateView() {
 
   // 설정 상태
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+  const [selectedStyle, setSelectedStyle] = useState<'policy' | 'emotional' | 'consensus' | null>(null);
 
   // 토론 상태
   const [phase, setPhase] = useState<Phase>('setup');
   const [messages, setMessages] = useState<DebateMessage[]>([]);
   const [currentSpeaker, setCurrentSpeaker] = useState<'ohsehoon' | 'jungwono' | null>(null);
   const [currentText, setCurrentText] = useState('');
-  const [round, setRound] = useState(0); // 0~9 (총 10라운드)
+  const [round, setRound] = useState(0); // 0~29 (최대 30라운드, 타이머로 제한)
   const [judgment, setJudgment] = useState<Judgment | null>(null);
+  const [timeLeft, setTimeLeft] = useState(300); // 5분 = 300초
 
   // 실행 취소용 ref
   const abortRef = useRef(false);
@@ -97,11 +99,40 @@ export default function DebateView() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
+  // ─── 타이머 ──────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    if (phase !== 'running') {
+      setTimeLeft(300);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => {
+        const next = prev - 1;
+        if (next <= 0) {
+          abortRef.current = true;
+          return 0;
+        }
+        return next;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [phase]);
+
+  // 타이머가 0이 되면 토론 종료
+  useEffect(() => {
+    if (phase === 'running' && timeLeft === 0) {
+      endDebate();
+    }
+  }, [timeLeft, phase]);
+
   // ─── 캐시 조회 ─────────────────────────────────────────────────────────────
 
-  const fetchCache = async (topic: string): Promise<{ messages: DebateMessage[]; judgment: Judgment | null } | null> => {
+  const fetchCache = async (topic: string, style: string): Promise<{ messages: DebateMessage[]; judgment: Judgment | null } | null> => {
     try {
-      const res = await fetch(`/api/debate-cache?topic=${encodeURIComponent(topic)}&style=free`);
+      const res = await fetch(`/api/debate-cache?topic=${encodeURIComponent(topic)}&style=${encodeURIComponent(style)}`);
       const data = await res.json();
       if (data.cached?.messages?.length > 0) {
         return {
@@ -167,7 +198,8 @@ export default function DebateView() {
   const streamRound = async (
     speaker: 'ohsehoon' | 'jungwono',
     topic: string,
-    opponentLastMessage: string
+    opponentLastMessage: string,
+    style: string
   ): Promise<string> => {
     return new Promise((resolve, reject) => {
       let fullText = '';
@@ -175,7 +207,7 @@ export default function DebateView() {
       fetch('/api/debate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic, speaker, opponentLastMessage }),
+        body: JSON.stringify({ topic, speaker, opponentLastMessage, style }),
       })
         .then((res) => {
           const reader = res.body!.getReader();
@@ -222,7 +254,7 @@ export default function DebateView() {
 
   // ─── 실시간 생성 모드 ──────────────────────────────────────────────────────
 
-  const runLiveDebate = async (topic: string) => {
+  const runLiveDebate = async (topic: string, style: string) => {
     abortRef.current = false;
     setMessages([]);
     setCurrentText('');
@@ -230,7 +262,7 @@ export default function DebateView() {
     const allMessages: DebateMessage[] = [];
     let lastText = '';
 
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 30; i++) {
       if (abortRef.current) break;
 
       const speaker: 'ohsehoon' | 'jungwono' = i % 2 === 0 ? 'ohsehoon' : 'jungwono';
@@ -241,7 +273,7 @@ export default function DebateView() {
       await sleep(500);
 
       try {
-        const text = await streamRound(speaker, topic, lastText);
+        const text = await streamRound(speaker, topic, lastText, style);
         if (abortRef.current) break;
 
         const bubbles = splitIntoBubbles(text);
@@ -289,7 +321,7 @@ export default function DebateView() {
       fetch('/api/debate-cache', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic, style: 'free', messages: allMessages, judgment: judgeResult }),
+        body: JSON.stringify({ topic, style, messages: allMessages, judgment: judgeResult }),
       }).catch(() => {});
     }
   };
@@ -320,23 +352,24 @@ export default function DebateView() {
   // ─── 토론 시작 ─────────────────────────────────────────────────────────────
 
   const startDebate = async () => {
-    if (!selectedTopic) return;
+    if (!selectedTopic || !selectedStyle) return;
 
     setPhase('running');
     setMessages([]);
     setCurrentText('');
     setRound(0);
     setJudgment(null);
+    setTimeLeft(300);
 
     const topicLabel =
       TOPICS.find((t) => t.id === selectedTopic)?.label || selectedTopic;
 
     // 캐시 확인
-    const cached = await fetchCache(topicLabel);
+    const cached = await fetchCache(topicLabel, selectedStyle);
     if (cached) {
       await replayDebate(cached.messages, cached.judgment);
     } else {
-      await runLiveDebate(topicLabel);
+      await runLiveDebate(topicLabel, selectedStyle);
     }
   };
 
@@ -402,7 +435,7 @@ export default function DebateView() {
         </div>
 
         {/* 주제 그리드 */}
-        <div className="px-4 grid grid-cols-2 gap-2">
+        <div className="px-4 grid grid-cols-2 gap-2 mb-4">
           {TOPICS.map((topic) => (
             <button
               key={topic.id}
@@ -427,19 +460,93 @@ export default function DebateView() {
           ))}
         </div>
 
+        {/* 토론 방식 선택 */}
+        <div className="px-4 mb-2">
+          <p className="text-white/70 text-sm font-semibold">🎤 토론 방식을 선택하세요</p>
+        </div>
+
+        <div className="px-4 grid grid-cols-1 gap-2 mb-4">
+          <button
+            onClick={() => setSelectedStyle('policy')}
+            className="relative rounded-xl px-4 py-3 text-left transition-all duration-200 border"
+            style={{
+              background:
+                selectedStyle === 'policy'
+                  ? 'linear-gradient(135deg, rgba(59,130,246,0.3), rgba(29,78,216,0.3))'
+                  : 'rgba(255,255,255,0.05)',
+              borderColor:
+                selectedStyle === 'policy' ? 'rgba(59,130,246,0.6)' : 'rgba(255,255,255,0.1)',
+            }}
+          >
+            <div className="text-white font-bold text-sm">🎯 정책 토론</div>
+            <div className="text-white/60 text-xs mt-1">구체적 수치, 정책 공약, 데이터 중심</div>
+            {selectedStyle === 'policy' && (
+              <span className="absolute top-2 right-2 text-blue-400 text-xs">✓</span>
+            )}
+          </button>
+
+          <button
+            onClick={() => setSelectedStyle('emotional')}
+            className="relative rounded-xl px-4 py-3 text-left transition-all duration-200 border"
+            style={{
+              background:
+                selectedStyle === 'emotional'
+                  ? 'linear-gradient(135deg, rgba(239,68,68,0.3), rgba(185,28,28,0.3))'
+                  : 'rgba(255,255,255,0.05)',
+              borderColor:
+                selectedStyle === 'emotional' ? 'rgba(239,68,68,0.6)' : 'rgba(255,255,255,0.1)',
+            }}
+          >
+            <div className="text-white font-bold text-sm">🔥 감정 토론</div>
+            <div className="text-white/60 text-xs mt-1">감정적, 격렬하게, 서로 공격하는 스타일</div>
+            {selectedStyle === 'emotional' && (
+              <span className="absolute top-2 right-2 text-red-400 text-xs">✓</span>
+            )}
+          </button>
+
+          <button
+            onClick={() => setSelectedStyle('consensus')}
+            className="relative rounded-xl px-4 py-3 text-left transition-all duration-200 border"
+            style={{
+              background:
+                selectedStyle === 'consensus'
+                  ? 'linear-gradient(135deg, rgba(167,139,250,0.3), rgba(124,58,237,0.3))'
+                  : 'rgba(255,255,255,0.05)',
+              borderColor:
+                selectedStyle === 'consensus' ? 'rgba(167,139,250,0.6)' : 'rgba(255,255,255,0.1)',
+            }}
+          >
+            <div className="text-white font-bold text-sm">🤝 합의 도출</div>
+            <div className="text-white/60 text-xs mt-1">공통점 찾고, 접점 만들기, 타협안 제시</div>
+            {selectedStyle === 'consensus' && (
+              <span className="absolute top-2 right-2 text-purple-400 text-xs">✓</span>
+            )}
+          </button>
+        </div>
+
         {/* 시작 버튼 */}
-        <div className="p-4 mt-4">
+        <div className="p-4">
           <button
             onClick={startDebate}
-            disabled={!selectedTopic}
+            disabled={!selectedTopic || !selectedStyle}
             className="w-full py-4 rounded-2xl font-bold text-white text-lg transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
             style={{
-              background: selectedTopic
+              background: selectedStyle === 'policy'
+                ? 'linear-gradient(135deg, #3B82F6, #1D4ED8)'
+                : selectedStyle === 'emotional'
+                ? 'linear-gradient(135deg, #EF4444, #B91C1C)'
+                : selectedStyle === 'consensus'
                 ? 'linear-gradient(135deg, #A78BFA, #7C3AED)'
                 : 'rgba(255,255,255,0.1)',
             }}
           >
-            🥊 자유 토론 시작!
+            {selectedStyle === 'policy'
+              ? '🎯 정책 토론 시작!'
+              : selectedStyle === 'emotional'
+              ? '🔥 감정 토론 시작!'
+              : selectedStyle === 'consensus'
+              ? '🤝 합의 도출 시작!'
+              : '🥊 토론 시작'}
           </button>
         </div>
       </div>
@@ -471,8 +578,8 @@ export default function DebateView() {
         </div>
         {phase === 'running' && (
           <div className="flex items-center gap-2">
-            <span className="text-white/50 text-xs">
-              {round + 1} / 10
+            <span className="text-white/50 text-xs font-mono">
+              ⏱ {String(Math.floor(timeLeft / 60)).padStart(2, '0')}:{String(timeLeft % 60).padStart(2, '0')}
             </span>
             <button
               onClick={endDebate}
@@ -543,6 +650,7 @@ export default function DebateView() {
               setCurrentText('');
               setJudgment(null);
               setRound(0);
+              setTimeLeft(300);
             }}
             className="flex-1 py-3 rounded-xl text-sm font-bold text-white border transition-colors hover:bg-white/10"
             style={{ borderColor: 'rgba(255,255,255,0.2)' }}
