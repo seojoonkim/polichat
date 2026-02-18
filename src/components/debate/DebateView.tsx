@@ -595,18 +595,27 @@ export default function DebateView() {
       {/* 헤더 */}
       <div
         className="shrink-0 flex items-center justify-between px-4 pb-3 border-b"
-        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)', borderColor: 'rgba(255,255,255,0.1)' }}
+        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)', borderColor: 'rgba(255,255,255,0.15)' }}
       >
         <div className="flex items-center gap-2">
-          <span className="text-white font-bold text-sm truncate max-w-[180px]">
+          <span className="text-white font-extrabold text-base truncate max-w-[200px]">
             🥊 {topicLabel}
           </span>
         </div>
         {phase === 'running' && (
           <div className="flex items-center gap-2">
-            <span className="text-white/50 text-xs font-mono">
-              ⏱ {String(Math.floor(timeLeft / 60)).padStart(2, '0')}:{String(timeLeft % 60).padStart(2, '0')}
-            </span>
+            <div className="flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1">
+              {/* 초시계 SVG */}
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-purple-300">
+                <circle cx="12" cy="13" r="8"/>
+                <path d="M12 9v4l2.5 2.5"/>
+                <path d="M9 3h6"/>
+                <path d="M12 3v2"/>
+              </svg>
+              <span className="text-white font-bold text-base font-mono tracking-wide">
+                {String(Math.floor(timeLeft / 60)).padStart(2, '0')}:{String(timeLeft % 60).padStart(2, '0')}
+              </span>
+            </div>
             <button
               onClick={endDebate}
               className="text-xs px-3 py-1 rounded-full border text-white/70 hover:text-white transition-colors"
@@ -617,19 +626,19 @@ export default function DebateView() {
           </div>
         )}
         {(phase === 'judging' || phase === 'result') && (
-          <span className="text-yellow-400 text-xs font-bold">
+          <span className="text-yellow-400 text-sm font-bold">
             {phase === 'judging' ? '⏳ 판정 중...' : '🏆 결과'}
           </span>
         )}
       </div>
 
-      {/* 진행률 바 — 시간 경과 표시 (6분 = 360초) */}
+      {/* 진행률 바 — 남은 시간 표시 (왼쪽에서 오른쪽으로 줄어듦) */}
       {phase === 'running' && (
-        <div className="h-1 bg-white/10">
+        <div className="h-1.5 bg-white/10">
           <div
             className="h-full transition-all duration-1000"
             style={{
-              width: `${((360 - timeLeft) / 360) * 100}%`,
+              width: `${(timeLeft / 360) * 100}%`,
               background: 'linear-gradient(90deg, #A78BFA, #7C3AED)',
             }}
           />
