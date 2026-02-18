@@ -20,6 +20,8 @@ const TOPICS: Array<{ id: string; label: string }> = [
   { id: 'branding', label: '도시 브랜딩' },
   { id: 'education', label: '교육 격차 해소' },
   { id: 'smallbiz', label: '소상공인 지원' },
+  { id: 'safety', label: '치안·안전 정책' },
+  { id: 'culture', label: '문화·관광 육성' },
 ] as const;
 
 const OSH_COLOR = '#C9151E';
