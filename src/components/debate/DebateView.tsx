@@ -387,11 +387,11 @@ export default function DebateView() {
           <div className="flex flex-col items-center gap-0.5">
             <img
               src="/politicians/jungwono/profile.jpg"
-              alt="정원오"
+              alt="정원오 구청장"
               className="w-11 h-11 rounded-full object-cover border-2"
               style={{ borderColor: JWO_COLOR }}
             />
-            <span className="text-white text-[11px] font-bold">정원오</span>
+            <span className="text-white text-[11px] font-bold">정원오 구청장</span>
             <span className="text-white/40 text-[9px]">더불어민주</span>
           </div>
         </div>
@@ -573,7 +573,7 @@ function MessageBubble({
 }) {
   const isOsh = msg.speaker === 'ohsehoon';
   const color = isOsh ? OSH_COLOR : JWO_COLOR;
-  const name = isOsh ? '오세훈 시장' : '정원오';
+  const name = isOsh ? '오세훈 시장' : '정원오 구청장';
   const imgSrc = isOsh
     ? '/politicians/ohsehoon/profile.jpg'
     : '/politicians/jungwono/profile.jpg';
@@ -639,7 +639,7 @@ function JudgmentCard({
   jwoPct: number;
 }) {
   const isOshWinner = judgment.winner === 'ohsehoon';
-  const winnerName = isOshWinner ? '오세훈' : '정원오';
+  const winnerName = isOshWinner ? '오세훈' : '정원오 구청장';
   const winnerColor = isOshWinner ? OSH_COLOR : JWO_COLOR;
 
   const scoreItems = [
@@ -671,7 +671,7 @@ function JudgmentCard({
             오세훈 {oshPct}%
           </span>
           <span style={{ color: JWO_COLOR }} className="font-bold">
-            {jwoPct}% 정원오
+            {jwoPct}% 정원오 구청장
           </span>
         </div>
         <div className="flex h-3 rounded-full overflow-hidden">
