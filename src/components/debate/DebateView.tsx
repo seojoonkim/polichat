@@ -511,7 +511,7 @@ export default function DebateView() {
         ))}
 
         {/* 현재 타이핑 중인 발언 */}
-        {phase === 'running' && currentSpeaker && (
+        {phase === 'running' && currentSpeaker && currentText && (
           <MessageBubble
             msg={{ speaker: currentSpeaker, text: currentText, timestamp: Date.now() }}
             isActive
