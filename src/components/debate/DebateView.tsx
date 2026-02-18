@@ -357,7 +357,7 @@ export default function DebateView() {
 
   if (phase === 'setup') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex flex-col">
+      <div className="bg-gradient-to-br from-slate-900 to-slate-800 flex flex-col overflow-y-auto" style={{ height: '100svh' }}>
         {/* 헤더 */}
         <div
           className="flex items-center gap-3 px-4 pb-4"
@@ -455,10 +455,13 @@ export default function DebateView() {
   const jwoPct = 100 - oshPct;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex flex-col">
+    <div
+      className="bg-gradient-to-br from-slate-900 to-slate-800 flex flex-col overflow-hidden"
+      style={{ height: '100svh' }}
+    >
       {/* 헤더 */}
       <div
-        className="flex items-center justify-between px-4 pb-3 border-b"
+        className="shrink-0 flex items-center justify-between px-4 pb-3 border-b"
         style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)', borderColor: 'rgba(255,255,255,0.1)' }}
       >
         <div className="flex items-center gap-2">
