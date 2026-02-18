@@ -357,7 +357,7 @@ export default function DebateView() {
 
   if (phase === 'setup') {
     return (
-      <div className="bg-gradient-to-br from-slate-900 to-slate-800 flex flex-col overflow-y-auto" style={{ height: '100svh' }}>
+      <div className="bg-gradient-to-br from-slate-700 to-slate-800 flex flex-col overflow-y-auto" style={{ height: '100svh' }}>
         {/* 헤더 */}
         <div
           className="flex items-center gap-3 px-4 pb-4"
@@ -456,7 +456,7 @@ export default function DebateView() {
 
   return (
     <div
-      className="bg-gradient-to-br from-slate-900 to-slate-800 flex flex-col overflow-hidden"
+      className="bg-gradient-to-br from-slate-700 to-slate-800 flex flex-col overflow-hidden"
       style={{ height: '100svh' }}
     >
       {/* 헤더 */}
@@ -597,7 +597,7 @@ function MessageBubble({
       {/* 말풍선 */}
       <div className="max-w-[75%]">
         <span
-          className={`text-[11px] font-bold block mb-1 ${isOsh ? 'text-right' : 'text-left'}`}
+          className={`text-[12px] font-bold block mb-1 ${isOsh ? 'text-right' : 'text-left'}`}
           style={{ color }}
         >
           {name}
