@@ -374,25 +374,25 @@ export default function DebateView() {
 
         {/* 후보 미리보기 */}
         <div className="flex items-center justify-center gap-4 px-4 mb-3">
-          <div className="flex flex-col items-center gap-0.5">
+          <div className="flex flex-col items-center gap-1">
             <img
               src="/politicians/ohsehoon/profile.jpg"
               alt="오세훈"
-              className="w-11 h-11 rounded-full object-cover border-2"
+              className="w-24 h-24 rounded-full object-cover border-2"
               style={{ borderColor: OSH_COLOR }}
             />
-            <span className="text-white text-[11px] font-bold">오세훈</span>
+            <span className="text-white text-sm font-bold">오세훈</span>
           </div>
-          <div className="text-yellow-400 font-black text-xl">VS</div>
-          <div className="flex flex-col items-center gap-0.5">
+          <div className="text-yellow-400 font-black text-2xl">VS</div>
+          <div className="flex flex-col items-center gap-1">
             <img
               src="/politicians/jungwono/profile.jpg"
               alt="정원오 구청장"
-              className="w-11 h-11 rounded-full object-cover border-2"
+              className="w-24 h-24 rounded-full object-cover border-2"
               style={{ borderColor: JWO_COLOR }}
             />
-            <span className="text-white text-[11px] font-bold">정원오 구청장</span>
-            <span className="text-white/40 text-[9px]">더불어민주</span>
+            <span className="text-white text-sm font-bold">정원오 구청장</span>
+            <span className="text-white/40 text-[10px]">더불어민주</span>
           </div>
         </div>
 
