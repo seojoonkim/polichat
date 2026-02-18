@@ -468,7 +468,7 @@ export default function DebateView() {
                 color: selectedTopic === topic.id ? 'rgba(255,215,0,0.9)' : 'rgba(255,255,255,0.5)',
               }}
             >
-              <span className="text-white text-[11px] font-semibold leading-tight">{topic.label}</span>
+              <span className="text-white text-[12px] font-semibold leading-tight">{topic.label}</span>
               {selectedTopic === topic.id && (
                 <span className="absolute top-1.5 right-1.5 text-yellow-400 text-xs">✓</span>
               )}
