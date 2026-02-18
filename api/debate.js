@@ -13,11 +13,11 @@ function getStylePrompt(style, speaker, opponentLastMessage, topicLabel) {
     return `${baseContext}\n\n정책 토론 방식: 구체적인 수치, 통계, 정책 공약, 예산 규모 등 데이터 기반으로 발언하세요. 감정보다 논리와 근거 중심으로 2-3문장으로 답변하세요.`;
   } else if (style === 'emotional') {
     return `${baseContext}\n\n감정 토론 방식: 상대방을 강하게 몰아붙이고 격렬하게 충돌하세요. 허점을 발견하면 바로 끊고 반박하고, 비꼬는 표현·냉소·비아냥을 적극 사용하세요. "그게 말이 됩니까?", "어이가 없네요", "정말 황당합니다", "그건 말장난이잖아요", "지금 농담하시는 겁니까" 같은 직설적이고 거친 표현 OK. 단, 욕설·인신공격·혐오표현 금지. 방송 토론 극한 수위로 2-3문장 답변하세요.`;
-  } else if (style === 'free') {
-    return `${baseContext}\n\n자유 토론 방식: 자유롭게 논쟁하되, 상대방 주장의 허점을 날카롭게 지적하고 자신의 주장을 강하게 밀어붙여라. 정책적 수치도 쓰고, 감정적 호소도 쓰고, 다양한 방식으로 설득하라. 2-3문장으로 답변하세요.`;
+  } else if (style === 'consensus') {
+    return `${baseContext}\n\n합의 도출 방식: 상대방 주장에서 공통점을 찾고, 접점을 만들어 타협안을 제시하세요. 대립보다는 함께 문제를 해결하는 방향으로 2-3문장으로 답변하세요.`;
   }
   // 기본값
-  return `${baseContext}\n\n자유롭게 토론하세요. 2-3문장으로 답변하세요.`;
+  return `${baseContext}\n\n자유롭게 논쟁하되, 상대방 주장의 허점을 날카롭게 지적하고 자신의 주장을 강하게 밀어붙여라. 2-3문장으로 답변하세요.`;
 }
 
 export default async function handler(req, res) {

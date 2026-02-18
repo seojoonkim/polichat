@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router';
 // const TOPIC_ICONS: Record<string, React.ReactNode> = { ... };
 
 const TOPICS: Array<{ id: string; label: string }> = [
+  { id: 'free', label: '🎲 자유토론 (2분마다 전환)' },
   { id: 'redevelopment', label: '재개발 vs 도시재생' },
   { id: 'gentrification', label: '젠트리피케이션 대응' },
   { id: 'housing', label: '주거 정책 방향' },
@@ -72,8 +73,8 @@ export default function DebateView() {
   const navigate = useNavigate();
 
   // 설정 상태
-  const [selectedTopic, setSelectedTopic] = useState<string>(TOPICS[0]?.id || 'redevelopment');
-  const [selectedStyle, setSelectedStyle] = useState<'free' | 'policy' | 'emotional'>('free');
+  const [selectedTopic, setSelectedTopic] = useState<string>(TOPICS[1]?.id || 'redevelopment');
+  const [selectedStyle, setSelectedStyle] = useState<'policy' | 'emotional' | 'consensus'>('policy');
 
   // 토론 상태
   const [phase, setPhase] = useState<Phase>('setup');
@@ -82,11 +83,12 @@ export default function DebateView() {
   const [currentText, setCurrentText] = useState('');
   const [round, setRound] = useState(0); // 0~29 (최대 30라운드, 타이머로 제한)
   const [judgment, setJudgment] = useState<Judgment | null>(null);
-  const [timeLeft, setTimeLeft] = useState(300); // 5분 = 300초
+  const [timeLeft, setTimeLeft] = useState(360); // 6분 = 360초
 
   // 실행 취소용 ref
   const abortRef = useRef(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const freeTopicRef = useRef<string>('');
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -103,7 +105,7 @@ export default function DebateView() {
 
   useEffect(() => {
     if (phase !== 'running') {
-      setTimeLeft(300);
+      setTimeLeft(360);
       return;
     }
 
@@ -127,6 +129,25 @@ export default function DebateView() {
       endDebate();
     }
   }, [timeLeft, phase]);
+
+  // 자유토론: 240초, 120초에서 랜덤 주제 전환
+  useEffect(() => {
+    if (selectedTopic !== 'free' || phase !== 'running') return;
+    if (timeLeft !== 240 && timeLeft !== 120) return;
+
+    const realTopics = TOPICS.filter(t => t.id !== 'free');
+    const next = realTopics[Math.floor(Math.random() * realTopics.length)];
+    if (!next) return;
+    
+    freeTopicRef.current = next.label;
+
+    setMessages(prev => [...prev, {
+      speaker: 'ohsehoon' as const,
+      text: `🎲 주제 전환! 새 주제: "${next.label}"`,
+      timestamp: Date.now(),
+      isTopicChange: true,
+    }]);
+  }, [timeLeft, selectedTopic, phase]);
 
   // ─── 캐시 조회 ─────────────────────────────────────────────────────────────
 
@@ -254,7 +275,7 @@ export default function DebateView() {
 
   // ─── 실시간 생성 모드 ──────────────────────────────────────────────────────
 
-  const runLiveDebate = async (topic: string, style: string) => {
+  const runLiveDebate = async (initialTopic: string, style: string) => {
     abortRef.current = false;
     setMessages([]);
     setCurrentText('');
@@ -265,20 +286,6 @@ export default function DebateView() {
     for (let i = 0; i < 30; i++) {
       if (abortRef.current) break;
 
-      // round가 4의 배수이고 > 0이면 주제 변경 권장 메시지 (free 방식만)
-      if (style === 'free' && i > 0 && i % 4 === 0) {
-        const topicChangeMsg: DebateMessage = {
-          speaker: 'ohsehoon',
-          text: `🎲 2라운드가 끝났어요! 주제를 바꿔볼까요? 지금 주제: "${topic}"`,
-          timestamp: Date.now(),
-          isTopicChange: true,
-        };
-        setMessages((prev) => [...prev, topicChangeMsg]);
-        allMessages.push(topicChangeMsg);
-        scrollToBottom();
-        await sleep(1500);
-      }
-
       const speaker: 'ohsehoon' | 'jungwono' = i % 2 === 0 ? 'ohsehoon' : 'jungwono';
       setRound(i);
       setCurrentSpeaker(speaker);
@@ -287,7 +294,8 @@ export default function DebateView() {
       await sleep(500);
 
       try {
-        const text = await streamRound(speaker, topic, lastText, style);
+        const currentTopic = selectedTopic === 'free' ? freeTopicRef.current : initialTopic;
+        const text = await streamRound(speaker, currentTopic, lastText, style);
         if (abortRef.current) break;
 
         const bubbles = splitIntoBubbles(text);
@@ -335,7 +343,7 @@ export default function DebateView() {
       fetch('/api/debate-cache', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic, style, messages: allMessages, judgment: judgeResult }),
+        body: JSON.stringify({ topic: initialTopic, style, messages: allMessages, judgment: judgeResult }),
       }).catch(() => {});
     }
   };
@@ -366,20 +374,27 @@ export default function DebateView() {
   // ─── 토론 시작 ─────────────────────────────────────────────────────────────
 
   const startDebate = async () => {
-    // 자유 토론이면 랜덤 주제 선택
-    const topicId = selectedStyle === 'free'
-      ? (TOPICS[Math.floor(Math.random() * TOPICS.length)]?.id || 'redevelopment')
-      : selectedTopic;
-
-    const topicLabel =
-      TOPICS.find((t) => t.id === topicId)?.label || topicId;
+    let topicLabel: string;
+    if (selectedTopic === 'free') {
+      const realTopics = TOPICS.filter(t => t.id !== 'free');
+      const first = realTopics[Math.floor(Math.random() * realTopics.length)];
+      if (!first) {
+        topicLabel = 'redevelopment';
+        freeTopicRef.current = '재개발 vs 도시재생';
+      } else {
+        freeTopicRef.current = first.label;
+        topicLabel = first.label;
+      }
+    } else {
+      topicLabel = TOPICS.find(t => t.id === selectedTopic)?.label || selectedTopic || '';
+    }
 
     setPhase('running');
     setMessages([]);
     setCurrentText('');
     setRound(0);
     setJudgment(null);
-    setTimeLeft(300);
+    setTimeLeft(360);
 
     // 캐시 확인
     const cached = await fetchCache(topicLabel, selectedStyle);
@@ -483,25 +498,6 @@ export default function DebateView() {
 
         <div className="px-4 grid grid-cols-3 gap-2 mb-4">
           <button
-            onClick={() => setSelectedStyle('free')}
-            className="relative rounded-xl px-1.5 py-[10px] text-center transition-all duration-200 border"
-            style={{
-              background:
-                selectedStyle === 'free'
-                  ? 'linear-gradient(135deg, rgba(167,139,250,0.4), rgba(124,58,237,0.4))'
-                  : 'rgba(167,139,250,0.08)',
-              borderColor:
-                selectedStyle === 'free' ? 'rgba(167,139,250,0.8)' : 'rgba(167,139,250,0.2)',
-            }}
-          >
-            <div className="text-white font-bold text-sm">🎲 자유 토론</div>
-            <div className="text-white/60 text-[10px] text-center mt-0.5">랜덤 주제 전환</div>
-            {selectedStyle === 'free' && (
-              <span className="absolute top-1.5 right-1.5 text-purple-400 text-xs">✓</span>
-            )}
-          </button>
-
-          <button
             onClick={() => setSelectedStyle('policy')}
             className="relative rounded-xl px-1.5 py-[10px] text-center transition-all duration-200 border"
             style={{
@@ -538,6 +534,25 @@ export default function DebateView() {
               <span className="absolute top-1.5 right-1.5 text-purple-400 text-xs">✓</span>
             )}
           </button>
+
+          <button
+            onClick={() => setSelectedStyle('consensus')}
+            className="relative rounded-xl px-1.5 py-[10px] text-center transition-all duration-200 border"
+            style={{
+              background:
+                selectedStyle === 'consensus'
+                  ? 'linear-gradient(135deg, rgba(167,139,250,0.4), rgba(124,58,237,0.4))'
+                  : 'rgba(167,139,250,0.08)',
+              borderColor:
+                selectedStyle === 'consensus' ? 'rgba(167,139,250,0.8)' : 'rgba(167,139,250,0.2)',
+            }}
+          >
+            <div className="text-white font-bold text-sm">🤝 합의 도출</div>
+            <div className="text-white/60 text-[10px] text-center mt-0.5">접점·타협안 제시</div>
+            {selectedStyle === 'consensus' && (
+              <span className="absolute top-1.5 right-1.5 text-purple-400 text-xs">✓</span>
+            )}
+          </button>
         </div>
 
         {/* 시작 버튼 */}
@@ -551,9 +566,9 @@ export default function DebateView() {
               opacity: !selectedTopic || !selectedStyle ? 0.4 : 1,
             }}
           >
-            {selectedStyle === 'free' ? '🎲 자유 토론 시작!' 
-              : selectedStyle === 'policy' ? '🎯 정책 토론 시작!' 
-              : '🔥 감정 토론 시작!'}
+            {selectedStyle === 'policy' ? '🎯 정책 토론 시작!' 
+              : selectedStyle === 'emotional' ? '🔥 감정 토론 시작!' 
+              : '🤝 합의 도출 시작!'}
           </button>
         </div>
       </div>
@@ -562,7 +577,9 @@ export default function DebateView() {
 
   // ─── UI: 토론 진행 + 결과 화면 ────────────────────────────────────────────
 
-  const topicLabel = TOPICS.find((t) => t.id === selectedTopic)?.label || selectedTopic || '';
+  const topicLabel = selectedTopic === 'free'
+    ? (freeTopicRef.current || '자유토론')
+    : (TOPICS.find(t => t.id === selectedTopic)?.label || selectedTopic || '');
   const oshScore = judgment?.scores.ohsehoon.total ?? 0;
   const jwoScore = judgment?.scores.jungwono.total ?? 0;
   const totalScore = oshScore + jwoScore || 100;
@@ -657,7 +674,7 @@ export default function DebateView() {
               setCurrentText('');
               setJudgment(null);
               setRound(0);
-              setTimeLeft(300);
+              setTimeLeft(360);
             }}
             className="flex-1 py-3 rounded-xl text-sm font-bold text-white border transition-colors hover:bg-white/10"
             style={{ borderColor: 'rgba(255,255,255,0.2)' }}
