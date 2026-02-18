@@ -443,7 +443,7 @@ export default function DebateView() {
               style={{ borderColor: JWO_COLOR }}
             />
             <span className="text-white text-sm font-bold">정원오 구청장</span>
-            <span className="text-white/40 text-[10px]">더불어민주</span>
+            <span className="text-white/40 text-[10px]">더불어민주당</span>
           </div>
         </div>
 
