@@ -99,6 +99,13 @@ export default function DebateView() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
+  // 새 말풍선 추가될 때마다 자동 스크롤
+  useEffect(() => {
+    if (messages.length > 0) {
+      scrollToBottom();
+    }
+  }, [messages, scrollToBottom]);
+
   // ─── 타이머 ──────────────────────────────────────────────────────────────
 
   useEffect(() => {
