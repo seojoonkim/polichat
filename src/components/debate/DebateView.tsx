@@ -359,7 +359,10 @@ export default function DebateView() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex flex-col">
         {/* 헤더 */}
-        <div className="flex items-center gap-3 px-4 pt-6 pb-4">
+        <div
+          className="flex items-center gap-3 px-4 pb-4"
+          style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 24px)' }}
+        >
           <button
             onClick={() => navigate('/')}
             className="text-white/60 hover:text-white transition-colors"
@@ -455,8 +458,8 @@ export default function DebateView() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex flex-col">
       {/* 헤더 */}
       <div
-        className="flex items-center justify-between px-4 py-3 border-b"
-        style={{ borderColor: 'rgba(255,255,255,0.1)' }}
+        className="flex items-center justify-between px-4 pb-3 border-b"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)', borderColor: 'rgba(255,255,255,0.1)' }}
       >
         <div className="flex items-center gap-2">
           <span className="text-white font-bold text-sm truncate max-w-[180px]">
