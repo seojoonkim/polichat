@@ -13,8 +13,8 @@ function getStylePrompt(style, speaker, opponentLastMessage, topicLabel) {
     return `${baseContext}\n\n정책 토론 방식: 구체적인 수치, 통계, 정책 공약, 예산 규모 등 데이터 기반으로 발언하세요. 감정보다 논리와 근거 중심으로 2-3문장으로 답변하세요.`;
   } else if (style === 'emotional') {
     return `${baseContext}\n\n감정 토론 방식: 상대방 주장의 허점을 날카롭게 공격하고 감정적으로 반응하세요. 격렬하고 직접적으로 반박하되 정치인답게 2-3문장으로 답변하세요.`;
-  } else if (style === 'consensus') {
-    return `${baseContext}\n\n합의 도출 방식: 상대방의 의견에서 공통점을 찾고, 양측이 동의할 수 있는 접점과 타협안을 제시하세요. 협력적 톤으로 2-3문장으로 답변하세요.`;
+  } else if (style === 'free') {
+    return `${baseContext}\n\n자유 토론 방식: 자유롭게 논쟁하되, 상대방 주장의 허점을 날카롭게 지적하고 자신의 주장을 강하게 밀어붙여라. 정책적 수치도 쓰고, 감정적 호소도 쓰고, 다양한 방식으로 설득하라. 2-3문장으로 답변하세요.`;
   }
   // 기본값
   return `${baseContext}\n\n자유롭게 토론하세요. 2-3문장으로 답변하세요.`;
