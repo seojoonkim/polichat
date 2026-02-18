@@ -406,7 +406,7 @@ export default function DebateView() {
             <button
               key={topic.id}
               onClick={() => setSelectedTopic(topic.id)}
-              className="relative rounded-xl p-2.5 text-left transition-all duration-200 border flex items-center gap-2"
+              className="relative rounded-xl px-2.5 py-[17px] text-left transition-all duration-200 border flex items-center gap-2"
               style={{
                 background:
                   selectedTopic === topic.id
@@ -434,7 +434,7 @@ export default function DebateView() {
             className="w-full py-4 rounded-2xl font-bold text-white text-lg transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
             style={{
               background: selectedTopic
-                ? 'linear-gradient(135deg, #C9151E, #8B0A10)'
+                ? 'linear-gradient(135deg, #A78BFA, #7C3AED)'
                 : 'rgba(255,255,255,0.1)',
             }}
           >
