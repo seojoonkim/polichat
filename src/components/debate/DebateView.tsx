@@ -382,6 +382,7 @@ export default function DebateView() {
               style={{ borderColor: OSH_COLOR }}
             />
             <span className="text-white text-sm font-bold">오세훈</span>
+            <span className="text-white/40 text-[10px]">국민의힘</span>
           </div>
           <div className="text-yellow-400 font-black text-2xl">VS</div>
           <div className="flex flex-col items-center gap-1">
