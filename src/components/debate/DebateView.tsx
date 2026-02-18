@@ -83,7 +83,7 @@ export default function DebateView() {
   const [messages, setMessages] = useState<DebateMessage[]>([]);
   const [currentSpeaker, setCurrentSpeaker] = useState<'ohsehoon' | 'jungwono' | null>(null);
   const [currentText, setCurrentText] = useState('');
-  const [round, setRound] = useState(0); // 0~29 (최대 30라운드, 타이머로 제한)
+  const [_round, setRound] = useState(0); // 0~29 (최대 30라운드, 타이머로 제한)
   const [judgment, setJudgment] = useState<Judgment | null>(null);
   const [timeLeft, setTimeLeft] = useState(360); // 6분 = 360초
 
