@@ -138,7 +138,7 @@ export default function DebateView() {
         if (abortRef.current) break;
         displayed += char;
         setCurrentText(displayed);
-        const delay = ['.', '!', '?', ','].includes(char) ? 80 : 25 + Math.random() * 15;
+        const delay = ['.', '!', '?', ','].includes(char) ? 52 : 16 + Math.random() * 10;
         await sleep(delay);
       }
 
@@ -256,7 +256,7 @@ export default function DebateView() {
             if (abortRef.current) break;
             displayed += char;
             setCurrentText(displayed);
-            await sleep(120);
+            await sleep(78);
           }
 
           if (abortRef.current) break;
