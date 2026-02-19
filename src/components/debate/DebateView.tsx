@@ -92,16 +92,23 @@ export default function DebateView() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const freeTopicRef = useRef<string>('');
 
-  const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
+    messagesEndRef.current?.scrollIntoView({ behavior });
   }, []);
 
-  // 새 말풍선 추가될 때마다 자동 스크롤
+  // 완료된 말풍선 추가 시 → 부드럽게 스크롤
   useEffect(() => {
     if (messages.length > 0) {
-      scrollToBottom();
+      scrollToBottom('smooth');
     }
   }, [messages, scrollToBottom]);
+
+  // 타이핑 중 글자 추가 시 → 즉시 스크롤 (말풍선 높이 변화 따라가기)
+  useEffect(() => {
+    if (currentText) {
+      scrollToBottom('instant');
+    }
+  }, [currentText, scrollToBottom]);
 
   // ─── 타이머 ──────────────────────────────────────────────────────────────
 
