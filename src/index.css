@@ -76,13 +76,30 @@ body {
   letter-spacing: -0.01em;
 }
 
-/* ===== Polichat Background - Light Mode ===== */
+/* ===== Polichat Background - Animated Light Mode ===== */
+@keyframes bg-drift {
+  0%   { background-position: 0% 0%; }
+  25%  { background-position: 100% 0%; }
+  50%  { background-position: 100% 100%; }
+  75%  { background-position: 0% 100%; }
+  100% { background-position: 0% 0%; }
+}
+
 .polichat-bg {
   position: relative;
   min-height: 100svh;
   -webkit-overflow-scrolling: touch;
-  background: linear-gradient(160deg, #ffffff 0%, #f5f4f9 50%, #edeaf5 100%);
+  background: linear-gradient(135deg, #ffffff, #f8f5ff, #f0eef8, #edeaf5, #f5f4f9, #ffffff);
+  background-size: 400% 400%;
+  animation: bg-drift 20s ease infinite;
   background-attachment: fixed;
+}
+
+/* 고정 크기(fixed inset-0) 화면용 — debate 등 */
+.app-bg {
+  background: linear-gradient(135deg, #ffffff, #f8f5ff, #f0eef8, #edeaf5, #f5f4f9, #ffffff);
+  background-size: 400% 400%;
+  animation: bg-drift 20s ease infinite;
 }
 
 .policy-pattern {
