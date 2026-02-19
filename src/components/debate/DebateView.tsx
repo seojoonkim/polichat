@@ -412,7 +412,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
               streamedText += char;
               currentBubble += char;
               setCurrentText(currentBubble);
-              await sleep(55);
+              await sleep(document.hidden ? 0 : 55);
 
               // 문장 끝 감지
               const isSentenceEnd = /[.!?]$/.test(currentBubble.trimEnd());
