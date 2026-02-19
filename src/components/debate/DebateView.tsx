@@ -91,30 +91,6 @@ type Phase = 'setup' | 'running' | 'judging' | 'result';
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-function splitIntoBubbles(text: string): string[] {
-  const sentences = text.split(/(?<=[.!?。])\s+/).filter(s => s.trim().length > 0);
-  if (sentences.length <= 1) return [text];
-
-  // 최대 3개 말풍선으로 분리 — 내용 손실 없이 전체 보존
-  // 앞 2개 말풍선: 80자 이내 자연스러운 문장 단위 / 3번째: 나머지 전체
-  const bubbles: string[] = [];
-  let current = '';
-
-  for (const s of sentences) {
-    if (bubbles.length >= 2) {
-      // 3번째 말풍선은 남은 텍스트 전부 담기
-      current += (current ? ' ' : '') + s;
-    } else if (current.length > 0 && current.length + s.length > 80) {
-      bubbles.push(current.trim());
-      current = s;
-    } else {
-      current += (current ? ' ' : '') + s;
-    }
-  }
-  if (current) bubbles.push(current.trim());
-  return bubbles;
-}
-
 // ─── 메인 컴포넌트 ─────────────────────────────────────────────────────────────
 
 export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {

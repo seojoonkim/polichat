@@ -7,6 +7,22 @@ interface Props {
   politicians: PoliticianMeta[];
 }
 
+// 홈 화면에서 body scroll 허용 (채팅 화면은 자체 fixed 레이아웃)
+function useBodyScrollUnlock() {
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    const prevPos = document.body.style.position;
+    document.body.style.overflow = 'auto';
+    document.body.style.position = 'static';
+    document.documentElement.style.overflow = 'auto';
+    return () => {
+      document.body.style.overflow = prev;
+      document.body.style.position = prevPos;
+      document.documentElement.style.overflow = '';
+    };
+  }, []);
+}
+
 function getInitials(name: string): string {
   return name.slice(0, 1);
 }
@@ -96,6 +112,7 @@ function TypingPreview({ name }: { name: string }) {
 }
 
 export default function PoliticianSelector({ politicians }: Props) {
+  useBodyScrollUnlock();
   const setCurrentPolitician = useChatStore((s) => s.setCurrentPolitician);
   const cardsRef = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -113,7 +130,7 @@ export default function PoliticianSelector({ politicians }: Props) {
 
   return (
     <div style={{ background: '#0D0F1A', minHeight: '100vh' }}>
-    <div className="polichat-bg overflow-y-auto overflow-x-hidden relative hide-scrollbar" style={{ height: '100svh', maxWidth: '700px', margin: '0 auto' }}>
+    <div className="polichat-bg overflow-x-hidden relative" style={{ maxWidth: '700px', margin: '0 auto', minHeight: '100svh' }}>
       {/* Mesh gradient background */}
       <div className="policy-pattern" />
 
