@@ -122,6 +122,9 @@ export default async function handler(req, res) {
       ...messages,
     ];
 
+    const apiAbort = new AbortController();
+    const apiTimeout = setTimeout(() => apiAbort.abort(), 25000); // 25초 타임아웃
+
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -136,7 +139,9 @@ export default async function handler(req, res) {
         stream: true,
         messages: openaiMessages,
       }),
+      signal: apiAbort.signal,
     });
+    clearTimeout(apiTimeout);
 
     if (!response.ok) {
       const err = await response.text();

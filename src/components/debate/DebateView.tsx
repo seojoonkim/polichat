@@ -264,13 +264,42 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
   ): Promise<string> => {
     return new Promise((resolve, reject) => {
       let fullText = '';
+      let firstTokenReceived = false;
+
+      // ── 타임아웃 설정 ──────────────────────────────────────────────────────
+      const abortCtrl = new AbortController();
+
+      // 12초 내 첫 토큰 미수신 시 abort
+      const firstTokenTimeout = setTimeout(() => {
+        if (!firstTokenReceived) {
+          abortCtrl.abort();
+          reject(new Error('First token timeout'));
+        }
+      }, 12000);
+
+      // 전체 스트림 30초 hard limit
+      const hardTimeout = setTimeout(() => {
+        abortCtrl.abort();
+        reject(new Error('Stream hard timeout'));
+      }, 30000);
+
+      const cleanup = () => {
+        clearTimeout(firstTokenTimeout);
+        clearTimeout(hardTimeout);
+      };
 
       fetch('/api/debate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ topic, speaker, opponentLastMessage, style, debateType }),
+        signal: abortCtrl.signal,
       })
         .then((res) => {
+          if (!res.ok) {
+            cleanup();
+            reject(new Error(`HTTP ${res.status}`));
+            return;
+          }
           const reader = res.body!.getReader();
           const decoder = new TextDecoder();
           let buf = '';
@@ -278,6 +307,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           const pump = async (): Promise<void> => {
             const { done, value } = await reader.read();
             if (done) {
+              cleanup();
               resolve(fullText);
               return;
             }
@@ -293,25 +323,33 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
               try {
                 const json = JSON.parse(data);
                 if (json.error) {
+                  cleanup();
                   reject(new Error(json.error));
                   return;
                 }
                 if (json.text) {
+                  if (!firstTokenReceived) {
+                    firstTokenReceived = true;
+                    clearTimeout(firstTokenTimeout); // 첫 토큰 도착 → 타임아웃 해제
+                  }
                   fullText += json.text;
-                  if (abortRef.current) return;
+                  if (abortRef.current) {
+                    cleanup();
+                    return;
+                  }
                   await onToken?.(json.text);
                 }
               } catch {
-                // skip
+                // skip malformed
               }
             }
 
             return pump();
           };
 
-          pump().catch(reject);
+          pump().catch((err) => { cleanup(); reject(err); });
         })
-        .catch(reject);
+        .catch((err) => { cleanup(); reject(err); });
     });
   };
 
