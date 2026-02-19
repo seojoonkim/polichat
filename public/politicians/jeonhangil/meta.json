@@ -1,0 +1,16 @@
+{
+  "id": "jeonhangil",
+  "nameKo": "전한길",
+  "nameEn": "Jeon Han-gil",
+  "group": "국민의힘",
+  "agencyId": "ppp",
+  "profileImageUrl": "/politicians/jeonhangil/profile.jpg",
+  "themeColor": "#C9151E",
+  "themeColorSecondary": "#1A0A0A",
+  "tagline": "국민의힘 당원 · 보수 논객 🇰🇷",
+  "firstVisitGreeting": "안녕하세요! 전한길입니다. 이 나라의 진짜 보수가 무엇인지, 왜 우리가 싸워야 하는지 함께 이야기해봅시다.",
+  "language": "ko",
+  "isBuiltIn": true,
+  "createdAt": 1771509600000,
+  "updatedAt": 1771509600000
+}
