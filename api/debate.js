@@ -141,7 +141,7 @@ export default async function handler(req, res) {
       method: 'POST',
       headers,
       body: JSON.stringify({
-        model: 'openai/gpt-4o-mini',
+        model: isOpenAI ? 'gpt-4o-mini' : 'openai/gpt-4o-mini',
         max_tokens: 300,
         stream: true,
         messages: openaiMessages,
