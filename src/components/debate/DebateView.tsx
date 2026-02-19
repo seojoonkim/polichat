@@ -212,8 +212,9 @@ export default function DebateView() {
       if (abortRef.current) break;
 
       // 완료된 메시지를 목록에 추가
-      setMessages((prev) => [...prev, { speaker: msg.speaker, text: msg.text, timestamp: msg.timestamp }]);
       setCurrentText('');
+      setCurrentSpeaker(null); // 다음 화자 전환 전 인디케이터 제거
+      setMessages((prev) => [...prev, { speaker: msg.speaker, text: msg.text, timestamp: msg.timestamp }]);
       scrollToBottom();
       await sleep(900);
     }
@@ -332,13 +333,15 @@ export default function DebateView() {
 
           const msg: DebateMessage = { speaker, text: bubbleText, timestamp: Date.now() };
           allMessages.push(msg);
-          setMessages((prev) => [...prev, msg]);
           setCurrentText('');
+          setMessages((prev) => [...prev, msg]);
           scrollToBottom();
 
           await sleep(400);
         }
 
+        // 이번 턴 말풍선 모두 완료 → 다음 화자 전환 전 인디케이터 제거
+        setCurrentSpeaker(null);
         lastText = text;
 
         await sleep(400);
