@@ -783,7 +783,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           <JudgmentCard judgment={judgment} oshPct={oshPct} jwoPct={jwoPct} config={config} />
         )}
 
-        <div ref={messagesEndRef} />
+        <div ref={messagesEndRef} className="h-16" />
       </div>
 
       {/* 하단 액션 */}
