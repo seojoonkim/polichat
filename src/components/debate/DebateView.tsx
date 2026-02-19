@@ -800,13 +800,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
         {(phase === 'running' || phase === 'coinflip') && (
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1.5 bg-gray-200 rounded-full px-3 py-1">
-              {/* 타이머 SVG */}
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-purple-600">
-                <circle cx="12" cy="13" r="8"/>
-                <path d="M12 9v4l2.5 2.5"/>
-                <path d="M9 3h6"/>
-                <path d="M12 3v2"/>
-              </svg>
+              <span className="text-purple-600 text-xs font-semibold">남은 시간</span>
               <span className="text-gray-800 font-bold text-base font-mono tracking-wide">
                 {String(Math.floor(timeLeft / 60)).padStart(2, '0')}:{String(timeLeft % 60).padStart(2, '0')}
               </span>
