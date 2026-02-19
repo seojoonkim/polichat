@@ -200,33 +200,31 @@ export default async function handler(req, res) {
     systemPrompt += kbText;
   }
 
-  // ── 최근 대화 히스토리 주입 (기억력 향상) ───────────────────────────────
+  // ── 대화 히스토리 → messages 배열로 전달 (LLM native 방식, 전체 기억) ───────
+  const SPEAKER_NAMES = {
+    ohsehoon: '오세훈 시장',
+    jungwono: '정원오 구청장',
+    jungcr: '정청래 대표',
+    jangdh: '장동혁 대표',
+  };
+
+  const historyMessages = [];
   if (recentHistory && recentHistory.length > 0) {
-    const NAMES = {
-      ohsehoon: '오세훈 시장',
-      jungwono: '정원오 구청장',
-      jungcr: '정청래 대표',
-      jangdh: '장동혁 대표',
-    };
-    const historyText = recentHistory
-      .map(msg => `${NAMES[msg.speaker] || msg.speaker}: ${msg.text}`)
-      .join('\n');
-    systemPrompt += `\n\n📜 지금까지 오간 발언 (맥락 유지 — 이전 주장 반복 금지, 상대 논거 정면 반박):\n${historyText}`;
+    for (const msg of recentHistory) {
+      // 현재 speaker 발언 = assistant, 상대방 발언 = user
+      const role = msg.speaker === speaker ? 'assistant' : 'user';
+      historyMessages.push({
+        role,
+        content: `${SPEAKER_NAMES[msg.speaker] || msg.speaker}: ${msg.text}`,
+      });
+    }
   }
 
-  const messages = opponentLastMessage
-    ? [
-        {
-          role: 'user',
-          content: `상대방 발언: "${opponentLastMessage}" — 이에 대한 당신의 입장을 말씀해주세요.`,
-        },
-      ]
-    : [
-        {
-          role: 'user',
-          content: `"${topic}" 주제로 토론을 시작합니다. 첫 발언을 해주세요.`,
-        },
-      ];
+  const finalUserMessage = opponentLastMessage
+    ? `상대방 발언: "${opponentLastMessage}" — 이에 대한 당신의 입장을 말씀해주세요.`
+    : `"${topic}" 주제로 토론을 시작합니다. 첫 발언을 해주세요.`;
+
+  const messages = [...historyMessages, { role: 'user', content: finalUserMessage }];
 
   // SSE 스트리밍
   res.setHeader('Content-Type', 'text/event-stream');

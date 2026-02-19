@@ -404,7 +404,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           const MAX_BUBBLES = 3;
           const MAX_SENTENCES_PER_BUBBLE = 2;
 
-          const recentHistory = allMessages.slice(-10);
+          const recentHistory = [...allMessages]; // 전체 히스토리 전달 (처음부터 기억)
           const text = await streamRound(speaker, currentTopic, lastText, style, async (chunk) => {
             if (abortRef.current) return;
             for (const char of chunk) {
