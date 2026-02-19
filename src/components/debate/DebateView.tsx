@@ -125,6 +125,13 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
     }
   }, [messages, scrollToBottom]);
 
+  // 새 화자 시작 시 → 즉시 스크롤 (말풍선 틀 + 얼굴 바로 보이게)
+  useEffect(() => {
+    if (currentSpeaker) {
+      scrollToBottom('smooth');
+    }
+  }, [currentSpeaker, scrollToBottom]);
+
   // 타이핑 중 글자 추가 시 → 즉시 스크롤 (말풍선 높이 변화 따라가기)
   useEffect(() => {
     if (currentText) {
