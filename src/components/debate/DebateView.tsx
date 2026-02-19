@@ -52,21 +52,25 @@ type Phase = 'setup' | 'running' | 'judging' | 'result';
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 function splitIntoBubbles(text: string): string[] {
-  const sentences = text.split(/(?<=[.!?。])\s+/).filter(s => s.trim().length > 5);
+  const sentences = text.split(/(?<=[.!?。])\s+/).filter(s => s.trim().length > 0);
   if (sentences.length <= 1) return [text];
 
-  const bubbles: string[] = [];
-  let current = '';
-  for (const s of sentences) {
-    if (current.length > 0 && current.length + s.length > 60) {
-      bubbles.push(current.trim());
-      current = s;
-    } else {
-      current += (current ? ' ' : '') + s;
-    }
+  // 최대 2개 말풍선으로 분리 — 내용 손실 없이 전체 보존
+  // 첫 번째 말풍선: 80자 이내에서 자연스러운 문장 단위로 끊기
+  let firstBubble = sentences[0] ?? '';
+  let splitAt = 1;
+
+  if (
+    sentences.length > 1 &&
+    firstBubble.length < 80 &&
+    firstBubble.length + (sentences[1]?.length ?? 0) <= 80
+  ) {
+    firstBubble += ' ' + (sentences[1] ?? '');
+    splitAt = 2;
   }
-  if (current) bubbles.push(current.trim());
-  return bubbles.slice(0, 3);
+
+  const rest = sentences.slice(splitAt).join(' ').trim();
+  return rest ? [firstBubble, rest] : [firstBubble];
 }
 
 // ─── 메인 컴포넌트 ─────────────────────────────────────────────────────────────
@@ -662,12 +666,16 @@ export default function DebateView() {
           <MessageBubble key={i} msg={msg} />
         ))}
 
-        {/* 현재 타이핑 중인 발언 */}
-        {phase === 'running' && currentSpeaker && currentText && (
-          <MessageBubble
-            msg={{ speaker: currentSpeaker, text: currentText, timestamp: Date.now() }}
-            isActive
-          />
+        {/* 현재 발화자 — 대기 중(로딩) 또는 타이핑 중 */}
+        {phase === 'running' && currentSpeaker && (
+          currentText ? (
+            <MessageBubble
+              msg={{ speaker: currentSpeaker, text: currentText, timestamp: Date.now() }}
+              isActive
+            />
+          ) : (
+            <TypingIndicator speaker={currentSpeaker} />
+          )
         )}
 
         {/* 판정 중 */}
@@ -791,6 +799,52 @@ function MessageBubble({
               />
             )}
           </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── 타이핑 인디케이터 컴포넌트 ──────────────────────────────────────────────────
+
+function TypingIndicator({ speaker }: { speaker: 'ohsehoon' | 'jungwono' }) {
+  const isOsh = speaker === 'ohsehoon';
+  const color = isOsh ? OSH_COLOR : JWO_COLOR;
+  const name = isOsh ? '오세훈 시장' : '정원오 구청장';
+  const imgSrc = isOsh
+    ? '/politicians/ohsehoon/profile.jpg'
+    : '/politicians/jungwono/profile.jpg';
+  const bubbleBg = isOsh ? 'rgba(229,62,62,0.25)' : 'rgba(0,78,162,0.25)';
+
+  return (
+    <div className={`flex items-end gap-2 ${isOsh ? 'flex-row-reverse' : 'flex-row'}`}>
+      <img
+        src={imgSrc}
+        alt={name}
+        className="w-8 h-8 rounded-full object-cover border flex-shrink-0"
+        style={{ borderColor: `${color}60` }}
+        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+      />
+      <div className="max-w-[75%]">
+        <span
+          className={`text-[12px] font-bold block mb-1 ${isOsh ? 'text-right' : 'text-left'}`}
+          style={{ color }}
+        >
+          {name}
+        </span>
+        <div
+          className="rounded-2xl px-4 py-3"
+          style={{ background: bubbleBg, boxShadow: `0 0 16px ${color}30` }}
+        >
+          <div className="flex gap-1.5 items-center h-5">
+            {[0, 150, 300].map((delay) => (
+              <span
+                key={delay}
+                className="w-2 h-2 rounded-full animate-bounce"
+                style={{ background: `${color}cc`, animationDelay: `${delay}ms` }}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </div>
