@@ -359,7 +359,7 @@ const CURRENT_CONTEXT = `⚠️ 시간 기준 (최우선 규칙): 현재는 2026
 ✅ 필수 예시: "2025년 서울 아파트 평균 매매가가 전년 대비 상승했고(한국부동산원)" / "국민연금 소진 예상이 2055년으로 앞당겨졌으며" / "LH 부채 160조를 넘어선 상황에서" / "법인세 최고세율을 24%로 인하한 이후" / "10.15 부동산 대책으로 서울 전역에 3중 규제가 적용된 결과"
 근거를 먼저 제시하고 → 그 의미와 주장을 덧붙이는 구조로 발언하라.`;
 
-function getStylePrompt(style, speaker, opponentLastMessage, topicLabel, debateType = 'seoul') {
+function getStylePrompt(style, speaker, opponentLastMessage, topicLabel, debateType = 'seoul', historyLength = 0) {
   const NAMES = {
     ohsehoon: '오세훈 서울시장',
     jungwono: '정원오 성동구청장',
@@ -396,7 +396,15 @@ function getStylePrompt(style, speaker, opponentLastMessage, topicLabel, debateT
 규칙: ① 근거(수치·사례·사실)는 반드시 유지 — 빈 감정만은 금지 ② 허점 발견 즉시 끊고 반박 ③ 욕설·인신공격·혐오표현 금지 ④ 같은 감정 표현 연속 반복 금지 ⑤ 총 4문장 이내.`;
 
   } else if (style === 'consensus') {
-    return `${baseContext}\n\n합의 도출 방식: ${opponentName} 주장의 근거 중 타당한 것을 인정하고, 공통점과 접점을 찾아 타협안을 제시하세요. 타협안도 반드시 구체적 정책명·수치·예산 등 근거를 들어 제시하세요. 총 4문장 이내.`;
+    // 발언 수에 따라 합의 단계 자동 진화
+    const phase = historyLength < 5 ? 1 : historyLength < 11 ? 2 : historyLength < 17 ? 3 : 4;
+    const phaseGuide = {
+      1: `[1단계 — 탐색 (초반)] 각자 핵심 입장을 밝히되, ${opponentName} 주장 중 타당한 부분을 반드시 1개 이상 인정하세요. "저도 XX 문제는 동의합니다"처럼 공유하는 가치와 공통점 찾기를 시작하세요. 이견보다 공감대에 집중하세요.`,
+      2: `[2단계 — 접점 구축 (중반)] 지금까지 나온 발언에서 합의된 부분을 명시적으로 확인하세요("우리 둘 다 XX에는 동의하는 것 같습니다"). 남은 이견을 구체적 쟁점 1-2개로 좁히고, 각 쟁점에서 상대 입장의 합리적 측면을 수용하기 시작하세요.`,
+      3: `[3단계 — 조건부 합의 (후반)] "${opponentName}이 XX를 수용한다면, 저는 YY를 받아들일 수 있습니다" 형식으로 조건부 합의를 제안하세요. 구체적 정책명·수치·기한을 제시해 타협안을 구체화하세요. 이미 합의된 사항은 "우리가 동의한 것: ..."으로 명시하세요.`,
+      4: `[4단계 — 합의문 작성 (마무리)] 지금까지 합의된 내용을 공동 선언문 형태로 요약하세요. "우리가 공동으로 확인한 사항: 1. XX 2. YY 3. ZZ" 형태로 조항을 열거하고, 남은 이견은 "추가 논의 필요: ..."로 명시하세요. 합의문 초안을 함께 완성해가는 마지막 단계입니다.`,
+    };
+    return `${baseContext}\n\n합의 도출 ${phase}단계 (현재까지 발언 ${historyLength}개):\n${phaseGuide[phase]}\n\n공통 규칙: 모든 타협안·제안은 반드시 구체적 정책명·수치·예산 근거 포함. 총 4문장 이내.`;
   }
   // 기본값
   return `${baseContext}\n\n자유롭게 논쟁하되, 모든 주장에 반드시 구체적 수치·사례·데이터를 근거로 제시하고 ${opponentName}의 주장 허점을 날카롭게 지적하라. 총 4문장 이내.`;
@@ -475,7 +483,7 @@ export default async function handler(req, res) {
   // 스타일에 따른 시스템 프롬프트 결정
   let systemPrompt = persona.baseSystem;
   if (style && style !== 'free') {
-    systemPrompt = getStylePrompt(style, speaker, opponentLastMessage, topic, debateType);
+    systemPrompt = getStylePrompt(style, speaker, opponentLastMessage, topic, debateType, recentHistory.length);
   }
 
   // ── 정책 지식베이스 주입 ───────────────────────────────────────────────
