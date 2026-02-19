@@ -188,7 +188,7 @@ export default function ChatLayout({ politician }: Props) {
   // 내부는 flexbox로 헤더-메시지-입력창 배치
   return (
     <div 
-      className="fixed top-0 left-0 right-0 flex flex-col bg-white overflow-hidden"
+      className="app-bg fixed top-0 left-0 right-0 flex flex-col overflow-hidden"
       style={{ maxWidth: '600px', margin: '0 auto', height: '100svh' }}
     >
       {/* 헤더: 절대 스크롤 안 됨 */}
