@@ -446,8 +446,8 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
         </div>
 
         {/* 후보 미리보기 */}
-        <div className="flex items-center justify-center gap-4 px-4 mb-3">
-          <div className="flex flex-col items-center gap-1">
+        <div className="flex items-center px-4 mb-3">
+          <div className="flex-1 flex flex-col items-center gap-1">
             <img
               src={`/politicians/${config.speakerA}/profile.jpg`}
               alt={config.speakerAName}
@@ -457,8 +457,8 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
             <span className="text-gray-800 text-sm font-bold">{config.speakerAName.split(' ')[0]}</span>
             <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.92)', color: config.speakerAColor, border: `1px solid ${config.speakerAColor}80` }}>{debateType === 'seoul' ? '국민의힘' : '더불어민주당'}</span>
           </div>
-          <div className="text-yellow-400 font-black text-2xl">VS</div>
-          <div className="flex flex-col items-center gap-1">
+          <div className="w-12 flex-shrink-0 text-center text-yellow-400 font-black text-2xl">VS</div>
+          <div className="flex-1 flex flex-col items-center gap-1">
             <img
               src={`/politicians/${config.speakerB}/profile.jpg`}
               alt={config.speakerBName}
