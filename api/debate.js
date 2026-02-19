@@ -575,7 +575,7 @@ function getKnowledge(topicLabel, speaker) {
   return {
     myPosition,
     seoulContext,
-    attackPoints: kb.공격포인트.slice(0, 4),
+    attackPoints: kb.공격포인트,  // 전체 반환, 주입 시 로테이션
     conflicts: relevantConflicts.slice(0, 3),
     reversals: pppSpeaker ? POLICY_KB.dp.입장변화 : POLICY_KB.ppp.공약파기
   };
@@ -800,8 +800,19 @@ export default async function handler(req, res) {
         kbText += `\n  - [${c.주제}] 내 입장: ${['ohsehoon','jangdh','leejunseok','jeonhangil'].includes(speaker) ? c.ppp : c.dp} | 수치: ${c.수치}`;
       });
     }
+    if (kb.attackPoints && kb.attackPoints.length > 0) {
+      // 내 공격포인트 로테이션 (매 턴 다른 3개 노출)
+      const apRound = (recentHistory || []).filter(m => m.speaker === speaker).length;
+      const apStart = (apRound * 3) % kb.attackPoints.length;
+      const apRotated = [...kb.attackPoints.slice(apStart), ...kb.attackPoints.slice(0, apStart)];
+      kbText += `\n• 이번 발언 공격 포인트 후보 (3개, 새로운 것 선택):\n` + apRotated.slice(0, 3).map((a,i) => `  ${i+1}. ${a}`).join('\n');
+    }
     if (kb.reversals.length > 0) {
-      kbText += `\n• 상대 공격 포인트 (구체적으로 활용): ${kb.reversals.slice(0,3).join(' / ')}`;
+      // 상대 약점 로테이션
+      const rvRound = (recentHistory || []).filter(m => m.speaker === speaker).length;
+      const rvStart = (rvRound * 2) % kb.reversals.length;
+      const rvRotated = [...kb.reversals.slice(rvStart), ...kb.reversals.slice(0, rvStart)];
+      kbText += `\n• 상대 약점/입장변화 (활용 가능): ${rvRotated.slice(0, 2).join(' / ')}`;
     }
     kbText += '\n⚠️ 위 데이터의 수치·사실을 발언에 직접 인용하되, 같은 논거를 반복하지 마세요.';
     // ── 세부논거 풀 주입 ──
