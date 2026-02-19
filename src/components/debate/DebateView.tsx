@@ -321,7 +321,6 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
     abortRef.current = false;
     setMessages([]);
     setCurrentText('');
-    setCurrentSpeaker(null);
 
     const allMessages: DebateMessage[] = [];
     let lastText = '';
@@ -460,6 +459,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
     setPhase('running');
     setTimeLeft(180);
     setCoinFlipStage('idle');
+    setCurrentSpeaker(firstKey); // 코인 직후 첫 화자 TypingIndicator 즉시 표시
 
     // 캐시 확인
     const cached = await fetchCache(topicLabel, selectedStyle);
