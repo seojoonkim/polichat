@@ -195,7 +195,18 @@ export default function PoliticianSelector({ politicians }: Props) {
         {/* 토론 배틀 배너 */}
         <div className="animate-fade-in-up space-y-2" style={{ animationDelay: '0.12s' }}>
           <div className="mb-2">
-            <p className="text-[13px] font-bold text-gray-700 tracking-wide uppercase" style={{ letterSpacing: '0.06em' }}>⚔️ AI 토론 시뮬레이션</p>
+            <p className="text-[13px] font-bold text-gray-700 tracking-wide uppercase flex items-center gap-1.5" style={{ letterSpacing: '0.06em' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/>
+                <line x1="13" y1="19" x2="19" y2="13"/>
+                <line x1="16" y1="16" x2="20" y2="20"/>
+                <line x1="19" y1="21" x2="21" y2="19"/>
+                <polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/>
+                <line x1="5" y1="14" x2="9" y2="18"/>
+                <line x1="7" y1="21" x2="9" y2="19"/>
+              </svg>
+              AI 토론 시뮬레이션
+            </p>
           </div>
           <DebateBanner debateType="seoul" />
           <DebateBanner debateType="national" />
@@ -203,7 +214,15 @@ export default function PoliticianSelector({ politicians }: Props) {
 
         {/* Section title */}
         <div className="mb-3 animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
-          <p className="text-[13px] font-bold text-gray-700 tracking-wide uppercase" style={{ letterSpacing: '0.06em' }}>💬 1:1 AI 대화</p>
+          <p className="text-[13px] font-bold text-gray-700 tracking-wide uppercase flex items-center gap-1.5" style={{ letterSpacing: '0.06em' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              <circle cx="9" cy="10" r="0.8" fill="currentColor"/>
+              <circle cx="12" cy="10" r="0.8" fill="currentColor"/>
+              <circle cx="15" cy="10" r="0.8" fill="currentColor"/>
+            </svg>
+            1:1 AI 대화
+          </p>
         </div>
 
         {/* Politician Cards */}
