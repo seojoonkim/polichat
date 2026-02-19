@@ -68,8 +68,7 @@ export const DEBATE_CONFIGS = {
       { id: 'conservative-identity', label: '보수의 정체성' },
       { id: 'yoon-impeachment', label: '윤석열 탄핵' },
       { id: 'gender-feminism', label: '젠더·페미니즘' },
-      { id: 'lee-scandal', label: '이준석 의혹' },
-      { id: 'jeon-remarks', label: '전한길 막말 논란' },
+      { id: 'controversies', label: '논란·의혹' },
     ],
   },
 } as const;
