@@ -251,7 +251,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
     topic: string,
     opponentLastMessage: string,
     style: string,
-    onToken?: (text: string) => void
+    onToken?: (text: string) => Promise<void> | void
   ): Promise<string> => {
     return new Promise((resolve, reject) => {
       let fullText = '';
@@ -289,9 +289,8 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
                 }
                 if (json.text) {
                   fullText += json.text;
-                  // 실시간 토큰 콜백 호출
                   if (abortRef.current) return;
-                  onToken?.(json.text);
+                  await onToken?.(json.text);
                 }
               } catch {
                 // skip
@@ -331,10 +330,15 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
         const currentTopic = selectedTopic === 'free' ? freeTopicRef.current : initialTopic;
         
         let streamedText = '';
-        const text = await streamRound(speaker, currentTopic, lastText, style, (chunk) => {
+        const text = await streamRound(speaker, currentTopic, lastText, style, async (chunk) => {
           if (abortRef.current) return;
-          streamedText += chunk;
-          setCurrentText(streamedText);
+          // 글자 단위로 딜레이를 주어 절반 속도로 표시
+          for (const char of chunk) {
+            if (abortRef.current) return;
+            streamedText += char;
+            setCurrentText(streamedText);
+            await sleep(55); // 글자당 ~55ms (자연스러운 타이핑 속도)
+          }
         });
         
         if (abortRef.current) break;
