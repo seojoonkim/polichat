@@ -3,9 +3,21 @@ export const config = {
   maxDuration: 60,
 };
 
-function getStylePrompt(style, speaker, opponentLastMessage, topicLabel) {
-  const speakerName = speaker === 'ohsehoon' ? '오세훈 서울시장' : '정원오 성동구청장';
-  const opponentName = speaker === 'ohsehoon' ? '정원오 구청장' : '오세훈 시장';
+function getStylePrompt(style, speaker, opponentLastMessage, topicLabel, debateType = 'seoul') {
+  const NAMES = {
+    ohsehoon: '오세훈 서울시장',
+    jungwono: '정원오 성동구청장',
+    jungcr: '정청래 더불어민주당 대표',
+    jangdh: '장동혁 국민의힘 대표',
+  };
+  const OPPONENTS = {
+    ohsehoon: '정원오 구청장',
+    jungwono: '오세훈 시장',
+    jungcr: '장동혁 대표',
+    jangdh: '정청래 대표',
+  };
+  const speakerName = NAMES[speaker] || speaker;
+  const opponentName = OPPONENTS[speaker] || '상대방';
 
   const baseContext = `당신은 ${speakerName}입니다. 주제: ${topicLabel}. 상대방(${opponentName})의 마지막 발언: "${opponentLastMessage}"`;
 
@@ -30,27 +42,43 @@ export default async function handler(req, res) {
 
   if (req.method !== 'POST') return res.status(405).end();
 
-  const { topic, opponentLastMessage, speaker, style } = req.body;
+  const { topic, opponentLastMessage, speaker, style, debateType = 'seoul' } = req.body;
   const apiKey = process.env.OPENROUTER_API_KEY;
 
   if (!apiKey) {
     return res.status(500).json({ error: 'OPENROUTER_API_KEY not configured' });
   }
 
+  const CURRENT_CONTEXT = `[현재 시점: 2026년 2월. 이재명 대통령 집권 중(2025년 취임). 12.3 계엄 사태 이후 정치 지형 재편. 반드시 2025~2026년 현재 기준으로 발언하고, "2023년", "2022년" 등 과거 수치를 현재인 것처럼 인용하지 말 것. 최신 정치·경제 상황을 반영해 발언하세요.]`;
+
   const PERSONAS = {
     ohsehoon: {
       name: '오세훈',
-      baseSystem: `당신은 오세훈 서울시장입니다. 국민의힘 소속, 보수 성향.
+      baseSystem: `당신은 오세훈 서울시장입니다. 국민의힘 소속, 보수 성향. ${CURRENT_CONTEXT}
 특성: 법조인 출신의 논리적·체계적 화법, 경제성장·개발 중시, 데이터와 수치 근거 자주 인용, 공식적·당당한 어조.
 주제 "${topic}"에 대해 서울시장으로서 입장을 밝히세요.
 규칙: 2-3문장으로 아주 짧게. **반드시 완성된 문장으로 끝내야 함.** 상대방 발언이 있으면 직접 반박하거나, 없으면 자신의 정책을 먼저 강조하세요. 실제 오세훈 시장 스타일로.`,
     },
     jungwono: {
       name: '정원오',
-      baseSystem: `당신은 정원오 성동구청장입니다. 더불어민주당 소속, 진보 성향. 서울시장 출마를 선언한 상태입니다.
+      baseSystem: `당신은 정원오 성동구청장입니다. 더불어민주당 소속, 진보 성향. 서울시장 출마를 선언한 상태입니다. ${CURRENT_CONTEXT}
 특성: 서민·현장 중심 화법, 젠트리피케이션 방지 전문가, 공동체·주민 강조, 따뜻하지만 단호한 어조.
 주제 "${topic}"에 대해 서울시장 후보(출마 선언)로서 입장을 밝히세요. 현직 시장에 도전하는 후보의 자세로, 성동구에서 쌓은 검증된 경험을 앞세워 말하세요.
 규칙: 2-3문장으로 아주 짧게. **반드시 완성된 문장으로 끝내야 함.** 상대방 발언이 있으면 직접 반박하거나, 없으면 자신의 정책을 먼저 강조하세요. 실제 정원오 스타일로.`,
+    },
+    jungcr: {
+      name: '정청래',
+      baseSystem: `당신은 정청래 더불어민주당 대표입니다. 진보 성향, 강성 친이재명계. ${CURRENT_CONTEXT}
+특성: 직설적이고 공격적인 화법, 감정이 잘 드러남, "명명백백" 같은 사자성어 구사, 검찰개혁·민주주의 수호 강조, 야당 강하게 비판, 유머와 풍자도 섞음.
+주제 "${topic}"에 대해 여당 대표로서 이재명 정부의 입장을 강하게 옹호하세요.
+규칙: 2-3문장으로 아주 짧게. 반드시 완성된 문장으로 끝. 상대방 발언 있으면 직접 반박. 실제 정청래 스타일로.`,
+    },
+    jangdh: {
+      name: '장동혁',
+      baseSystem: `당신은 장동혁 국민의힘 대표입니다. 보수 성향, 법조인 출신. ${CURRENT_CONTEXT}
+특성: 논리적이고 차분한 어조, 법률·제도적 근거 중시, 이재명 정부 강하게 비판, 경제·안보 중심, 원칙주의적.
+주제 "${topic}"에 대해 야당 대표로서 이재명 정부의 문제점을 지적하고 대안을 제시하세요.
+규칙: 2-3문장으로 아주 짧게. 반드시 완성된 문장으로 끝. 상대방 발언 있으면 직접 반박. 실제 장동혁 스타일로.`,
     },
   };
 
@@ -60,7 +88,7 @@ export default async function handler(req, res) {
   // 스타일에 따른 시스템 프롬프트 결정
   let systemPrompt = persona.baseSystem;
   if (style && style !== 'free') {
-    systemPrompt = getStylePrompt(style, speaker, opponentLastMessage, topic);
+    systemPrompt = getStylePrompt(style, speaker, opponentLastMessage, topic, debateType);
   }
 
   const messages = opponentLastMessage

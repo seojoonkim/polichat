@@ -1,0 +1,15 @@
+
+> polichat@0.1.0 build
+> tsc -b && vite build
+
+vite v6.4.1 building for production...
+transforming...
+✓ 247 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                       2.23 kB │ gzip:   1.12 kB
+dist/assets/AdminPage-DDbXBANV.css    5.02 kB │ gzip:   1.19 kB
+dist/assets/index-BV_OyMHJ.css       59.12 kB │ gzip:  11.57 kB
+dist/assets/AdminPage-BBGuRPzB.js   159.76 kB │ gzip:  48.77 kB
+dist/assets/index-Bc9aBRIu.js       323.31 kB │ gzip: 101.32 kB
+✓ built in 750ms

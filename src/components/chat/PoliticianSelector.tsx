@@ -121,53 +121,68 @@ export default function PoliticianSelector({ politicians }: Props) {
         style={{ maxWidth: '600px' }}
       >
         {/* Hero */}
-        <div className="text-center mb-10">
+        <div className="text-center mb-8">
           {/* Logo */}
-          <div className="flex items-center justify-center gap-1 mb-5 animate-fade-in">
-            <img src="/logo.svg" alt="Polichat" className="w-14 h-14" />
-            <h1 className="text-4xl logo-text-gradient">
+          <div className="flex items-center justify-center gap-2 mb-5 animate-fade-in">
+            <img src="/logo.svg" alt="Polichat" className="w-12 h-12" />
+            <h1
+              style={{
+                fontFamily: "'Poppins', sans-serif",
+                fontWeight: 700,
+                fontSize: '40px',
+                letterSpacing: '-0.04em',
+                lineHeight: 1,
+                color: '#0C0C1A',
+              }}
+            >
               Polichat
             </h1>
           </div>
 
-          {/* Hero Message + LIVE Badge inline */}
-          <div
-            className="animate-fade-in-up"
-            style={{ animationDelay: '0.1s' }}
-          >
-            <div className="flex items-center justify-center gap-2 mb-3">
-              <p className="text-xl font-bold text-slate-800 tracking-tight">
-                정치인과 직접 대화하세요
-              </p>
-              <div className="live-badge inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold text-slate-700">
-                <span className="relative flex h-2 w-2">
+          {/* Hero tagline */}
+          <div className="animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+            <div className="flex items-center justify-center gap-2.5 mb-3">
+              <h2
+                style={{
+                  fontFamily: "'SUITE Variable', sans-serif",
+                  fontWeight: 800,
+                  fontSize: '19px',
+                  letterSpacing: '-0.03em',
+                  color: '#0C0C1A',
+                }}
+              >
+                AI 정치인과 직접 대화하세요
+              </h2>
+              <div className="live-badge inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full">
+                <span className="relative flex h-1.5 w-1.5">
                   <span className="live-dot absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
                 </span>
-                LIVE
+                <span className="text-[10px] font-bold text-slate-600 tracking-wider">LIVE</span>
               </div>
             </div>
-            <p className="text-sm text-slate-500 leading-relaxed max-w-md mx-auto">
-              AI가 공약, 경력, 발언을 학습했습니다. 정책 질문부터 일상 대화까지 자유롭게!
+            <p className="text-[13px] text-gray-500 leading-relaxed max-w-[280px] mx-auto">
+              공약·경력·발언을 학습한 AI — 정책 질문부터 일상 대화까지
             </p>
           </div>
-
         </div>
 
         {/* 토론 배틀 배너 */}
-        <div className="animate-fade-in-up" style={{ animationDelay: '0.12s' }}>
-          <DebateBanner />
+        <div className="animate-fade-in-up space-y-2" style={{ animationDelay: '0.12s' }}>
+          <div className="mb-2">
+            <p className="text-[13px] font-bold text-gray-700 tracking-wide uppercase" style={{ letterSpacing: '0.06em' }}>⚔️ AI 토론 시뮬레이션</p>
+          </div>
+          <DebateBanner debateType="seoul" />
+          <DebateBanner debateType="national" />
         </div>
 
         {/* Section title */}
-        <div className="mb-4 animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
-          <h2 className="text-sm font-bold text-slate-600 uppercase tracking-wider">
-            대화 상대 선택
-          </h2>
+        <div className="mb-3 animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
+          <p className="text-[13px] font-bold text-gray-700 tracking-wide uppercase" style={{ letterSpacing: '0.06em' }}>💬 1:1 AI 대화</p>
         </div>
 
         {/* Politician Cards */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           {politicians.map((politician, index) => (
             <div
               key={politician.id}
@@ -180,78 +195,67 @@ export default function PoliticianSelector({ politicians }: Props) {
                 className="w-full text-left group"
               >
                 <div
-                  className="politician-card rounded-2xl overflow-hidden"
-                  style={{
-                    ['--pol-color' as string]: politician.themeColor,
-                    ['--pol-color-secondary' as string]: politician.themeColorSecondary,
-                    ['--pol-glow' as string]: `${politician.themeColor}25`,
-                    height: '100px',
-                  }}
+                  className="pc-card-interactive w-full overflow-hidden"
                 >
-                  <div className="flex items-stretch">
-                    {/* Avatar with glow ring */}
-                    <div
-                      className="politician-image glow-ring flex items-center justify-center text-white text-2xl font-bold shrink-0"
-                      style={{
-                        width: '100px',
-                        height: '100px',
-                        background: `linear-gradient(145deg, ${politician.themeColor}, ${politician.themeColorSecondary})`,
-                        ['--glow-color' as string]: `${politician.themeColor}40`,
-                      }}
-                    >
-                      {politician.profileImageUrl ? (
-                        <img
-                          src={politician.profileImageUrl}
-                          alt={politician.nameKo}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                            e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                          }}
-                        />
-                      ) : null}
-                      <span className={politician.profileImageUrl ? 'hidden' : ''}>
-                        {getInitials(politician.nameKo)}
-                      </span>
+                  <div className="flex items-center gap-4 px-4 py-3.5">
+                    {/* Profile circle with color ring */}
+                    <div className="relative shrink-0">
+                      <div
+                        className="w-[66px] h-[66px] rounded-full overflow-hidden"
+                        style={{
+                          boxShadow: `0 0 0 2.5px white, 0 0 0 5px ${politician.themeColor}80`,
+                        }}
+                      >
+                        {politician.profileImageUrl ? (
+                          <img
+                            src={politician.profileImageUrl}
+                            alt={politician.nameKo}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                            }}
+                          />
+                        ) : null}
+                        <div
+                          className={`${politician.profileImageUrl ? 'hidden' : ''} w-full h-full flex items-center justify-center text-white text-xl font-bold`}
+                          style={{ background: `linear-gradient(135deg, ${politician.themeColor}, ${politician.themeColorSecondary})` }}
+                        >
+                          {getInitials(politician.nameKo)}
+                        </div>
+                      </div>
+                      {/* Online dot */}
+                      <span
+                        className="online-indicator absolute bottom-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-white"
+                      />
                     </div>
 
                     {/* Info */}
-                    <div className="flex-1 px-4 py-2 flex flex-col justify-center min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-bold text-lg text-slate-900 truncate">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <h3 className="font-bold text-[18px] text-gray-900 truncate">
                           {politician.nameKo}
                         </h3>
                         <span
-                          className="px-2 py-0.5 text-xs font-semibold rounded-full shrink-0"
+                          className="px-2 py-0.5 text-[11px] font-bold rounded-full shrink-0 whitespace-nowrap"
                           style={{
-                            backgroundColor: `${politician.themeColor}20`,
+                            backgroundColor: `${politician.themeColor}15`,
                             color: politician.themeColor,
                           }}
                         >
                           {politician.group}
                         </span>
-                        {/* Online indicator */}
-                        <span className="online-indicator w-2.5 h-2.5 rounded-full bg-green-500 shrink-0" />
                       </div>
-
-                      <p className="text-sm text-slate-600 line-clamp-1 mb-1">
+                      <p className="text-[13px] text-gray-500 line-clamp-1 mb-1.5 leading-snug">
                         {politician.tagline}
                       </p>
-
-                      {/* Typing preview - JS driven loop */}
                       <TypingPreview name={politician.nameKo} />
                     </div>
 
-                    {/* Hover arrow */}
-                    <div className="flex items-center pr-4">
-                      <svg
-                        className="w-5 h-5 text-slate-400 opacity-0 -translate-x-2 transition-all duration-300 ease-out group-hover:opacity-100 group-hover:translate-x-0"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    {/* Chevron arrow */}
+                    <div className="shrink-0 pl-1 text-gray-300 transition-all duration-300 group-hover:text-gray-500 group-hover:translate-x-1">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M9 18l6-6-6-6" />
                       </svg>
                     </div>
                   </div>

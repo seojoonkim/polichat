@@ -1,39 +1,79 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 
+// ─── 타입 ────────────────────────────────────────────────────────────────────
+
+export type DebateType = 'seoul' | 'national';
+
+// ─── 설정 상수 ────────────────────────────────────────────────────────────────
+
+export const DEBATE_CONFIGS = {
+  seoul: {
+    speakerA: 'ohsehoon' as const,
+    speakerB: 'jungwono' as const,
+    speakerAName: '오세훈 시장',
+    speakerBName: '정원오 구청장',
+    speakerAColor: '#E61E2B',
+    speakerBColor: '#004EA2',
+    topics: [
+      { id: 'free', label: '자유토론' },
+      { id: 'redevelopment', label: '재개발 vs 도시재생' },
+      { id: 'gentrification', label: '젠트리피케이션 대응' },
+      { id: 'housing', label: '주거 정책 방향' },
+      { id: 'welfare', label: '복지: 선별 vs 보편' },
+      { id: 'gangnam-gap', label: '강남북 격차 해소' },
+      { id: 'transport', label: '교통 인프라' },
+      { id: 'environment', label: '환경·탄소중립' },
+      { id: 'youth', label: '청년 정책' },
+      { id: 'admin', label: '행정 혁신' },
+      { id: 'branding', label: '도시 브랜딩' },
+      { id: 'edu-gap', label: '교육 격차 해소' },
+      { id: 'small-biz', label: '소상공인 지원' },
+      { id: 'safety', label: '치안·안전 정책' },
+      { id: 'culture', label: '문화·관광 육성' },
+    ],
+  },
+  national: {
+    speakerA: 'jungcr' as const,
+    speakerB: 'jangdh' as const,
+    speakerAName: '정청래 대표',
+    speakerBName: '장동혁 대표',
+    speakerAColor: '#004EA2',
+    speakerBColor: '#C9151E',
+    topics: [
+      { id: 'free', label: '자유토론' },
+      { id: 'economy', label: '경제·민생 위기' },
+      { id: 'prosecution', label: '검찰·사법 개혁' },
+      { id: 'north-korea', label: '대북·외교 정책' },
+      { id: 'constitution', label: '개헌 논의' },
+      { id: 'real-estate', label: '부동산·주거 정책' },
+      { id: 'education', label: '교육 개혁' },
+      { id: 'ai-industry', label: 'AI·디지털 산업' },
+      { id: 'pension', label: '연금·복지 개혁' },
+      { id: 'us-alliance', label: '한미동맹·트럼프 대응' },
+      { id: 'media-freedom', label: '언론·표현의 자유' },
+      { id: 'election-reform', label: '선거제도 개혁' },
+      { id: 'tax-biz', label: '기업·세금 정책' },
+    ],
+  },
+} as const;
+
 // ─── 상수 ───────────────────────────────────────────────────────────────────
 
 // TOPIC_ICONS는 현재 사용되지 않음 (텍스트만 표시)
 // const TOPIC_ICONS: Record<string, React.ReactNode> = { ... };
 
-const TOPICS: Array<{ id: string; label: string }> = [
-  { id: 'free', label: '자유토론' },
-  { id: 'redevelopment', label: '재개발 vs 도시재생' },
-  { id: 'gentrification', label: '젠트리피케이션 대응' },
-  { id: 'housing', label: '주거 정책 방향' },
-  { id: 'welfare', label: '복지: 선별 vs 보편' },
-  { id: 'gap', label: '강남북 격차 해소' },
-  { id: 'transport', label: '교통 인프라' },
-  { id: 'environment', label: '환경·탄소중립' },
-  { id: 'youth', label: '청년 정책' },
-  { id: 'admin', label: '행정 혁신' },
-  { id: 'branding', label: '도시 브랜딩' },
-  { id: 'education', label: '교육 격차 해소' },
-  { id: 'smallbiz', label: '소상공인 지원' },
-  { id: 'safety', label: '치안·안전 정책' },
-  { id: 'culture', label: '문화·관광 육성' },
-] as const;
-
-const OSH_COLOR = '#C9151E';
-const JWO_COLOR = '#004EA2';
-
 // ─── 타입 ────────────────────────────────────────────────────────────────────
 
 interface DebateMessage {
-  speaker: 'ohsehoon' | 'jungwono';
+  speaker: string;
   text: string;
   timestamp: number;
   isTopicChange?: boolean;
+}
+
+interface DebateViewProps {
+  debateType?: DebateType;
 }
 
 interface Judgment {
@@ -77,17 +117,18 @@ function splitIntoBubbles(text: string): string[] {
 
 // ─── 메인 컴포넌트 ─────────────────────────────────────────────────────────────
 
-export default function DebateView() {
+export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
   const navigate = useNavigate();
+  const config = DEBATE_CONFIGS[debateType];
 
   // 설정 상태
-  const [selectedTopic, setSelectedTopic] = useState<string>(TOPICS[1]?.id || 'redevelopment');
+  const [selectedTopic, setSelectedTopic] = useState<string>(config.topics[1]?.id || 'free');
   const [selectedStyle, setSelectedStyle] = useState<'policy' | 'emotional' | 'consensus'>('policy');
 
   // 토론 상태
   const [phase, setPhase] = useState<Phase>('setup');
   const [messages, setMessages] = useState<DebateMessage[]>([]);
-  const [currentSpeaker, setCurrentSpeaker] = useState<'ohsehoon' | 'jungwono' | null>(null);
+  const [currentSpeaker, setCurrentSpeaker] = useState<string | null>(null);
   const [currentText, setCurrentText] = useState('');
   const [_round, setRound] = useState(0); // 0~29 (최대 30라운드, 타이머로 제한)
   const [judgment, setJudgment] = useState<Judgment | null>(null);
@@ -150,25 +191,27 @@ export default function DebateView() {
     if (selectedTopic !== 'free' || phase !== 'running') return;
     if (timeLeft !== 240 && timeLeft !== 120) return;
 
-    const realTopics = TOPICS.filter(t => t.id !== 'free');
+    const realTopics = config.topics.filter(t => t.id !== 'free');
     const next = realTopics[Math.floor(Math.random() * realTopics.length)];
     if (!next) return;
     
     freeTopicRef.current = next.label;
 
     setMessages(prev => [...prev, {
-      speaker: 'ohsehoon' as const,
+      speaker: config.speakerA,
       text: `주제 전환! 새 주제: "${next.label}"`,
       timestamp: Date.now(),
       isTopicChange: true,
     }]);
-  }, [timeLeft, selectedTopic, phase]);
+  }, [timeLeft, selectedTopic, phase, config]);
 
   // ─── 캐시 조회 ─────────────────────────────────────────────────────────────
 
   const fetchCache = async (topic: string, style: string): Promise<{ messages: DebateMessage[]; judgment: Judgment | null } | null> => {
     try {
-      const res = await fetch(`/api/debate-cache?topic=${encodeURIComponent(topic)}&style=${encodeURIComponent(style)}`);
+      const res = await fetch(
+        `/api/debate-cache?topic=${encodeURIComponent(topic)}&style=${encodeURIComponent(style)}&debateType=${debateType}`
+      );
       const data = await res.json();
       if (data.cached?.messages?.length > 0) {
         return {
@@ -184,7 +227,7 @@ export default function DebateView() {
 
   // ─── 캐시 재생 ─────────────────────────────────────────────────────────────
 
-  const replayDebate = async (cachedMessages: DebateMessage[], cachedJudgment?: Judgment | null) => {
+  const replayDebate = async (cachedMessages: DebateMessage[], _cachedJudgment?: Judgment | null) => {
     abortRef.current = false;
     setMessages([]);
     setCurrentText('');
@@ -221,19 +264,15 @@ export default function DebateView() {
 
     if (!abortRef.current) {
       setCurrentSpeaker(null);
-      if (cachedJudgment) {
-        setJudgment(cachedJudgment);
-        setPhase('result');
-      } else {
-        await requestJudgment(cachedMessages);
-      }
+      // 판정 없이 종료 — setup으로 복귀
+      setPhase('setup');
     }
   };
 
   // ─── SSE 스트리밍으로 1라운드 생성 ────────────────────────────────────────
 
   const streamRound = async (
-    speaker: 'ohsehoon' | 'jungwono',
+    speaker: string,
     topic: string,
     opponentLastMessage: string,
     style: string
@@ -244,7 +283,7 @@ export default function DebateView() {
       fetch('/api/debate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic, speaker, opponentLastMessage, style }),
+        body: JSON.stringify({ topic, speaker, opponentLastMessage, style, debateType }),
       })
         .then((res) => {
           const reader = res.body!.getReader();
@@ -302,7 +341,7 @@ export default function DebateView() {
     for (let i = 0; i < 30; i++) {
       if (abortRef.current) break;
 
-      const speaker: 'ohsehoon' | 'jungwono' = i % 2 === 0 ? 'ohsehoon' : 'jungwono';
+      const speaker = i % 2 === 0 ? config.speakerA : config.speakerB;
       setRound(i);
       setCurrentSpeaker(speaker);
       setCurrentText('');
@@ -316,8 +355,11 @@ export default function DebateView() {
 
         const bubbles = splitIntoBubbles(text);
 
-        for (const bubbleText of bubbles) {
-          if (abortRef.current) break;
+        for (let bi = 0; bi < bubbles.length; bi++) {
+          const bubbleText = bubbles[bi];
+          const isLastBubble = bi === bubbles.length - 1;
+          if (!bubbleText || abortRef.current) break;
+
           setCurrentSpeaker(speaker);
           setCurrentText('');
 
@@ -333,6 +375,8 @@ export default function DebateView() {
 
           const msg: DebateMessage = { speaker, text: bubbleText, timestamp: Date.now() };
           allMessages.push(msg);
+          // 마지막 버블이면 speaker도 동시에 지워서 TypingIndicator 깜빡임 방지
+          if (isLastBubble) setCurrentSpeaker(null);
           setCurrentText('');
           setMessages((prev) => [...prev, msg]);
           scrollToBottom();
@@ -340,7 +384,7 @@ export default function DebateView() {
           await sleep(400);
         }
 
-        // 이번 턴 말풍선 모두 완료 → 다음 화자 전환 전 인디케이터 제거
+        // 이미 위에서 setCurrentSpeaker(null) 처리됨 (혹시 break된 경우 대비)
         setCurrentSpeaker(null);
         lastText = text;
 
@@ -354,57 +398,35 @@ export default function DebateView() {
     setCurrentSpeaker(null);
 
     if (!abortRef.current && allMessages.length > 0) {
-      // 판정 먼저 받고 캐시에 함께 저장
-      const judgeResult = await requestJudgment(allMessages);
-
-      // 캐시 저장 (판정 포함, 비동기, 실패해도 무시)
+      // 캐시 저장 (판정 없이, 비동기, 실패해도 무시)
       fetch('/api/debate-cache', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic: initialTopic, style, messages: allMessages, judgment: judgeResult }),
+        body: JSON.stringify({ topic: initialTopic, style, messages: allMessages, judgment: null }),
       }).catch(() => {});
     }
   };
 
   // ─── 판정 요청 ─────────────────────────────────────────────────────────────
 
-  const requestJudgment = async (msgs: DebateMessage[]): Promise<Judgment | null> => {
-    setPhase('judging');
-    try {
-      const topicLabel =
-        TOPICS.find((t) => t.id === selectedTopic)?.label || selectedTopic || '';
-      const res = await fetch('/api/debate-judge', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic: topicLabel, messages: msgs }),
-      });
-      const data = await res.json();
-      setJudgment(data);
-      return data as Judgment;
-    } catch (e) {
-      console.error('[debate-judge] Error:', e);
-      return null;
-    } finally {
-      setPhase('result');
-    }
-  };
+  // requestJudgment 제거됨 — 판정 기능 비활성화
 
   // ─── 토론 시작 ─────────────────────────────────────────────────────────────
 
   const startDebate = async () => {
     let topicLabel: string;
     if (selectedTopic === 'free') {
-      const realTopics = TOPICS.filter(t => t.id !== 'free');
+      const realTopics = config.topics.filter(t => t.id !== 'free');
       const first = realTopics[Math.floor(Math.random() * realTopics.length)];
       if (!first) {
-        topicLabel = 'redevelopment';
-        freeTopicRef.current = '재개발 vs 도시재생';
+        topicLabel = config.topics[1]?.label || 'free';
+        freeTopicRef.current = config.topics[1]?.label || 'free';
       } else {
         freeTopicRef.current = first.label;
         topicLabel = first.label;
       }
     } else {
-      topicLabel = TOPICS.find(t => t.id === selectedTopic)?.label || selectedTopic || '';
+      topicLabel = config.topics.find(t => t.id === selectedTopic)?.label || selectedTopic || '';
     }
 
     setPhase('running');
@@ -426,15 +448,15 @@ export default function DebateView() {
 
   // ─── 토론 종료 (강제) ──────────────────────────────────────────────────────
 
-  const endDebate = async () => {
+  const endDebate = () => {
     abortRef.current = true;
     setCurrentSpeaker(null);
     setCurrentText('');
-    if (messages.length > 0) {
-      await requestJudgment(messages);
-    } else {
-      setPhase('setup');
-    }
+    setMessages([]);
+    setJudgment(null);
+    setRound(0);
+    setTimeLeft(360);
+    setPhase('setup');
   };
 
   // ─── UI: 설정 화면 ─────────────────────────────────────────────────────────
@@ -449,14 +471,13 @@ export default function DebateView() {
         >
           <button
             onClick={() => navigate('/')}
-            className="text-gray-600 hover:text-gray-800 transition-colors"
+            className="text-gray-500 hover:text-gray-700 transition-colors flex items-center gap-1 whitespace-nowrap text-sm font-medium"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
             뒤로
           </button>
-          <h1 className="text-gray-800 font-bold text-lg flex items-center gap-2">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/><path d="M19 21l2-2"/></svg>
-            AI 토론 배틀
+          <h1 className="text-gray-800 font-bold text-base tracking-tight">
+            AI 토론배틀
           </h1>
         </div>
 
@@ -464,29 +485,29 @@ export default function DebateView() {
         <div className="flex items-center justify-center gap-4 px-4 mb-3">
           <div className="flex flex-col items-center gap-1">
             <img
-              src="/politicians/ohsehoon/profile.jpg"
-              alt="오세훈"
+              src={`/politicians/${config.speakerA}/profile.jpg`}
+              alt={config.speakerAName}
               className="w-24 h-24 rounded-full object-cover border-2"
-              style={{ borderColor: OSH_COLOR }}
+              style={{ borderColor: config.speakerAColor }}
             />
-            <span className="text-gray-800 text-sm font-bold">오세훈</span>
-            <span className="text-gray-500 text-[10px]">국민의힘</span>
+            <span className="text-gray-800 text-sm font-bold">{config.speakerAName.split(' ')[0]}</span>
+            <span className="text-gray-500 text-[10px]">{debateType === 'seoul' ? '국민의힘' : '더불어민주당'}</span>
           </div>
           <div className="text-yellow-400 font-black text-2xl">VS</div>
           <div className="flex flex-col items-center gap-1">
             <img
-              src="/politicians/jungwono/profile.jpg"
-              alt="정원오 구청장"
+              src={`/politicians/${config.speakerB}/profile.jpg`}
+              alt={config.speakerBName}
               className="w-24 h-24 rounded-full object-cover border-2"
-              style={{ borderColor: JWO_COLOR }}
+              style={{ borderColor: config.speakerBColor }}
             />
-            <span className="text-gray-800 text-sm font-bold">정원오 구청장</span>
-            <span className="text-gray-500 text-[10px]">더불어민주당</span>
+            <span className="text-gray-800 text-sm font-bold">{config.speakerBName.split(' ')[0]}</span>
+            <span className="text-gray-500 text-[10px]">{debateType === 'seoul' ? '더불어민주당' : '국민의힘'}</span>
           </div>
         </div>
 
         <div className="px-4 mb-2">
-          <p className="text-gray-700 text-sm font-semibold flex items-center gap-2">
+          <p className="pc-section-label flex items-center gap-1.5">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg>
             토론 주제를 선택하세요
           </p>
@@ -494,25 +515,22 @@ export default function DebateView() {
 
         {/* 주제 그리드 */}
         <div className="px-4 grid grid-cols-3 gap-2 mb-4">
-          {TOPICS.map((topic) => (
+          {config.topics.map((topic) => (
             <button
               key={topic.id}
               onClick={() => setSelectedTopic(topic.id)}
               className="relative rounded-xl px-1.5 text-center transition-all duration-200 border flex flex-col items-center justify-center"
               style={{
-                height: '52px',
-                background:
-                  selectedTopic === topic.id
-                    ? 'linear-gradient(135deg, rgba(167,139,250,0.3), rgba(124,58,237,0.2))'
-                    : 'rgba(0,0,0,0.04)',
-                borderColor:
-                  selectedTopic === topic.id ? 'rgba(167,139,250,0.8)' : 'rgba(0,0,0,0.1)',
+                height: '58px',
+                background: selectedTopic === topic.id ? 'rgba(99,102,241,0.1)' : 'white',
+                borderColor: selectedTopic === topic.id ? 'rgba(99,102,241,0.5)' : 'rgba(0,0,0,0.07)',
+                boxShadow: selectedTopic === topic.id ? '0 0 0 2px rgba(99,102,241,0.15)' : '0 1px 3px rgba(0,0,0,0.04)',
               }}
             >
               {topic.id === 'free' ? (
                 <span className="flex flex-col items-center gap-0.5">
                   <span className="flex items-center gap-1 text-gray-800 text-[12px] font-semibold">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="3"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="16" cy="8" r="1.5" fill="currentColor"/><circle cx="8" cy="16" r="1.5" fill="currentColor"/><circle cx="16" cy="16" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>
                     자유토론
                   </span>
                   <span className="text-gray-500 text-[10px]">2분마다 전환</span>
@@ -531,7 +549,7 @@ export default function DebateView() {
 
         {/* 토론 방식 선택 */}
         <div className="px-4 mb-2">
-          <p className="text-gray-700 text-sm font-semibold flex items-center gap-2">
+          <p className="pc-section-label flex items-center gap-1.5">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
             토론 방식을 선택하세요
           </p>
@@ -542,12 +560,9 @@ export default function DebateView() {
             onClick={() => setSelectedStyle('policy')}
             className="relative rounded-xl px-1.5 py-[10px] text-center transition-all duration-200 border"
             style={{
-              background:
-                selectedStyle === 'policy'
-                  ? 'linear-gradient(135deg, rgba(167,139,250,0.4), rgba(124,58,237,0.4))'
-                  : 'rgba(167,139,250,0.08)',
-              borderColor:
-                selectedStyle === 'policy' ? 'rgba(167,139,250,0.8)' : 'rgba(167,139,250,0.2)',
+              background: selectedStyle === 'policy' ? 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.1))' : 'white',
+              borderColor: selectedStyle === 'policy' ? 'rgba(99,102,241,0.5)' : 'rgba(0,0,0,0.07)',
+              boxShadow: selectedStyle === 'policy' ? '0 0 0 2px rgba(99,102,241,0.12)' : '0 1px 3px rgba(0,0,0,0.04)',
             }}
           >
             <div className="text-gray-800 font-bold text-sm flex items-center justify-center gap-1">
@@ -566,12 +581,9 @@ export default function DebateView() {
             onClick={() => setSelectedStyle('emotional')}
             className="relative rounded-xl px-1.5 py-[10px] text-center transition-all duration-200 border"
             style={{
-              background:
-                selectedStyle === 'emotional'
-                  ? 'linear-gradient(135deg, rgba(167,139,250,0.4), rgba(124,58,237,0.4))'
-                  : 'rgba(167,139,250,0.08)',
-              borderColor:
-                selectedStyle === 'emotional' ? 'rgba(167,139,250,0.8)' : 'rgba(167,139,250,0.2)',
+              background: selectedStyle === 'emotional' ? 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.1))' : 'white',
+              borderColor: selectedStyle === 'emotional' ? 'rgba(99,102,241,0.5)' : 'rgba(0,0,0,0.07)',
+              boxShadow: selectedStyle === 'emotional' ? '0 0 0 2px rgba(99,102,241,0.12)' : '0 1px 3px rgba(0,0,0,0.04)',
             }}
           >
             <div className="text-gray-800 font-bold text-sm flex items-center justify-center gap-1">
@@ -590,12 +602,9 @@ export default function DebateView() {
             onClick={() => setSelectedStyle('consensus')}
             className="relative rounded-xl px-1.5 py-[10px] text-center transition-all duration-200 border"
             style={{
-              background:
-                selectedStyle === 'consensus'
-                  ? 'linear-gradient(135deg, rgba(167,139,250,0.4), rgba(124,58,237,0.4))'
-                  : 'rgba(167,139,250,0.08)',
-              borderColor:
-                selectedStyle === 'consensus' ? 'rgba(167,139,250,0.8)' : 'rgba(167,139,250,0.2)',
+              background: selectedStyle === 'consensus' ? 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.1))' : 'white',
+              borderColor: selectedStyle === 'consensus' ? 'rgba(99,102,241,0.5)' : 'rgba(0,0,0,0.07)',
+              boxShadow: selectedStyle === 'consensus' ? '0 0 0 2px rgba(99,102,241,0.12)' : '0 1px 3px rgba(0,0,0,0.04)',
             }}
           >
             <div className="text-gray-800 font-bold text-sm flex items-center justify-center gap-1">
@@ -616,10 +625,10 @@ export default function DebateView() {
           <button
             onClick={startDebate}
             disabled={!selectedTopic || !selectedStyle}
-            className="w-full py-4 rounded-2xl font-bold text-white text-lg transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full py-4 rounded-2xl font-bold text-white text-[16px] tracking-tight transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             style={{
-              background: 'linear-gradient(135deg, #A78BFA, #7C3AED)',
-              opacity: !selectedTopic || !selectedStyle ? 0.4 : 1,
+              background: 'linear-gradient(135deg, #6366F1, #8B5CF6)',
+              boxShadow: '0 4px 16px rgba(99,102,241,0.4)',
             }}
           >
             {selectedStyle === 'policy' ? (
@@ -648,9 +657,9 @@ export default function DebateView() {
 
   const topicLabel = selectedTopic === 'free'
     ? (freeTopicRef.current || '자유토론')
-    : (TOPICS.find(t => t.id === selectedTopic)?.label || selectedTopic || '');
-  const oshScore = judgment?.scores.ohsehoon.total ?? 0;
-  const jwoScore = judgment?.scores.jungwono.total ?? 0;
+    : (config.topics.find(t => t.id === selectedTopic)?.label || selectedTopic || '');
+  const oshScore = judgment?.scores.ohsehoon?.total ?? 0;
+  const jwoScore = judgment?.scores.jungwono?.total ?? 0;
   const totalScore = oshScore + jwoScore || 100;
   const oshPct = Math.round((oshScore / totalScore) * 100);
   const jwoPct = 100 - oshPct;
@@ -711,22 +720,47 @@ export default function DebateView() {
 
       {/* 진행률 바 — 남은 시간 표시 (왼쪽에서 오른쪽으로 줄어듦) */}
       {phase === 'running' && (
-        <div className="h-1.5 bg-gray-200 flex justify-end">
-          <div
-            className="h-full transition-all duration-1000"
-            style={{
-              width: `${(timeLeft / 360) * 100}%`,
-              background: 'linear-gradient(270deg, #A78BFA, #7C3AED)',
-            }}
-          />
-        </div>
+        <>
+          <style>{`
+            @keyframes timerWobble {
+              0%, 100% { transform: rotate(0deg); }
+              25% { transform: rotate(-22deg); }
+              75% { transform: rotate(22deg); }
+            }
+            .timer-wobble { animation: timerWobble 0.45s ease-in-out infinite; }
+          `}</style>
+          <div className="relative bg-gray-200 flex justify-end overflow-visible" style={{ height: '3px' }}>
+            <div
+              className="h-full transition-all duration-1000 relative overflow-visible"
+              style={{
+                width: `${(timeLeft / 360) * 100}%`,
+                background: 'linear-gradient(270deg, #A78BFA, #7C3AED)',
+              }}
+            >
+              {/* 아이콘: 바의 왼쪽 끝(줄어드는 쪽)에 고정 */}
+              <div
+                className="absolute overflow-visible pointer-events-none"
+                style={{ left: '-11px', top: '50%', transform: 'translateY(-50%)' }}
+              >
+                <div className="timer-wobble" style={{ background: 'var(--pc-bg, #F6F6FA)', borderRadius: '50%', padding: '1px', lineHeight: 0 }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="13" r="8"/>
+                    <path d="M12 9v4l2.5 2.5"/>
+                    <path d="M9 3h6"/>
+                    <path d="M12 3v2"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
       )}
 
       {/* 스크롤 영역 */}
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
         {/* 완료된 발언들 */}
         {messages.map((msg, i) => (
-          <MessageBubble key={i} msg={msg} />
+          <MessageBubble key={i} msg={msg} config={config} />
         ))}
 
         {/* 현재 발화자 — 대기 중(로딩) 또는 타이핑 중 */}
@@ -735,9 +769,10 @@ export default function DebateView() {
             <MessageBubble
               msg={{ speaker: currentSpeaker, text: currentText, timestamp: Date.now() }}
               isActive
+              config={config}
             />
           ) : (
-            <TypingIndicator speaker={currentSpeaker} />
+            <TypingIndicator speaker={currentSpeaker} config={config} />
           )
         )}
 
@@ -750,7 +785,7 @@ export default function DebateView() {
 
         {/* 판정 결과 */}
         {phase === 'result' && judgment && (
-          <JudgmentCard judgment={judgment} oshPct={oshPct} jwoPct={jwoPct} />
+          <JudgmentCard judgment={judgment} oshPct={oshPct} jwoPct={jwoPct} config={config} />
         )}
 
         <div ref={messagesEndRef} />
@@ -793,17 +828,21 @@ export default function DebateView() {
 function MessageBubble({
   msg,
   isActive = false,
+  config,
 }: {
   msg: DebateMessage;
   isActive?: boolean;
+  config: typeof DEBATE_CONFIGS[DebateType];
 }) {
-  const isOsh = msg.speaker === 'ohsehoon';
-  const color = isOsh ? OSH_COLOR : JWO_COLOR;
-  const name = isOsh ? '오세훈 시장' : '정원오 구청장';
-  const imgSrc = isOsh
-    ? '/politicians/ohsehoon/profile.jpg'
-    : '/politicians/jungwono/profile.jpg';
-  const bubbleBg = isOsh ? 'rgba(229,62,62,0.12)' : 'rgba(0,78,162,0.12)';
+  const isA = msg.speaker === config.speakerA;
+  const color = isA ? config.speakerAColor : config.speakerBColor;
+  const name = isA ? config.speakerAName : config.speakerBName;
+  const imgSrc = isA
+    ? `/politicians/${config.speakerA}/profile.jpg`
+    : `/politicians/${config.speakerB}/profile.jpg`;
+  const bubbleBg = isA 
+    ? `${config.speakerAColor}20` 
+    : `${config.speakerBColor}20`;
 
   // 주제 변경 메시지인 경우
   if (msg.isTopicChange) {
@@ -824,7 +863,7 @@ function MessageBubble({
 
   return (
     <div
-      className={`flex items-end gap-2 ${isOsh ? 'flex-row-reverse' : 'flex-row'}`}
+      className={`flex items-end gap-2 ${isA ? 'flex-row-reverse' : 'flex-row'}`}
     >
       {/* 아바타 */}
       <img
@@ -840,7 +879,7 @@ function MessageBubble({
       {/* 말풍선 */}
       <div className="max-w-[75%]">
         <span
-          className={`text-[12px] font-bold block mb-1 flex items-center gap-1 ${isOsh ? 'justify-end' : 'justify-start'}`}
+          className={`text-[12px] font-bold block mb-1 flex items-center gap-1 ${isA ? 'justify-end' : 'justify-start'}`}
           style={{ color }}
         >
           {name}
@@ -852,7 +891,7 @@ function MessageBubble({
           className="rounded-2xl px-4 py-3 transition-all duration-300"
           style={{
             background: bubbleBg,
-            boxShadow: isActive ? `0 0 16px ${color}30` : 'none',
+            border: `1px solid ${color}25`,
           }}
         >
           <p className="text-gray-800 text-[15px] leading-relaxed" style={{ color: '#1e293b' }}>
@@ -872,17 +911,25 @@ function MessageBubble({
 
 // ─── 타이핑 인디케이터 컴포넌트 ──────────────────────────────────────────────────
 
-function TypingIndicator({ speaker }: { speaker: 'ohsehoon' | 'jungwono' }) {
-  const isOsh = speaker === 'ohsehoon';
-  const color = isOsh ? OSH_COLOR : JWO_COLOR;
-  const name = isOsh ? '오세훈 시장' : '정원오 구청장';
-  const imgSrc = isOsh
-    ? '/politicians/ohsehoon/profile.jpg'
-    : '/politicians/jungwono/profile.jpg';
-  const bubbleBg = isOsh ? 'rgba(229,62,62,0.12)' : 'rgba(0,78,162,0.12)';
+function TypingIndicator({
+  speaker,
+  config,
+}: {
+  speaker: string;
+  config: typeof DEBATE_CONFIGS[DebateType];
+}) {
+  const isA = speaker === config.speakerA;
+  const color = isA ? config.speakerAColor : config.speakerBColor;
+  const name = isA ? config.speakerAName : config.speakerBName;
+  const imgSrc = isA
+    ? `/politicians/${config.speakerA}/profile.jpg`
+    : `/politicians/${config.speakerB}/profile.jpg`;
+  const bubbleBg = isA 
+    ? `${config.speakerAColor}26` 
+    : `${config.speakerBColor}26`;
 
   return (
-    <div className={`flex items-end gap-2 ${isOsh ? 'flex-row-reverse' : 'flex-row'}`}>
+    <div className={`flex items-end gap-2 ${isA ? 'flex-row-reverse' : 'flex-row'}`}>
       <img
         src={imgSrc}
         alt={name}
@@ -892,14 +939,14 @@ function TypingIndicator({ speaker }: { speaker: 'ohsehoon' | 'jungwono' }) {
       />
       <div className="max-w-[75%]">
         <span
-          className={`text-[12px] font-bold block mb-1 ${isOsh ? 'text-right' : 'text-left'}`}
+          className={`text-[12px] font-bold block mb-1 ${isA ? 'text-right' : 'text-left'}`}
           style={{ color }}
         >
           {name}
         </span>
         <div
           className="rounded-2xl px-4 py-3"
-          style={{ background: bubbleBg, boxShadow: `0 0 16px ${color}30` }}
+          style={{ background: bubbleBg, border: `1px solid ${color}25` }}
         >
           <div className="flex gap-1.5 items-center h-5">
             {[0, 150, 300].map((delay) => (
@@ -922,14 +969,18 @@ function JudgmentCard({
   judgment,
   oshPct,
   jwoPct,
+  config,
 }: {
   judgment: Judgment;
   oshPct: number;
   jwoPct: number;
+  config: typeof DEBATE_CONFIGS[DebateType];
 }) {
-  const isOshWinner = judgment.winner === 'ohsehoon';
-  const winnerName = isOshWinner ? '오세훈' : '정원오 구청장';
-  const winnerColor = isOshWinner ? OSH_COLOR : JWO_COLOR;
+  const isAWinner = judgment.winner === config.speakerA;
+  const winnerName = isAWinner ? config.speakerAName : config.speakerBName;
+  const winnerColor = isAWinner ? config.speakerAColor : config.speakerBColor;
+  const colorA = config.speakerAColor as string;
+  const colorB = config.speakerBColor as string;
 
   const scoreItems = [
     { label: '논리력', key: 'logic' as const },
@@ -960,16 +1011,16 @@ function JudgmentCard({
       {/* 점수 비율 바 */}
       <div className="mb-4">
         <div className="flex justify-between text-xs mb-1">
-          <span style={{ color: OSH_COLOR }} className="font-bold">
-            오세훈 {oshPct}%
+          <span style={{ color: colorA }} className="font-bold">
+            {config.speakerAName} {oshPct}%
           </span>
-          <span style={{ color: JWO_COLOR }} className="font-bold">
-            {jwoPct}% 정원오 구청장
+          <span style={{ color: colorB }} className="font-bold">
+            {jwoPct}% {config.speakerBName}
           </span>
         </div>
         <div className="flex h-3 rounded-full overflow-hidden">
-          <div style={{ width: `${oshPct}%`, background: OSH_COLOR }} />
-          <div style={{ width: `${jwoPct}%`, background: JWO_COLOR }} />
+          <div style={{ width: `${oshPct}%`, background: colorA }} />
+          <div style={{ width: `${jwoPct}%`, background: colorB }} />
         </div>
       </div>
 
@@ -983,22 +1034,22 @@ function JudgmentCard({
               <div className="flex justify-between text-xs text-gray-600 mb-1">
                 <span>{item.label}</span>
                 <span>
-                  <span style={{ color: OSH_COLOR }}>{oshScore}</span>
+                  <span style={{ color: colorA }}>{oshScore}</span>
                   {' : '}
-                  <span style={{ color: JWO_COLOR }}>{jwoScore}</span>
+                  <span style={{ color: colorB }}>{jwoScore}</span>
                 </span>
               </div>
               <div className="flex h-1.5 rounded-full overflow-hidden bg-gray-200">
                 <div
                   style={{
                     width: `${(oshScore / (oshScore + jwoScore)) * 100}%`,
-                    background: OSH_COLOR,
+                    background: colorA,
                   }}
                 />
                 <div
                   style={{
                     width: `${(jwoScore / (oshScore + jwoScore)) * 100}%`,
-                    background: JWO_COLOR,
+                    background: colorB,
                   }}
                 />
               </div>

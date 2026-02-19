@@ -18,7 +18,7 @@ export default async function handler(req, res) {
 
   // GET: 캐시 조회 (최신 버전)
   if (req.method === 'GET') {
-    const { topic, style = 'free' } = req.query;
+    const { topic, style = 'free', debateType = 'seoul' } = req.query;
     if (!topic) return res.status(400).json({ error: 'topic required' });
 
     try {
@@ -27,6 +27,7 @@ export default async function handler(req, res) {
         .select('*')
         .eq('topic', topic)
         .eq('style', style)
+        .eq('debate_type', debateType)
         .order('version', { ascending: false })
         .limit(1)
         .single();
@@ -46,7 +47,7 @@ export default async function handler(req, res) {
 
   // POST: 캐시 저장
   if (req.method === 'POST') {
-    const { topic, style = 'free', messages, judgment } = req.body;
+    const { topic, style = 'free', messages, judgment, debateType = 'seoul' } = req.body;
     if (!topic || !messages) {
       return res.status(400).json({ error: 'topic and messages required' });
     }
@@ -58,6 +59,7 @@ export default async function handler(req, res) {
         .select('version')
         .eq('topic', topic)
         .eq('style', style)
+        .eq('debate_type', debateType)
         .order('version', { ascending: false })
         .limit(1)
         .single();
@@ -66,7 +68,7 @@ export default async function handler(req, res) {
 
       const { data, error } = await supabase
         .from('debate_cache')
-        .insert({ topic, style, version: nextVersion, messages, judgment: judgment || null })
+        .insert({ topic, style, debate_type: debateType, version: nextVersion, messages, judgment: judgment || null })
         .select()
         .single();
 
