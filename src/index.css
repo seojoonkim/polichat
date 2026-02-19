@@ -172,22 +172,19 @@ body {
   100% { transform: translate3d(1%, -1%, 0) scale(1); }
 }
 
-/* ===== Logo Poppins + Gradient ===== */
+/* ===== Logo animated gradient ===== */
 .logo-text-gradient {
-  font-family: 'Poppins', sans-serif;
-  font-weight: 900;
-  letter-spacing: -0.02em;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7, #6366f1);
-  background-size: 200% 200%;
+  background: linear-gradient(270deg, #2D0B6B, #7C3AED, #9333EA, #4C1D95, #2D0B6B);
+  background-size: 300% 300%;
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: gradient-shift 6s ease infinite;
+  animation: gradient-shift 5s ease-in-out infinite;
 }
 
 @keyframes gradient-shift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
 

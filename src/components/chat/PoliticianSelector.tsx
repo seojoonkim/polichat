@@ -126,16 +126,13 @@ export default function PoliticianSelector({ politicians }: Props) {
           <div className="flex items-center justify-center gap-1 mb-5 animate-fade-in">
             <img src="/logo.svg" alt="Polichat" className="w-14 h-14" />
             <h1
+              className="logo-text-gradient"
               style={{
                 fontFamily: "'Righteous', sans-serif",
                 fontWeight: 400,
                 fontSize: '42px',
                 letterSpacing: '-0.01em',
                 lineHeight: 1,
-                background: 'linear-gradient(135deg, #2D0B6B 0%, #6D28D9 55%, #9333EA 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
               }}
             >
               Polichat
@@ -151,7 +148,7 @@ export default function PoliticianSelector({ politicians }: Props) {
                   fontWeight: 800,
                   fontSize: '19px',
                   letterSpacing: '-0.03em',
-                  color: '#0C0C1A',
+                  color: '#2D0B6B',
                 }}
               >
                 AI 정치인과 직접 대화하세요
