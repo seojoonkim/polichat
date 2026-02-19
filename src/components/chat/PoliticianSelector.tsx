@@ -149,7 +149,21 @@ export default function PoliticianSelector({ politicians }: Props) {
         <div className="text-center mb-8">
           {/* Logo */}
           <div className="flex items-center justify-center gap-1 mb-5 animate-fade-in">
-            <img src="/logo.svg" alt="Polichat" className="w-14 h-14" />
+            <div className="relative">
+              <img src="/logo.svg" alt="Polichat" className="w-14 h-14" />
+              <span
+                style={{
+                  position: 'absolute',
+                  bottom: '2px',
+                  right: '-18px',
+                  fontSize: '11px',
+                  fontFamily: "'Pretendard Variable', sans-serif",
+                  fontWeight: 700,
+                  color: '#7C3AED',
+                  letterSpacing: '0',
+                }}
+              >.kr</span>
+            </div>
             <h1
               className="logo-text-gradient"
               style={{
@@ -158,9 +172,10 @@ export default function PoliticianSelector({ politicians }: Props) {
                 fontSize: '42px',
                 letterSpacing: '-0.01em',
                 lineHeight: 1,
+                marginLeft: '12px',
               }}
             >
-              Polichat<span className="text-[0.6em] font-semibold opacity-70">.kr</span>
+              Polichat
             </h1>
           </div>
 
