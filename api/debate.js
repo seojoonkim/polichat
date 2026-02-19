@@ -3,6 +3,91 @@ export const config = {
   maxDuration: 60,
 };
 
+// ── 정당 정책 지식베이스 (4대 LLM 리서치 취합, 2026-02) ─────────────────
+const POLICY_KB = {
+  ppp: {
+    핵심입장: {
+      부동산: '10.15 대책 전면 철회 요구. 재건축/재개발 규제 완화·거래세 인하. 오세훈 354곳 정비구역 추진.',
+      경제: '상속세 대개편(완화/폐지) 추진. 이재명 정부 210조 확장재정 비판.',
+      복지: '선별 복지, 재정 건전성 강조. 현금살포성 복지 반대.',
+      안보: '한미동맹 강화, 대북 강경. 이재명 정부 대북 확성기 중지 비판.',
+      사법: '검찰 수사 독립성, 이재명 정부 사법 리스크 견제.'
+    },
+    공약파기: ['250만호 공급 목표 미달', '여가부 폐지 실패', '사드 추가배치 무산', '주69시간제 철회'],
+    이행률: '윤석열 정부 공약 이행률 35.3% (136개 중 48개 완료, 72개 파기)',
+    공격포인트: [
+      '이재명 기본소득 공약 집권하자마자 철회 — 대국민 사기',
+      '탈원전 주장하다 180도 전환 — 정책 신뢰 제로',
+      '10.15 대책으로 서울 집값 오히려 불안 심화',
+      'LH 부채 160조인데 기본주택 100만호? 재정 파탄 자초',
+      '다주택자 6채 보유 이재명 — 부동산 규제 본인에게도 적용하나 (2026.02 설전)'
+    ]
+  },
+  dp: {
+    핵심입장: {
+      부동산: '10.15 대책(서울 전역 3중 규제). 기본주택 100만호. 전세사기특별법 통과. 투기 억제 중심.',
+      경제: 'AI 3대 강국, 210조 재정투자. 기본소득 철회, 원전 유지로 현실 노선 전환.',
+      복지: '기본이 튼튼한 사회. 저출생 대책, 공공의료 강화.',
+      안보: '대북 확성기 중지(2025.6). 한미동맹+균형외교. 남북 신뢰 회복.',
+      사법: '검찰 수사권 박탈 유지, 공수처 강화, 내란 청산.'
+    },
+    입장변화: [
+      '기본소득 철회: 2022 핵심 공약→2025 대선 공약에서 완전 삭제',
+      '탈원전 철회: 원전 유지·활용으로 180도 전환',
+      '경제 우클릭: 재벌 개혁→AI 산업 육성으로 노선 이동',
+      '부동산: 2022 재건축 완화 검토→집권 후 10.15 대책으로 강화'
+    ],
+    공격포인트: [
+      '국민의힘 공약 이행률 35.3%, 72개 파기 — 국민 기만',
+      '12.3 계엄 사태 민주주의 파괴 — 이 당이 집권해도 되나',
+      '5년 250만호 공약 완전 실패, 집값은 오히려 폭등',
+      '오세훈 재개발로 결국 강남만 집값 상승, 서민은 내몰림',
+      '상속세 폐지 = 재벌 특혜, 부의 대물림 고착화'
+    ]
+  },
+  핵심쟁점: [
+    { 주제: '부동산 규제', ppp: '규제가 공급 위축→집값 상승. 민간 재건축 활성화 필요.', dp: '투기 억제 없으면 집값 더 오름. 10.15 대책이 정답.', 수치: '서울 다주택자 양도세 중과 2026.5 만료 예정' },
+    { 주제: '기본소득', ppp: '집권하자마자 철회, 공약 사기.', dp: '재정 현실 반영한 현명한 노선 수정.', 수치: '연 100만원→완전 철회' },
+    { 주제: '원전', ppp: '탈원전 주장하다 180도 전환, 일관성 없음.', dp: '에너지 현실주의, 국민 에너지 안보 위해 합리적 결정.', 수치: '현재 여야 모두 원전 유지 방향 수렴' },
+    { 주제: '재건축초과이익환수', ppp: '폐지해야. 공사비 급등 시대에 사업성 악화.', dp: '개발이익 사유화 안돼. 사회 환원 당연.', 수치: '평균 부담금 3~5억원, 조합원 반발 사례 증가' },
+    { 주제: '상속세', ppp: '최고세율 60% 세계 최고, 기업 경영권 위협.', dp: '부자 감세, 부의 대물림 고착화.', 수치: 'OECD 평균 15% vs 한국 60%' },
+    { 주제: '예산', ppp: '지역화폐 예산 반대, 재정 건전성 우선.', dp: '민생 예산 증액 필수, 728조 합의 처리.', 수치: '2026년도 예산 728조원(전년比 +3.2%)' }
+  ]
+};
+
+function getKnowledge(topicLabel, speaker) {
+  const pppSpeaker = ['ohsehoon', 'jangdh'].includes(speaker);
+  const kb = pppSpeaker ? POLICY_KB.ppp : POLICY_KB.dp;
+
+  const isHousing = /부동산|재건축|재개발|주거|주택|전세|임대|젠트리/.test(topicLabel);
+  const isEconomy = /경제|민생|예산|세금|상속|물가/.test(topicLabel);
+  const isEnv = /환경|탄소|에너지|원전/.test(topicLabel);
+  const isWelfare = /복지|기본소득|연금|의료|저출생/.test(topicLabel);
+  const isSecurity = /안보|북한|한미|외교|국방/.test(topicLabel);
+
+  // 관련 쟁점 필터
+  const relevantConflicts = POLICY_KB.핵심쟁점.filter(c => {
+    if (isHousing) return /부동산|재건축/.test(c.주제);
+    if (isEconomy) return /기본소득|상속|예산/.test(c.주제);
+    if (isEnv) return /원전/.test(c.주제);
+    return false;
+  });
+
+  const myPosition = isHousing ? kb.핵심입장.부동산
+    : isEconomy ? kb.핵심입장.경제
+    : isEnv ? kb.핵심입장.경제
+    : isWelfare ? kb.핵심입장.복지
+    : isSecurity ? kb.핵심입장.안보
+    : null;
+
+  return {
+    myPosition,
+    attackPoints: kb.공격포인트.slice(0, 3),
+    conflicts: relevantConflicts,
+    reversals: pppSpeaker ? POLICY_KB.dp.입장변화 : POLICY_KB.ppp.공약파기
+  };
+}
+
 // 모듈 최상위에 정의 — getStylePrompt에서도 접근 가능
 const CURRENT_CONTEXT = `⚠️ 시간 기준 (최우선 규칙): 현재는 2026년 2월이다. 이재명 대통령 집권 중(2025년 취임). 12.3 계엄 사태 이후 정치 지형 재편. 절대 금지: "2023년 기준", "2022년 기준" 등 과거 수치를 현재인 것처럼 말하는 것. 수치 인용 시 2025~2026년 현재 기준임을 전제하거나, 정확한 수치를 모르면 구체적 숫자 대신 방향성으로 답변하라.`;
 
@@ -97,7 +182,25 @@ export default async function handler(req, res) {
     systemPrompt = getStylePrompt(style, speaker, opponentLastMessage, topic, debateType);
   }
 
-  // 최근 대화 히스토리를 시스템 프롬프트에 주입 (기억력 향상)
+  // ── 정책 지식베이스 주입 ───────────────────────────────────────────────
+  const kb = getKnowledge(topic, speaker);
+  if (kb.myPosition || kb.conflicts.length > 0) {
+    let kbText = '\n\n📚 정책 지식베이스 (이 데이터를 논거로 적극 활용하세요):';
+    if (kb.myPosition) kbText += `\n• 내 핵심 입장: ${kb.myPosition}`;
+    if (kb.conflicts.length > 0) {
+      kbText += '\n• 핵심 쟁점:';
+      kb.conflicts.forEach(c => {
+        kbText += `\n  - [${c.주제}] 내 입장: ${['ohsehoon','jangdh'].includes(speaker) ? c.ppp : c.dp} | 수치: ${c.수치}`;
+      });
+    }
+    if (kb.reversals.length > 0) {
+      kbText += `\n• 상대 공격 포인트 (구체적으로 활용): ${kb.reversals.slice(0,2).join(' / ')}`;
+    }
+    kbText += '\n⚠️ 위 데이터의 수치·사실을 발언에 직접 인용하되, 같은 논거를 반복하지 마세요.';
+    systemPrompt += kbText;
+  }
+
+  // ── 최근 대화 히스토리 주입 (기억력 향상) ───────────────────────────────
   if (recentHistory && recentHistory.length > 0) {
     const NAMES = {
       ohsehoon: '오세훈 시장',
@@ -108,7 +211,7 @@ export default async function handler(req, res) {
     const historyText = recentHistory
       .map(msg => `${NAMES[msg.speaker] || msg.speaker}: ${msg.text}`)
       .join('\n');
-    systemPrompt += `\n\n📜 지금까지 오간 발언 (맥락 유지에 활용하세요 — 이전에 한 주장을 반복하지 말고, 상대가 이미 꺼낸 논거는 정면으로 반박하세요):\n${historyText}`;
+    systemPrompt += `\n\n📜 지금까지 오간 발언 (맥락 유지 — 이전 주장 반복 금지, 상대 논거 정면 반박):\n${historyText}`;
   }
 
   const messages = opponentLastMessage
