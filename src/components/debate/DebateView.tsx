@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router';
 // const TOPIC_ICONS: Record<string, React.ReactNode> = { ... };
 
 const TOPICS: Array<{ id: string; label: string }> = [
-  { id: 'free', label: '🎲 자유토론 (2분마다 전환)' },
+  { id: 'free', label: '🎲 자유토론' },
   { id: 'redevelopment', label: '재개발 vs 도시재생' },
   { id: 'gentrification', label: '젠트리피케이션 대응' },
   { id: 'housing', label: '주거 정책 방향' },
@@ -481,18 +481,21 @@ export default function DebateView() {
             <button
               key={topic.id}
               onClick={() => setSelectedTopic(topic.id)}
-              className="relative rounded-xl px-1.5 py-[10px] text-center transition-all duration-200 border"
+              className="relative rounded-xl px-1.5 text-center transition-all duration-200 border flex flex-col items-center justify-center"
               style={{
+                height: '52px',
                 background:
                   selectedTopic === topic.id
                     ? 'linear-gradient(135deg, rgba(201,21,30,0.3), rgba(0,78,162,0.3))'
                     : 'rgba(255,255,255,0.05)',
                 borderColor:
                   selectedTopic === topic.id ? 'rgba(255,215,0,0.6)' : 'rgba(255,255,255,0.1)',
-                color: selectedTopic === topic.id ? 'rgba(255,215,0,0.9)' : 'rgba(255,255,255,0.5)',
               }}
             >
               <span className="text-white text-[12px] font-semibold leading-tight">{topic.label}</span>
+              {topic.id === 'free' && (
+                <span className="text-white/40 text-[10px] mt-0.5">2분마다 전환</span>
+              )}
               {selectedTopic === topic.id && (
                 <span className="absolute top-1.5 right-1.5 text-yellow-400 text-xs">✓</span>
               )}
