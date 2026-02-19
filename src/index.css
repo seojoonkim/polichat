@@ -76,21 +76,13 @@ body {
   letter-spacing: -0.01em;
 }
 
-/* ===== Polichat Background - Mesh Gradient ===== */
+/* ===== Polichat Background - Light Mode ===== */
 .polichat-bg {
   position: relative;
   min-height: 100svh;
   -webkit-overflow-scrolling: touch;
-  /* background-attachment: fixed으로 스크롤/높이에 무관하게 항상 전체 뷰포트 커버 */
-  background-color: #f0f4ff;
-  background-image:
-    radial-gradient(ellipse at 20% 0%, rgba(99, 102, 241, 0.12) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 10%, rgba(168, 85, 247, 0.10) 0%, transparent 45%),
-    radial-gradient(ellipse at 60% 60%, rgba(236, 72, 153, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at 10% 80%, rgba(59, 130, 246, 0.10) 0%, transparent 45%),
-    radial-gradient(ellipse at 90% 90%, rgba(139, 92, 246, 0.06) 0%, transparent 40%);
+  background: linear-gradient(160deg, #ffffff 0%, #f5f4f9 50%, #edeaf5 100%);
   background-attachment: fixed;
-  background-size: cover;
 }
 
 .policy-pattern {
