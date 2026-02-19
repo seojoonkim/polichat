@@ -113,7 +113,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
   const config = DEBATE_CONFIGS[debateType];
 
   // 설정 상태
-  const [selectedTopic, setSelectedTopic] = useState<string>(config.topics[1]?.id || 'free');
+  const [selectedTopic, setSelectedTopic] = useState<string>('free');
   const [_selectedStyle, setSelectedStyle] = useState<'policy' | 'emotional' | 'consensus'>('policy');
   const selectedStyle = debateType === 'leejeon' ? 'emotional' : _selectedStyle;
 
