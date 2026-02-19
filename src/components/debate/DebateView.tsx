@@ -893,7 +893,13 @@ function MessageBubble({
         >
           {name}
           {isActive && (
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 animate-pulse"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <svg
+              width="15" height="15" viewBox="0 0 24 24" fill="currentColor"
+              stroke="none"
+              style={{ color, filter: `drop-shadow(0 0 4px ${color}99)`, animation: 'speakingPop 0.7s ease-in-out infinite alternate' }}
+            >
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
           )}
         </span>
         <div
