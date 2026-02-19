@@ -407,6 +407,7 @@ export default function DebateView() {
     setPhase('running');
     setMessages([]);
     setCurrentText('');
+    setCurrentSpeaker('ohsehoon'); // 첫 발화자 미리 설정 → 빈 화면 방지
     setRound(0);
     setJudgment(null);
     setTimeLeft(360);
@@ -437,7 +438,7 @@ export default function DebateView() {
 
   if (phase === 'setup') {
     return (
-      <div className="fixed inset-0 bg-gradient-to-br from-slate-700 to-slate-800 flex flex-col overflow-y-auto">
+      <div className="fixed inset-0 flex flex-col overflow-y-auto" style={{ background: 'linear-gradient(160deg, #2c4a7c 0%, #1a3060 45%, #0f1e42 100%)' }}>
         {/* 헤더 */}
         <div
           className="flex items-center gap-3 px-4 pb-4"
@@ -606,7 +607,8 @@ export default function DebateView() {
 
   return (
     <div
-      className="fixed inset-0 bg-gradient-to-br from-slate-700 to-slate-800 flex flex-col overflow-hidden"
+      className="fixed inset-0 flex flex-col overflow-hidden"
+      style={{ background: 'linear-gradient(160deg, #2c4a7c 0%, #1a3060 45%, #0f1e42 100%)' }}
     >
       {/* 헤더 */}
       <div
