@@ -115,6 +115,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
   const abortRef = useRef(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const freeTopicRef = useRef<string>('');
+  const topicChangedRef = useRef(false); // 주제 전환 시 lastText 리셋용
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
     messagesEndRef.current?.scrollIntoView({ behavior });
@@ -180,6 +181,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
     if (!next) return;
     
     freeTopicRef.current = next.label;
+    topicChangedRef.current = true; // 다음 라운드에서 lastText 초기화
 
     setMessages(prev => [...prev, {
       speaker: config.speakerA,
@@ -384,6 +386,12 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
         }
 
         try {
+          // 주제 전환 직후 라운드 → lastText 초기화 (이전 주제 맥락 제거)
+          if (topicChangedRef.current) {
+            lastText = '';
+            topicChangedRef.current = false;
+          }
+
           const currentTopic = selectedTopic === 'free' ? freeTopicRef.current : initialTopic;
 
           let streamedText = '';
