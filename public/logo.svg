@@ -1,4 +1,11 @@
 <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="purpleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2D0B6B"/>
+      <stop offset="100%" stop-color="#7C3AED"/>
+    </linearGradient>
+  </defs>
+
   <style>
     .bubble-right {
       animation: swayRight 3.2s ease-in-out infinite;
@@ -21,17 +28,17 @@
     }
   </style>
 
-  <!-- Right bubble (dark) — behind, sways right -->
+  <!-- Right bubble (purple gradient) — behind -->
   <g class="bubble-right">
-    <path d="M37 30C37 24.477 41.477 20 47 20H61C66.523 20 71 24.477 71 30V46C71 51.523 66.523 56 61 56H57V64L49 56H47C41.477 56 37 51.523 37 46V30Z" fill="#2D2D2D"/>
+    <path d="M37 30C37 24.477 41.477 20 47 20H61C66.523 20 71 24.477 71 30V46C71 51.523 66.523 56 61 56H57V64L49 56H47C41.477 56 37 51.523 37 46V30Z" fill="url(#purpleGrad)"/>
     <path d="M49 40L53 44L61 36" stroke="white" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
   </g>
 
-  <!-- Left bubble (white) — front, sways left (opposite phase) -->
+  <!-- Left bubble (white + purple border) — front -->
   <g class="bubble-left">
-    <path d="M10 20C10 14.477 14.477 10 20 10H38C43.523 10 48 14.477 48 20V36C48 41.523 43.523 46 38 46H26L18 54V46H20C14.477 46 10 41.523 10 36V20Z" fill="white" stroke="#C0C0C0" stroke-width="1.5"/>
-    <circle cx="23" cy="28" r="2.4" fill="#2D2D2D"/>
-    <circle cx="29" cy="28" r="2.4" fill="#2D2D2D"/>
-    <circle cx="35" cy="28" r="2.4" fill="#2D2D2D"/>
+    <path d="M10 20C10 14.477 14.477 10 20 10H38C43.523 10 48 14.477 48 20V36C48 41.523 43.523 46 38 46H26L18 54V46H20C14.477 46 10 41.523 10 36V20Z" fill="white" stroke="#C4B5FD" stroke-width="1.5"/>
+    <circle cx="23" cy="28" r="2.4" fill="#4C1D95"/>
+    <circle cx="29" cy="28" r="2.4" fill="#4C1D95"/>
+    <circle cx="35" cy="28" r="2.4" fill="#4C1D95"/>
   </g>
 </svg>

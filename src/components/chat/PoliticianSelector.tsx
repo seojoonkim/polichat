@@ -132,7 +132,10 @@ export default function PoliticianSelector({ politicians }: Props) {
                 fontSize: '42px',
                 letterSpacing: '-0.01em',
                 lineHeight: 1,
-                color: '#0C0C1A',
+                background: 'linear-gradient(135deg, #2D0B6B 0%, #6D28D9 55%, #9333EA 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
               }}
             >
               Polichat
