@@ -741,6 +741,31 @@ function extractThemes(text) {
   return Array.from(found);
 }
 
+// ── 공격 각도 강제 로테이션 (C) ──────────────────────────────────────────────
+const ATTACK_ANGLES = [
+  '① 새 수치·통계 직접 제시',
+  '② 상대 발언 그대로 인용 후 논리 해체',
+  '③ 언론 보도·전문가 발언 인용',
+  '④ 역사적 선례 또는 다른 나라 비교',
+  '⑤ 상대 논리의 내부 모순 지적',
+  '⑥ 상대 개인 신뢰성·전력 공격',
+  '⑦ 정책·발언의 실제 피해 결과 제시',
+];
+
+// ── 핵심 주장 추출 (B) ──────────────────────────────────────────────────────
+function extractKeyClaim(text) {
+  if (!text) return null;
+  // 수치/날짜/퍼센트 포함 문장 우선
+  const sentences = text.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 10);
+  const withData = sentences.find(s => /\d+[\.,]?\d*\s*(%|조|억|만|건|명|년|위|배|점)/.test(s));
+  if (withData) return withData.slice(0, 80);
+  // 의혹/공격성 문장 다음 우선
+  const withAttack = sentences.find(s => /의혹|막말|거짓|실패|비리|위선|모순|증명|해명/.test(s));
+  if (withAttack) return withAttack.slice(0, 80);
+  // 그냥 첫 문장
+  return sentences[0]?.slice(0, 80) || null;
+}
+
 export default async function handler(req, res) {
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -751,7 +776,7 @@ export default async function handler(req, res) {
 
   if (req.method !== 'POST') return res.status(405).end();
 
-  const { topic, opponentLastMessage, speaker, style, debateType = 'seoul', recentHistory = [] } = req.body;
+  const { topic, opponentLastMessage, speaker, style, debateType = 'seoul', recentHistory = [], usedArgCount = 0, mustRebutClaim = null, lastAngles = [] } = req.body;
   const apiKey = process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY;
 
   if (!apiKey) {
@@ -873,11 +898,9 @@ export default async function handler(req, res) {
         : '자유토론';
       const fullPool = kb.세부논거[topicKey] || kb.세부논거['자유토론'] || [];
       if (fullPool.length > 0) {
-        // 논거 풀 로테이션: 매 발언마다 다른 시작점에서 8개 보여줌 (반복 방지)
-        const roundIdx = (recentHistory || []).filter(m => m.speaker === speaker).length;
-        const step = 4;
-        const startIdx = (roundIdx * step) % fullPool.length;
-        const rotated = [...fullPool.slice(startIdx), ...fullPool.slice(0, startIdx)];
+        // 논거 풀: usedArgCount offset으로 이미 본 논거 완전히 건너뜀 (A)
+        const argOffset = (usedArgCount || 0) % fullPool.length;
+        const rotated = [...fullPool.slice(argOffset), ...fullPool.slice(0, argOffset)];
         const argPool = rotated.slice(0, 8);
         kbText += `\n\n💡 이번 발언 논거 후보 (8개, 이미 쓴 것 제외하고 새로운 것 선택):\n` + argPool.map((a,i)=>`${i+1}. ${a}`).join('\n');
       }
@@ -925,6 +948,17 @@ export default async function handler(req, res) {
 가능한 각도: ① 새로운 사실/수치 ② 상대방 말 인용+반박 ③ 제3자 증언/보도 ④ 역사적 선례 ⑤ 논리적 모순 지적 ⑥ 개인 신뢰성 공격 ⑦ 정책 효과 비판`;
   }
 
+  // ── C: 공격 각도 강제 로테이션 ─────────────────────────────────────────────
+  const availableAngles = ATTACK_ANGLES.filter(a => !(lastAngles || []).includes(a));
+  const forcedAngle = availableAngles.length > 0 ? availableAngles[0] : ATTACK_ANGLES[0];
+  systemPrompt += `\n\n🎯 이번 발언 필수 공격 각도: ${forcedAngle}\n이 각도로 시작하라. 다른 각도로 시작 금지.`;
+
+  // ── B: 상대방 핵심 주장 반박 의무화 ────────────────────────────────────────
+  const rebutClaim = mustRebutClaim || extractKeyClaim(opponentLastMessage);
+  if (rebutClaim) {
+    systemPrompt += `\n\n🎯 필수 반박 (이걸 직접 공격하지 않으면 패배): "${rebutClaim}"`;
+  }
+
   // ── 대화 히스토리 → messages 배열로 전달 (LLM native 방식, 전체 기억) ───────
   const SPEAKER_NAMES = {
     ohsehoon: '오세훈 시장',
@@ -959,6 +993,10 @@ export default async function handler(req, res) {
   res.setHeader('Connection', 'keep-alive');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('X-Accel-Buffering', 'no');
+
+  // META 이벤트 먼저 전송: 프론트가 다음 턴 상태 업데이트에 사용 (A+C)
+  const nextArgCount = (usedArgCount || 0) + 8;
+  res.write(`data: ${JSON.stringify({ meta: { nextArgCount, usedAngle: forcedAngle } })}\n\n`);
 
   try {
     // OpenRouter API (OpenAI 호환 포맷)

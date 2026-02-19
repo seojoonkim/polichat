@@ -106,6 +106,17 @@ type Phase = 'setup' | 'coinflip' | 'running' | 'judging' | 'result';
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+// 상대 발언에서 가장 반박하기 좋은 문장 1개 추출 (B)
+function extractKeyClaimClient(text: string): string | null {
+  if (!text) return null;
+  const sentences = text.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 10);
+  const withData = sentences.find(s => /\d+[\.,]?\d*\s*(%|조|억|만|건|명|년|위|배|점)/.test(s));
+  if (withData) return withData.slice(0, 80);
+  const withAttack = sentences.find(s => /의혹|막말|거짓|실패|비리|위선|모순|증명|해명/.test(s));
+  if (withAttack) return withAttack.slice(0, 80);
+  return sentences[0]?.slice(0, 80) || null;
+}
+
 // ─── 메인 컴포넌트 ─────────────────────────────────────────────────────────────
 
 export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
@@ -137,6 +148,11 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
   const pendingTopicChangeRef = useRef<string | null>(null); // 라운드 끝난 후 처리할 주제 전환
   const speakerOrderRef = useRef<[string, string]>([config.speakerA, config.speakerB]);
   const speakerIndexRef = useRef(0); // 순번 카운터 (주제 전환 시 리셋)
+
+  // 기억력 강화 ref (A+B+C)
+  const usedArgCountRef = useRef<Record<string, number>>({}); // A: 스피커별 소비 논거 카운터
+  const opponentClaimRef = useRef<string | null>(null);       // B: 다음 턴 반박 의무 주장
+  const lastAnglesRef = useRef<Record<string, string[]>>({});  // C: 스피커별 최근 사용 각도 (2개)
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
     messagesEndRef.current?.scrollIntoView({ behavior });
@@ -298,7 +314,8 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
     opponentLastMessage: string,
     style: string,
     onToken?: (text: string) => Promise<void> | void,
-    recentHistory?: DebateMessage[]
+    recentHistory?: DebateMessage[],
+    opts?: { usedArgCount?: number; mustRebutClaim?: string | null; lastAngles?: string[] }
   ): Promise<string> => {
     return new Promise((resolve, reject) => {
       let fullText = '';
@@ -329,7 +346,13 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
       fetch('/api/debate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic, speaker, opponentLastMessage, style, debateType, recentHistory: recentHistory ?? [] }),
+        body: JSON.stringify({
+          topic, speaker, opponentLastMessage, style, debateType,
+          recentHistory: recentHistory ?? [],
+          usedArgCount: opts?.usedArgCount ?? 0,
+          mustRebutClaim: opts?.mustRebutClaim ?? null,
+          lastAngles: opts?.lastAngles ?? [],
+        }),
         signal: abortCtrl.signal,
       })
         .then((res) => {
@@ -364,6 +387,17 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
                   cleanup();
                   reject(new Error(json.error));
                   return;
+                }
+                // META 이벤트: 논거 카운터 + 사용 각도 업데이트 (A+C)
+                if (json.meta) {
+                  if (json.meta.nextArgCount !== undefined) {
+                    usedArgCountRef.current[speaker] = json.meta.nextArgCount;
+                  }
+                  if (json.meta.usedAngle) {
+                    const prev = lastAnglesRef.current[speaker] || [];
+                    lastAnglesRef.current[speaker] = [...prev, json.meta.usedAngle].slice(-2);
+                  }
+                  continue;
                 }
                 if (json.text) {
                   if (!firstTokenReceived) {
@@ -402,6 +436,11 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
     speakerOrderRef.current = speakerOrder || [config.speakerA, config.speakerB];
     speakerIndexRef.current = 0;
     pendingTopicChangeRef.current = null;
+
+    // 기억력 강화 ref 초기화 (새 토론 시작마다 리셋)
+    usedArgCountRef.current = {};
+    opponentClaimRef.current = null;
+    lastAnglesRef.current = {};
 
     const allMessages: DebateMessage[] = [];
     let lastText = '';
@@ -442,6 +481,8 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           const MAX_SENTENCES_PER_BUBBLE = 2;
 
           const recentHistory = [...allMessages]; // 전체 히스토리 전달 (처음부터 기억)
+          // B: 상대 주장 반박 의무화 — 내 턴이면 상대(lastText)의 핵심 주장 전달
+          const mustRebutClaim = lastText ? opponentClaimRef.current : null;
           const text = await streamRound(speaker, currentTopic, lastText, style, async (chunk) => {
             if (abortRef.current) return;
             for (const char of chunk) {
@@ -471,7 +512,11 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
                 }
               }
             }
-          }, recentHistory);
+          }, recentHistory, {
+            usedArgCount: usedArgCountRef.current[speaker] ?? 0,
+            mustRebutClaim,
+            lastAngles: lastAnglesRef.current[speaker] ?? [],
+          });
 
           if (abortRef.current) break;
 
@@ -486,6 +531,8 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           setCurrentSpeaker(null);
           scrollToBottom();
           lastText = text;
+          // B: 방금 발언(text)에서 다음 턴 상대방이 반박할 핵심 주장 추출
+          opponentClaimRef.current = extractKeyClaimClient(text);
           roundSuccess = true;
 
           await sleep(900);
