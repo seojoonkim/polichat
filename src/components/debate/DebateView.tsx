@@ -611,7 +611,7 @@ export default function DebateView() {
   return (
     <div
       className="fixed inset-0 flex flex-col overflow-hidden"
-      style={{ background: 'linear-gradient(160deg, #2c4a7c 0%, #1a3060 45%, #0f1e42 100%)' }}
+      style={{ background: 'linear-gradient(160deg, #3a3a50 0%, #272738 45%, #1c1c2c 100%)' }}
     >
       {/* 헤더 */}
       <div
@@ -655,12 +655,12 @@ export default function DebateView() {
 
       {/* 진행률 바 — 남은 시간 표시 (왼쪽에서 오른쪽으로 줄어듦) */}
       {phase === 'running' && (
-        <div className="h-1.5 bg-white/10">
+        <div className="h-1.5 bg-white/10 flex justify-end">
           <div
             className="h-full transition-all duration-1000"
             style={{
               width: `${(timeLeft / 360) * 100}%`,
-              background: 'linear-gradient(90deg, #A78BFA, #7C3AED)',
+              background: 'linear-gradient(270deg, #A78BFA, #7C3AED)',
             }}
           />
         </div>
@@ -772,7 +772,7 @@ function MessageBubble({
       <img
         src={imgSrc}
         alt={name}
-        className="w-8 h-8 rounded-full object-cover border flex-shrink-0"
+        className="w-10 h-10 rounded-full object-cover border flex-shrink-0"
         style={{ borderColor: `${color}60` }}
         onError={(e) => {
           e.currentTarget.style.display = 'none';
@@ -828,7 +828,7 @@ function TypingIndicator({ speaker }: { speaker: 'ohsehoon' | 'jungwono' }) {
       <img
         src={imgSrc}
         alt={name}
-        className="w-8 h-8 rounded-full object-cover border flex-shrink-0"
+        className="w-10 h-10 rounded-full object-cover border flex-shrink-0"
         style={{ borderColor: `${color}60` }}
         onError={(e) => { e.currentTarget.style.display = 'none'; }}
       />
