@@ -24,11 +24,16 @@ export default function DebateBanner({ debateType = 'seoul' }: DebateBannerProps
       candidateB: { name: '전한길', party: '국민의힘', id: 'jeonhangil', color: '#C9151E' },
       tagline: '"보수 내전 🔥"',
     },
+    kimjin: {
+      candidateA: { name: '김어준', party: '정치비평가', id: 'kimeoojun', color: '#454545' },
+      candidateB: { name: '진중권', party: '정치비평가', id: 'jinjungkwon', color: '#808080' },
+      tagline: '"진보의 적은 누구인가"',
+    },
   };
 
   const c = config[debateType] ?? config['seoul'];
   const isNational = debateType === 'national';
-  const navigationUrl = debateType === 'leejeon' ? '/debate?type=leejeon' : isNational ? '/debate?type=national' : '/debate';
+  const navigationUrl = debateType === 'leejeon' ? '/debate?type=leejeon' : debateType === 'kimjin' ? '/debate?type=kimjin' : isNational ? '/debate?type=national' : '/debate';
   const uid = debateType; // unique prefix for animation names
 
   return (

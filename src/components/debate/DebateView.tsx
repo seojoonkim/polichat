@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router';
 
 // ─── 타입 ────────────────────────────────────────────────────────────────────
 
-export type DebateType = 'seoul' | 'national' | 'leejeon';
+export type DebateType = 'seoul' | 'national' | 'leejeon' | 'kimjin';
 
 // ─── 설정 상수 ────────────────────────────────────────────────────────────────
 
@@ -70,6 +70,26 @@ export const DEBATE_CONFIGS = {
       { id: 'gender-feminism', label: '젠더·페미니즘' },
       { id: 'controversies', label: '논란·의혹' },
     ],
+  },
+  kimjin: {
+    speakerA: 'kimeoojun' as const,
+    speakerB: 'jinjungkwon' as const,
+    speakerAName: '김어준',
+    speakerBName: '진중권',
+    speakerAColor: '#454545',
+    speakerBColor: '#808080',
+    topics: [
+      { id: 'free', label: '자유토론' },
+      { id: 'cho-justice', label: '조국·사법정의' },
+      { id: 'lee-minjoo', label: '이재명과 민주당' },
+      { id: 'election-fraud', label: '부정선거론' },
+      { id: 'prosecution', label: '검찰개혁' },
+      { id: 'media', label: '언론과 미디어' },
+      { id: 'moon-gov', label: '문재인 정부 평가' },
+      { id: 'hypocrisy', label: '진보의 배신·내로남불' },
+      { id: 'democracy', label: '한국 민주주의의 미래' },
+    ],
+    styles: ['policy', 'emotional', 'consensus'] as const,
   },
 } as const;
 
@@ -211,7 +231,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
   // 자유토론: 2분(120초) 뒤 랜덤 주제 전환 (서울/전국은 한 번만)
   useEffect(() => {
     if (selectedTopic !== 'free' || phase !== 'running') return;
-    if (debateType === 'leejeon') return; // leejeon은 아래 별도 useEffect에서 처리
+    if (debateType === 'leejeon' || debateType === 'kimjin') return; // leejeon/kimjin은 아래 별도 useEffect에서 처리
     if (timeLeft !== 240) return; // 6분 중 2분 경과 시점 (360-120=240)
 
     const realTopics = config.topics.filter(t => t.id !== 'free');
@@ -223,9 +243,9 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
     pendingTopicChangeRef.current = next.label; // 현재 라운드 끝난 후 처리
   }, [timeLeft, selectedTopic, phase, config, debateType]);
 
-  // 자유토론 (leejeon 전용): 2분마다 반복 랜덤 주제 전환
+  // 자유토론 (leejeon/kimjin 전용): 2분마다 반복 랜덤 주제 전환
   useEffect(() => {
-    if (selectedTopic !== 'free' || phase !== 'running' || debateType !== 'leejeon') return;
+    if (selectedTopic !== 'free' || phase !== 'running' || (debateType !== 'leejeon' && debateType !== 'kimjin')) return;
 
     const elapsed = 360 - timeLeft; // 경과 시간(초)
     if (elapsed > 0 && elapsed % 120 === 0) {
@@ -693,7 +713,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
               style={{ borderColor: config.speakerAColor }}
             />
             <span className="text-gray-800 text-sm font-bold">{config.speakerAName.split(' ')[0]}</span>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.92)', color: config.speakerAColor, border: `1px solid ${config.speakerAColor}80` }}>{debateType === 'seoul' ? '국민의힘' : debateType === 'leejeon' ? '개혁신당' : '더불어민주당'}</span>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.92)', color: config.speakerAColor, border: `1px solid ${config.speakerAColor}80` }}>{debateType === 'seoul' ? '국민의힘' : debateType === 'leejeon' ? '개혁신당' : debateType === 'kimjin' ? '정치비평가' : '더불어민주당'}</span>
           </div>
           <div className="w-12 flex-shrink-0 text-center text-yellow-400 font-black text-2xl">VS</div>
           <div className="flex-1 flex flex-col items-center gap-1">
@@ -704,7 +724,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
               style={{ borderColor: config.speakerBColor }}
             />
             <span className="text-gray-800 text-sm font-bold">{config.speakerBName.split(' ')[0]}</span>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.92)', color: config.speakerBColor, border: `1px solid ${config.speakerBColor}80` }}>{debateType === 'leejeon' ? '국민의힘' : debateType === 'seoul' ? '더불어민주당' : '국민의힘'}</span>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.92)', color: config.speakerBColor, border: `1px solid ${config.speakerBColor}80` }}>{debateType === 'leejeon' ? '국민의힘' : debateType === 'seoul' ? '더불어민주당' : debateType === 'kimjin' ? '정치비평가' : '국민의힘'}</span>
           </div>
         </div>
 
