@@ -479,10 +479,14 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
 
       // 라운드 실행 (API 오류 시 1회 재시도)
       let roundSuccess = false;
+      const messagesSnapshotLength = allMessages.length; // 이 라운드 시작 전 스냅샷
 
       for (let attempt = 0; attempt < 2 && !roundSuccess; attempt++) {
         if (attempt > 0) {
-          // 재시도 전 잠깐 대기 (currentSpeaker 유지 → 빈 화면 방지)
+          // 재시도 전: 이전 attempt에서 부분 출력된 말풍선 롤백 (중복 출력 방지)
+          allMessages.splice(messagesSnapshotLength);
+          setMessages([...allMessages]);
+          setCurrentText('');
           await sleep(1500);
           if (abortRef.current) break;
         }
