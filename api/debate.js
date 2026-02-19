@@ -200,6 +200,13 @@ export default async function handler(req, res) {
     systemPrompt += kbText;
   }
 
+  // ── 반복 금지 목록 주입 (현재 speaker가 이미 사용한 논점 추출) ──────────────
+  const myPastMessages = (recentHistory || []).filter(msg => msg.speaker === speaker);
+  if (myPastMessages.length > 0) {
+    const usedArgs = myPastMessages.map((m, i) => `${i + 1}. ${m.text}`).join('\n');
+    systemPrompt += `\n\n🚫 반복 절대 금지 — 네가 이미 한 발언들:\n${usedArgs}\n⚠️ 위 발언에 나온 논리·수치·사례·표현은 이번 발언에 단 하나도 반복하지 마라. 완전히 새로운 논거, 다른 사례, 새로운 수치로만 공격/방어하라. 같은 키워드라도 다른 맥락·각도에서 접근하라.`;
+  }
+
   // ── 대화 히스토리 → messages 배열로 전달 (LLM native 방식, 전체 기억) ───────
   const SPEAKER_NAMES = {
     ohsehoon: '오세훈 시장',
