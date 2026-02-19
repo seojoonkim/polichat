@@ -634,8 +634,8 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
 
   return (
     <div
-      className="app-bg flex flex-col overflow-hidden"
-      style={{ height: '100svh', maxWidth: '700px', margin: '0 auto', width: '100%' }}
+      className="app-bg fixed top-0 left-0 right-0 flex flex-col overflow-hidden"
+      style={{ height: '100svh', maxWidth: '700px', margin: '0 auto', bottom: 0 }}
     >
       {/* 헤더 */}
       <div
