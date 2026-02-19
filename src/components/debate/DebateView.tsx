@@ -343,14 +343,30 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
         
         if (abortRef.current) break;
 
-        // 스트리밍 완료 → 전체 텍스트를 하나의 말풍선으로 추가 (분리 X)
+        // 스트리밍 완료 → 문장 단위로 쪼개서 여러 말풍선으로 추가
         setCurrentText('');
         setCurrentSpeaker(null);
 
         if (text.trim()) {
-          const msg: DebateMessage = { speaker, text: text.trim(), timestamp: Date.now() };
-          allMessages.push(msg);
-          setMessages((prev) => [...prev, msg]);
+          // 문장 단위 분리: 마침표/느낌표/물음표 기준, 100자 이상이면 쪼개기
+          const sentences = text.trim().split(/(?<=[.!?])\s+/).filter(s => s.trim());
+          const bubbles: string[] = [];
+          let current = '';
+          for (const s of sentences) {
+            if (current.length > 0 && current.length + s.length > 100) {
+              bubbles.push(current.trim());
+              current = s;
+            } else {
+              current += (current ? ' ' : '') + s;
+            }
+          }
+          if (current) bubbles.push(current.trim());
+
+          for (const bubble of bubbles) {
+            const msg: DebateMessage = { speaker, text: bubble, timestamp: Date.now() };
+            allMessages.push(msg);
+            setMessages((prev) => [...prev, msg]);
+          }
         }
 
         scrollToBottom();
