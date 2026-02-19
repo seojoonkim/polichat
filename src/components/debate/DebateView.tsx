@@ -819,6 +819,14 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           </button>
         </div>
       )}
+
+      {/* 면책 문구 */}
+      <div className="text-center px-3 py-1.5 border-t" style={{ borderColor: 'rgba(0,0,0,0.06)', background: 'rgba(0,0,0,0.02)' }}>
+        <p className="text-[10px] text-gray-400 leading-relaxed">
+          이 서비스는 AI가 생성한 가상의 시뮬레이션으로, 실제 후보자 발언과 무관하며 선거운동 목적으로 제작되지 않았습니다.
+          문제 제기 시 즉시 서비스를 중단합니다.
+        </p>
+      </div>
     </div>
   );
 }
