@@ -148,35 +148,32 @@ export default function PoliticianSelector({ politicians }: Props) {
         {/* Hero */}
         <div className="text-center mb-8">
           {/* Logo */}
-          <div className="flex items-center justify-center gap-1 mb-5 animate-fade-in">
-            <div className="relative">
-              <img src="/logo.svg" alt="Polichat" className="w-14 h-14" />
+          <div className="flex items-center justify-center gap-2 mb-5 animate-fade-in">
+            <img src="/logo.svg" alt="Polichat" className="w-14 h-14" />
+            <div className="flex items-baseline gap-0.5">
+              <h1
+                className="logo-text-gradient"
+                style={{
+                  fontFamily: "'Rammetto One', sans-serif",
+                  fontWeight: 400,
+                  fontSize: '42px',
+                  letterSpacing: '-0.01em',
+                  lineHeight: 1,
+                }}
+              >
+                Polichat
+              </h1>
               <span
                 style={{
-                  position: 'absolute',
-                  bottom: '2px',
-                  right: '-18px',
-                  fontSize: '11px',
+                  fontSize: '15px',
                   fontFamily: "'Pretendard Variable', sans-serif",
                   fontWeight: 700,
                   color: '#7C3AED',
-                  letterSpacing: '0',
+                  opacity: 0.85,
+                  marginBottom: '2px',
                 }}
               >.kr</span>
             </div>
-            <h1
-              className="logo-text-gradient"
-              style={{
-                fontFamily: "'Rammetto One', sans-serif",
-                fontWeight: 400,
-                fontSize: '42px',
-                letterSpacing: '-0.01em',
-                lineHeight: 1,
-                marginLeft: '12px',
-              }}
-            >
-              Polichat
-            </h1>
           </div>
 
           {/* Hero tagline */}
