@@ -1,0 +1,62 @@
+{
+  "topics": {
+    "검찰·사법 개혁": {
+      "ppp": {
+        "position": "The PPP supports reforms that ensure the independence of investigations from political influence. They argue for maintaining a clear separation between investigative and prosecutorial powers.",
+        "keyData": ["Plans to restructure prosecution offices into more autonomous entities by 2026."],
+        "attackPoints": ["They criticize the current reforms as weakening effective law enforcement and over-politicizing the judicial process."]
+      },
+      "dp": {
+        "position": "The DP advocates for stronger oversight and reform measures, arguing it will lead to fairer trials and reduce corruption.",
+        "keyData": ["Implementation of comprehensive reforms affecting prosecution powers scheduled for 2025."],
+        "attackPoints": ["They target PPP's resistance to reforms as an attempt to maintain control over judicial processes for political gains."]
+      },
+      "핵심수치": ["Estimated reduction in prosecutorial overlap by 30% by 2026."],
+      "최신쟁점": "Disputes over the Public Prosecutor's Office restructuring timeline and autonomy."
+    },
+    "언론·표현의 자유": {
+      "ppp": {
+        "position": "Advocates for minimal state intervention in media, focusing on economic sustainability for major broadcasters.",
+        "keyData": ["Opposes new amendments aimed at increasing public broadcaster funding through state budgets."],
+        "attackPoints": ["They claim DP’s approach risks the independence of broadcasters by tying them to government funding."]
+      },
+      "dp": {
+        "position": "Proposes increased transparency and public accountability for major broadcasters, especially in news reporting.",
+        "keyData": ["Supports legislative measure increasing KBS funding; expects a 10% rise in public funding."],
+        "attackPoints": ["Views PPP’s stance as neglectful of issues like disinformation and insufficient public interest programming."]
+      },
+      "핵심수치": ["Projected increase in public service broadcasting content to 60% by 2026."],
+      "최신쟁점": "Debate on KBS’s broadcasting fees and their impact on public media bias."
+    },
+    "한미동맹·트럼프 대응": {
+      "ppp": {
+        "position": "Strongly supports a robust alliance with the US, advocating for a firm response to past US tariff actions under Trump.",
+        "keyData": ["Requests for a consistent strategic dialogue platform with the US by 2026."],
+        "attackPoints": ["Criticizes DP for being ambiguous on defense costs and security commitments with the US."]
+      },
+      "dp": {
+        "position": "Emphasizes diplomatic engagement and balanced negotiation with the US to prevent over-reliance.",
+        "keyData": ["Engaged in negotiating 8% increase in annual defense cost-sharing since 2025."],
+        "attackPoints": ["Points out PPP's aggressive stance as risking unnecessary confrontations with key allies."]
+      },
+      "핵심수치": ["Defense cost-sharing agreement projected to be 15% higher by 2026."],
+      "최신쟁점": "Tariff disputes and their impact on Korean industries."
+    },
+    "대북·외교 정책": {
+      "ppp": {
+        "position": "Advocates a strong stance against North Korea's provocations with plans to bolster defense capabilities.",
+        "keyData": ["Proposed increase in defense budget dedicated to missile defense systems."],
+        "attackPoints": ["Criticizes DP's past engagements with North Korea as ineffective and wasteful."]
+      },
+      "dp": {
+        "position": "Focused on diplomatic solutions and economic cooperation as means to achieve denuclearization.",
+        "keyData": ["Plans to initiate a new round of peace talks with guarantees of multilateral support by 2026."],
+        "attackPoints": ["Paints PPP's security-first strategy as escalating tensions without settlement prospects."]
+      },
+      "핵심수치": ["Expected defense budget rise by 8% targeting regional security."],
+      "최신쟁점": "Continuation of North Korean broadcasts into South Korea and their psychological impact."
+    }
+  },
+  "researchedAt": "2026-02-19",
+  "model": "gpt-4o"
+}
