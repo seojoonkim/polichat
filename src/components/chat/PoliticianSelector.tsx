@@ -129,7 +129,7 @@ export default function PoliticianSelector({ politicians }: Props) {
             <h1
               className="logo-text-gradient"
               style={{
-                fontFamily: "'Righteous', sans-serif",
+                fontFamily: "'Rammetto One', sans-serif",
                 fontWeight: 400,
                 fontSize: '42px',
                 letterSpacing: '-0.01em',
