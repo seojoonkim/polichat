@@ -52,18 +52,20 @@ export default function DebateBanner() {
           <div className="text-3xl font-black text-yellow-400 drop-shadow-lg tracking-tighter leading-none">
             VS
           </div>
-          <div className="text-white text-xs font-bold tracking-wider opacity-80">
-            🥊 AI 토론 배틀
+          <div className="text-white text-xs font-bold tracking-wider opacity-80 flex items-center gap-1">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/><path d="M19 21l2-2"/></svg>
+            AI 토론 배틀
           </div>
           <div
-            className="mt-2 px-4 py-1.5 rounded-full text-xs font-bold text-white transition-all duration-200 group-hover:scale-105"
+            className="mt-2 px-4 py-1.5 rounded-full text-xs font-bold text-white transition-all duration-200 group-hover:scale-105 flex items-center gap-1"
             style={{
               background: 'rgba(255,215,0,0.2)',
               border: '1px solid rgba(255,215,0,0.6)',
               color: '#FFD700',
             }}
           >
-            토론 시작 →
+            토론 시작
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
         </div>
 
