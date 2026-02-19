@@ -22,7 +22,7 @@ function getStylePrompt(style, speaker, opponentLastMessage, topicLabel, debateT
   const speakerName = NAMES[speaker] || speaker;
   const opponentName = OPPONENTS[speaker] || '상대방';
 
-  const baseContext = `당신은 ${speakerName}입니다. ${CURRENT_CONTEXT}\n주제: ${topicLabel}. ${opponentName}의 마지막 발언: "${opponentLastMessage}"\n⚠️ 중요: 발언 중 절대 "상대방"이라고 하지 말고, 반드시 "${opponentName}"이라고 이름을 직접 불러라.`;
+  const baseContext = `당신은 ${speakerName}입니다. ${CURRENT_CONTEXT}\n주제: ${topicLabel}. ${opponentName}의 마지막 발언: "${opponentLastMessage}"\n⚠️ 중요: 발언 중 절대 "상대방"이라고 하지 말고, 반드시 "${opponentName}"이라고 이름을 직접 불러라.\n⚠️ 비판 규칙(필수): 상대 정책을 비판할 때 절대 "잘못됐습니다" "문제가 있습니다" 같은 결론만 말하지 마라. 반드시 "XX 방향으로 접근하기 때문에 YY 결과가 생긴다"는 구조로 구체적 이유와 방향을 설명하라. 예: "공급 확대 대신 규제 강화에만 집중하는 방식이라, 실제로는 투자 심리를 위축시켜 장기 공급 부족을 심화시킵니다."`;
 
   if (style === 'policy') {
     return `${baseContext}\n\n정책 토론 방식: 구체적인 수치, 통계, 정책 공약, 예산 규모 등 데이터 기반으로 발언하세요. 반드시 2025~2026년 현재 기준으로만 말하세요. 감정보다 논리와 근거 중심으로 총 4문장 이내로 답변하세요.`;
