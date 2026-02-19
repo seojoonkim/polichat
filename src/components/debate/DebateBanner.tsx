@@ -26,7 +26,7 @@ export default function DebateBanner() {
         {/* 오세훈 */}
         <div className="flex flex-col items-center gap-1.5">
           <div
-            className="w-16 h-16 rounded-full overflow-hidden border-2 border-white/30 shadow-lg transition-transform duration-300 group-hover:scale-105"
+            className="w-20 h-20 rounded-full overflow-hidden border-2 border-white/30 shadow-lg transition-transform duration-300 group-hover:scale-105"
             style={{ boxShadow: '0 0 16px #C9151E80' }}
           >
             <img
@@ -38,7 +38,7 @@ export default function DebateBanner() {
               }}
             />
           </div>
-          <span className="text-white text-xs font-bold drop-shadow">오세훈</span>
+          <span className="text-white text-sm font-bold drop-shadow">오세훈</span>
           <span
             className="text-xs px-2 py-0.5 rounded-full font-semibold"
             style={{ background: '#C9151E40', color: '#ff9999', border: '1px solid #C9151E60' }}
@@ -70,7 +70,7 @@ export default function DebateBanner() {
         {/* 정원오 */}
         <div className="flex flex-col items-center gap-1.5">
           <div
-            className="w-16 h-16 rounded-full overflow-hidden border-2 border-white/30 shadow-lg transition-transform duration-300 group-hover:scale-105"
+            className="w-20 h-20 rounded-full overflow-hidden border-2 border-white/30 shadow-lg transition-transform duration-300 group-hover:scale-105"
             style={{ boxShadow: '0 0 16px #004EA280' }}
           >
             <img
@@ -82,7 +82,7 @@ export default function DebateBanner() {
               }}
             />
           </div>
-          <span className="text-white text-xs font-bold drop-shadow">정원오</span>
+          <span className="text-white text-sm font-bold drop-shadow">정원오</span>
           <span
             className="text-xs px-2 py-0.5 rounded-full font-semibold"
             style={{ background: '#004EA240', color: '#99bbff', border: '1px solid #004EA260' }}
