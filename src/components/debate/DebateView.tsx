@@ -331,6 +331,11 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
         
         let streamedText = '';
         let currentBubble = '';
+        let bubbleCount = 0;       // 이미 확정된 말풍선 수
+        let sentencesInBubble = 0; // 현재 말풍선 내 문장 수
+        const MAX_BUBBLES = 3;
+        const MAX_SENTENCES_PER_BUBBLE = 2;
+
         const text = await streamRound(speaker, currentTopic, lastText, style, async (chunk) => {
           if (abortRef.current) return;
           for (const char of chunk) {
@@ -340,17 +345,24 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
             setCurrentText(currentBubble);
             await sleep(55);
 
-            // 문장 끝 감지 → 현재 말풍선 확정하고 새 말풍선 시작
+            // 문장 끝 감지
             const isSentenceEnd = /[.!?]$/.test(currentBubble.trimEnd());
-            if (isSentenceEnd && currentBubble.trim().length > 20) {
-              const bubble = currentBubble.trim();
-              const msg: DebateMessage = { speaker, text: bubble, timestamp: Date.now() };
-              allMessages.push(msg);
-              setCurrentText('');
-              setMessages((prev) => [...prev, msg]);
-              scrollToBottom();
-              currentBubble = '';
-              await sleep(300); // 말풍선 사이 짧은 pause
+            if (isSentenceEnd && currentBubble.trim().length > 10) {
+              sentencesInBubble++;
+
+              // 말풍선당 최대 2문장 & 최대 2개까지 분리 (3번째는 나머지로 처리)
+              if (sentencesInBubble >= MAX_SENTENCES_PER_BUBBLE && bubbleCount < MAX_BUBBLES - 1) {
+                const bubble = currentBubble.trim();
+                const msg: DebateMessage = { speaker, text: bubble, timestamp: Date.now() };
+                allMessages.push(msg);
+                setCurrentText('');
+                setMessages((prev) => [...prev, msg]);
+                scrollToBottom();
+                currentBubble = '';
+                sentencesInBubble = 0;
+                bubbleCount++;
+                await sleep(300); // 말풍선 사이 짧은 pause
+              }
             }
           }
         });
