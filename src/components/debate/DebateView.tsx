@@ -275,7 +275,8 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
     speaker: string,
     topic: string,
     opponentLastMessage: string,
-    style: string
+    style: string,
+    onToken?: (text: string) => void
   ): Promise<string> => {
     return new Promise((resolve, reject) => {
       let fullText = '';
@@ -313,6 +314,9 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
                 }
                 if (json.text) {
                   fullText += json.text;
+                  // 실시간 토큰 콜백 호출
+                  if (abortRef.current) return;
+                  onToken?.(json.text);
                 }
               } catch {
                 // skip
@@ -346,56 +350,36 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
       setCurrentSpeaker(speaker);
       setCurrentText('');
 
-      await sleep(500);
+      // sleep(500) 제거 - 스트리밍이 시작되면 바로 표시됨
 
       try {
         const currentTopic = selectedTopic === 'free' ? freeTopicRef.current : initialTopic;
-        const text = await streamRound(speaker, currentTopic, lastText, style);
+        
+        let streamedText = '';
+        const text = await streamRound(speaker, currentTopic, lastText, style, (chunk) => {
+          if (abortRef.current) return;
+          streamedText += chunk;
+          setCurrentText(streamedText);
+        });
+        
         if (abortRef.current) break;
 
+        // 스트리밍 완료 → 버블로 분리해서 messages에 추가
         const bubbles = splitIntoBubbles(text);
+        setCurrentText('');
+        setCurrentSpeaker(null);
 
-        for (let bi = 0; bi < bubbles.length; bi++) {
-          const bubbleText = bubbles[bi];
-          const isLastBubble = bi === bubbles.length - 1;
-          if (!bubbleText || abortRef.current) break;
-
-          // 첫 버블만 speaker 설정 (이후 버블은 이미 설정되어 있음)
-          if (bi === 0) {
-            setCurrentSpeaker(speaker);
-          }
-
-          let displayed = '';
-          for (const char of bubbleText) {
-            if (abortRef.current) break;
-            displayed += char;
-            setCurrentText(displayed);
-            await sleep(78);
-          }
-
+        for (const bubble of bubbles) {
           if (abortRef.current) break;
-
-          const msg: DebateMessage = { speaker, text: bubbleText, timestamp: Date.now() };
+          const msg: DebateMessage = { speaker, text: bubble, timestamp: Date.now() };
           allMessages.push(msg);
-          setCurrentText('');
           setMessages((prev) => [...prev, msg]);
-          scrollToBottom();
-
-          if (isLastBubble) {
-            // 마지막 버블 → 다음 화자 전 여유
-            setCurrentSpeaker(null);
-            await sleep(600);
-          } else {
-            // 같은 화자 연속 말풍선 → 끊김 없이 바로 이어지게
-            await sleep(50);
-          }
         }
 
-        // 이미 위에서 setCurrentSpeaker(null) 처리됨 (혹시 break된 경우 대비)
-        setCurrentSpeaker(null);
+        scrollToBottom();
         lastText = text;
-
-        await sleep(400);
+        
+        await sleep(600); // 다음 화자 전 pause
       } catch (e) {
         console.error('[debate] Stream error:', e);
         break;
