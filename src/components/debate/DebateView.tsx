@@ -84,7 +84,7 @@ interface Judgment {
   reason: string;
 }
 
-type Phase = 'setup' | 'running' | 'judging' | 'result';
+type Phase = 'setup' | 'coinflip' | 'running' | 'judging' | 'result';
 
 // ─── 유틸 ─────────────────────────────────────────────────────────────────────
 
@@ -107,6 +107,8 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
   const [currentText, setCurrentText] = useState('');
   const [_round, setRound] = useState(0); // 0~29 (최대 30라운드, 타이머로 제한)
   const [judgment, setJudgment] = useState<Judgment | null>(null);
+  const [coinFlipStage, setCoinFlipStage] = useState<'spinning' | 'revealed' | 'idle'>('idle');
+  const [coinFlipWinner, setCoinFlipWinner] = useState<{ key: string; name: string } | null>(null);
   const [timeLeft, setTimeLeft] = useState(360); // 6분 = 360초
 
   // 실행 취소용 ref
@@ -315,10 +317,11 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
 
   // ─── 실시간 생성 모드 ──────────────────────────────────────────────────────
 
-  const runLiveDebate = async (initialTopic: string, style: string) => {
+  const runLiveDebate = async (initialTopic: string, style: string, speakerOrder?: [string, string]) => {
     abortRef.current = false;
     setMessages([]);
     setCurrentText('');
+    setCurrentSpeaker(null);
 
     const allMessages: DebateMessage[] = [];
     let lastText = '';
@@ -326,7 +329,9 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
     for (let i = 0; i < 30; i++) {
       if (abortRef.current) break;
 
-      const speaker = i % 2 === 0 ? config.speakerA : config.speakerB;
+      const speaker: string = speakerOrder
+        ? (speakerOrder[i % 2] as string)
+        : (i % 2 === 0 ? config.speakerA : config.speakerB);
       setRound(i);
       setCurrentSpeaker(speaker);
       setCurrentText('');
@@ -430,20 +435,38 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
       topicLabel = config.topics.find(t => t.id === selectedTopic)?.label || selectedTopic || '';
     }
 
-    setPhase('running');
+    // 동전던지기로 선공 결정
+    const coinSide = Math.random() < 0.5;
+    const firstKey = coinSide ? config.speakerA : config.speakerB;
+    const secondKey = coinSide ? config.speakerB : config.speakerA;
+    const firstName = coinSide ? config.speakerAName : config.speakerBName;
+    const speakerOrder: [string, string] = [firstKey, secondKey];
+
     setMessages([]);
     setCurrentText('');
-    setCurrentSpeaker('ohsehoon'); // 첫 발화자 미리 설정 → 빈 화면 방지
+    setCurrentSpeaker(null);
     setRound(0);
     setJudgment(null);
+
+    // 동전 애니메이션
+    setCoinFlipWinner({ key: firstKey, name: firstName });
+    setCoinFlipStage('spinning');
+    setPhase('coinflip');
+
+    await sleep(1600);
+    setCoinFlipStage('revealed');
+    await sleep(1800);
+
+    setPhase('running');
     setTimeLeft(180);
+    setCoinFlipStage('idle');
 
     // 캐시 확인
     const cached = await fetchCache(topicLabel, selectedStyle);
     if (cached) {
       await replayDebate(cached.messages, cached.judgment);
     } else {
-      await runLiveDebate(topicLabel, selectedStyle);
+      await runLiveDebate(topicLabel, selectedStyle, speakerOrder);
     }
   };
 
@@ -680,7 +703,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
             🥊 {topicLabel}
           </span>
         </div>
-        {phase === 'running' && (
+        {(phase === 'running' || phase === 'coinflip') && (
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1.5 bg-gray-200 rounded-full px-3 py-1">
               {/* 타이머 SVG */}
@@ -759,6 +782,84 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
       )}
 
       {/* 스크롤 영역 */}
+      {/* 동전던지기 오버레이 */}
+      {phase === 'coinflip' && coinFlipWinner && (
+        <div
+          className="absolute inset-0 z-50 flex flex-col items-center justify-center"
+          style={{ background: 'rgba(10,10,20,0.92)', backdropFilter: 'blur(6px)' }}
+        >
+          <p className="text-white/50 text-xs mb-8 tracking-[0.2em] uppercase">선공 결정 중</p>
+
+          <div className="flex items-center gap-10 mb-8">
+            {/* Speaker A */}
+            <div className={`flex flex-col items-center transition-all duration-700 ${
+              coinFlipStage === 'revealed'
+                ? coinFlipWinner.key === config.speakerA
+                  ? 'scale-125 opacity-100'
+                  : 'opacity-25 scale-90'
+                : 'opacity-100'
+            }`}>
+              <img
+                src={`/politicians/${config.speakerA}/profile.jpg`}
+                className="w-20 h-20 rounded-full border-[3px] object-cover"
+                style={{ borderColor: config.speakerAColor }}
+              />
+              <span className="text-white text-sm mt-2 font-semibold">{config.speakerAName.split(' ')[0]}</span>
+            </div>
+
+            {/* 동전 */}
+            <div
+              className="text-4xl select-none"
+              style={{
+                animation: coinFlipStage === 'spinning'
+                  ? 'coinSpin 0.25s linear infinite'
+                  : 'none',
+                display: 'inline-block',
+              }}
+            >
+              🪙
+            </div>
+
+            {/* Speaker B */}
+            <div className={`flex flex-col items-center transition-all duration-700 ${
+              coinFlipStage === 'revealed'
+                ? coinFlipWinner.key === config.speakerB
+                  ? 'scale-125 opacity-100'
+                  : 'opacity-25 scale-90'
+                : 'opacity-100'
+            }`}>
+              <img
+                src={`/politicians/${config.speakerB}/profile.jpg`}
+                className="w-20 h-20 rounded-full border-[3px] object-cover"
+                style={{ borderColor: config.speakerBColor }}
+              />
+              <span className="text-white text-sm mt-2 font-semibold">{config.speakerBName.split(' ')[0]}</span>
+            </div>
+          </div>
+
+          {coinFlipStage === 'revealed' && (
+            <div className="text-center" style={{ animation: 'fadeInUp 0.4s ease' }}>
+              <p className="text-white text-xl font-bold">{coinFlipWinner.name}</p>
+              <p className="text-white/60 text-sm mt-1">이 먼저 발언합니다 ⚡</p>
+            </div>
+          )}
+
+          <style>{`
+            @keyframes coinSpin {
+              0% { transform: rotateY(0deg) scaleX(1); }
+              25% { transform: rotateY(90deg) scaleX(0.1); }
+              50% { transform: rotateY(180deg) scaleX(1); }
+              75% { transform: rotateY(270deg) scaleX(0.1); }
+              100% { transform: rotateY(360deg) scaleX(1); }
+            }
+            @keyframes fadeInUp {
+              from { opacity: 0; transform: translateY(12px); }
+              to { opacity: 1; transform: translateY(0); }
+            }
+          `}</style>
+        </div>
+      )}
+
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
         {/* 완료된 발언들 */}
         {messages.map((msg, i) => (
