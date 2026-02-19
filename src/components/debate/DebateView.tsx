@@ -422,7 +422,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
                   const bubble = currentBubble.trim();
                   const msg: DebateMessage = { speaker, text: bubble, timestamp: Date.now() };
                   allMessages.push(msg);
-                  setCurrentText('');
+                  // currentText를 지우지 않음 — 렌더에서 커밋된 텍스트와 일치할 때 라이브 버블 자동 숨김
                   setMessages((prev) => [...prev, msg]);
                   scrollToBottom();
                   currentBubble = '';
@@ -1036,21 +1036,26 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
         ))}
 
         {/* 현재 발화자 — 대기 중(로딩) 또는 타이핑 중 */}
-        {phase === 'running' && currentSpeaker && (
-          currentText ? (
-            <MessageBubble
-              msg={{ speaker: currentSpeaker, text: currentText, timestamp: Date.now() }}
-              isActive
-              config={config}
-            />
-          ) : (
-            // 같은 화자가 이미 말풍선을 발화 중인 경우 TypingIndicator 숨김
-            // (말풍선 분리 pause 시 상대방이 말하려는 것처럼 오해 방지)
-            messages.length === 0 || messages[messages.length - 1]?.speaker !== currentSpeaker ? (
-              <TypingIndicator speaker={currentSpeaker} config={config} />
-            ) : null
-          )
-        )}
+        {phase === 'running' && currentSpeaker && (() => {
+          // 말풍선 분리 전환 중: currentText가 방금 커밋된 메시지와 동일하면 라이브 버블 숨김 (깜빡임 방지)
+          const lastMsg = messages[messages.length - 1];
+          const isJustCommitted = currentText.trim().length > 0 && lastMsg?.text === currentText.trim();
+
+          if (currentText && !isJustCommitted) {
+            return (
+              <MessageBubble
+                msg={{ speaker: currentSpeaker, text: currentText, timestamp: Date.now() }}
+                isActive
+                config={config}
+              />
+            );
+          }
+          // 새 화자 첫 등장 시에만 TypingIndicator 표시 (같은 화자 전환 중엔 숨김)
+          if (!lastMsg || lastMsg.speaker !== currentSpeaker) {
+            return <TypingIndicator speaker={currentSpeaker} config={config} />;
+          }
+          return null;
+        })()}
 
         {/* 판정 중 */}
         {phase === 'judging' && (
