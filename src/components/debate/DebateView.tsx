@@ -161,7 +161,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
 
   useEffect(() => {
     if (phase !== 'running') {
-      setTimeLeft(360);
+      setTimeLeft(180);
       return;
     }
 
@@ -189,7 +189,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
   // 자유토론: 240초, 120초에서 랜덤 주제 전환
   useEffect(() => {
     if (selectedTopic !== 'free' || phase !== 'running') return;
-    if (timeLeft !== 240 && timeLeft !== 120) return;
+    if (timeLeft !== 120 && timeLeft !== 60) return;
 
     const realTopics = config.topics.filter(t => t.id !== 'free');
     const next = realTopics[Math.floor(Math.random() * realTopics.length)];
@@ -435,7 +435,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
     setCurrentSpeaker('ohsehoon'); // 첫 발화자 미리 설정 → 빈 화면 방지
     setRound(0);
     setJudgment(null);
-    setTimeLeft(360);
+    setTimeLeft(180);
 
     // 캐시 확인
     const cached = await fetchCache(topicLabel, selectedStyle);
@@ -455,7 +455,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
     setMessages([]);
     setJudgment(null);
     setRound(0);
-    setTimeLeft(360);
+    setTimeLeft(180);
     setPhase('setup');
   };
 
@@ -533,7 +533,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="3"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="16" cy="8" r="1.5" fill="currentColor"/><circle cx="8" cy="16" r="1.5" fill="currentColor"/><circle cx="16" cy="16" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>
                     자유토론
                   </span>
-                  <span className="text-gray-500 text-[10px]">2분마다 전환</span>
+                  <span className="text-gray-500 text-[10px]">1분마다 전환</span>
                 </span>
               ) : (
                 <span className="text-gray-800 text-[12px] font-semibold leading-tight">{topic.label}</span>
@@ -733,7 +733,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
             <div
               className="h-full transition-all duration-1000 relative overflow-visible"
               style={{
-                width: `${(timeLeft / 360) * 100}%`,
+                width: `${(timeLeft / 180) * 100}%`,
                 background: 'linear-gradient(270deg, #A78BFA, #7C3AED)',
               }}
             >
@@ -801,7 +801,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
               setCurrentText('');
               setJudgment(null);
               setRound(0);
-              setTimeLeft(360);
+              setTimeLeft(180);
             }}
             className="flex-1 py-3 rounded-xl text-sm font-bold text-gray-800 border transition-colors hover:bg-gray-100 flex items-center justify-center gap-2"
             style={{ borderColor: 'rgba(0,0,0,0.1)' }}
