@@ -62,7 +62,12 @@ export default function DebateBanner({ debateType = 'seoul' }: DebateBannerProps
         }}
       />
 
-      <div className="relative z-10 flex items-center justify-between px-5 py-4">
+      {/* 상단 제목 */}
+      <div className="relative z-10 text-center pt-3 pb-0">
+        <p className="text-white font-black text-[17px] tracking-tight drop-shadow-lg">{bannerConfig.tagline}</p>
+      </div>
+
+      <div className="relative z-10 flex items-center justify-between px-5 py-3">
         {/* 후보A */}
         <div className="flex flex-col items-center gap-1.5">
           <div
@@ -123,10 +128,8 @@ export default function DebateBanner({ debateType = 'seoul' }: DebateBannerProps
         </div>
       </div>
 
-      {/* Bottom label */}
-      <div className="relative z-10 text-center pb-3">
-        <p className="text-white/35 text-[11px] tracking-wider">{bannerConfig.tagline}</p>
-      </div>
+      {/* 하단 여백 */}
+      <div className="pb-2" />
     </div>
   );
 }
