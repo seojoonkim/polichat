@@ -7,18 +7,25 @@ interface Props {
   politicians: PoliticianMeta[];
 }
 
-// 홈 화면에서 body scroll 허용 (채팅 화면은 자체 fixed 레이아웃)
+// 홈 화면에서 html/body/#root scroll 허용 (채팅 화면은 자체 fixed 레이아웃)
 function useBodyScrollUnlock() {
   useEffect(() => {
-    const prev = document.body.style.overflow;
-    const prevPos = document.body.style.position;
-    document.body.style.overflow = 'auto';
-    document.body.style.position = 'static';
-    document.documentElement.style.overflow = 'auto';
+    const root = document.getElementById('root');
+    const targets = [document.documentElement, document.body, root].filter(Boolean) as HTMLElement[];
+    const saved = targets.map(el => ({ overflow: el.style.overflow, position: el.style.position }));
+
+    targets.forEach(el => {
+      el.style.overflow = 'visible';
+      el.style.position = 'static';
+    });
+    document.documentElement.style.overflowY = 'auto';
+
     return () => {
-      document.body.style.overflow = prev;
-      document.body.style.position = prevPos;
-      document.documentElement.style.overflow = '';
+      targets.forEach((el, i) => {
+        el.style.overflow = saved[i].overflow;
+        el.style.position = saved[i].position;
+      });
+      document.documentElement.style.overflowY = '';
     };
   }, []);
 }
