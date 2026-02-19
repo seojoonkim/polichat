@@ -332,12 +332,11 @@ export default function PoliticianSelector({ politicians }: Props) {
           <div
             className="rounded-2xl px-5 py-4 text-center"
             style={{
-              background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%)',
-              border: '1px solid rgba(255,255,255,0.12)',
-              backdropFilter: 'blur(8px)',
+              background: 'rgba(0,0,0,0.18)',
+              border: '1px solid rgba(0,0,0,0.12)',
             }}
           >
-            <p className="text-[13px] font-medium leading-relaxed" style={{ color: 'rgba(255,255,255,0.75)' }}>
+            <p className="text-[13px] font-semibold leading-relaxed" style={{ color: 'rgba(255,255,255,0.92)' }}>
               ⚠️ 본 사이트에 게시된 콘텐츠는 AI를 활용해 생성되었으며,
               <br />
               특정 정치인 및 평론가의 공식 견해를 대표하지 않습니다.
