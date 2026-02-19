@@ -223,7 +223,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
         if (abortRef.current) break;
         displayed += char;
         setCurrentText(displayed);
-        const delay = ['.', '!', '?', ','].includes(char) ? 52 : 16 + Math.random() * 10;
+        const delay = ['.', '!', '?', ','].includes(char) ? 110 : 55;
         await sleep(delay);
       }
 
