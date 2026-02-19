@@ -165,7 +165,7 @@ export default function PoliticianSelector({ politicians }: Props) {
               </h1>
               <span
                 style={{
-                  fontSize: '15px',
+                  fontSize: '19px',
                   fontFamily: "'Pretendard Variable', sans-serif",
                   fontWeight: 700,
                   color: '#7C3AED',
