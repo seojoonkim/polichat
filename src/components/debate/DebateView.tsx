@@ -45,7 +45,6 @@ export const DEBATE_CONFIGS = {
       { id: 'economy', label: '경제·민생 위기' },
       { id: 'prosecution', label: '검찰·사법 개혁' },
       { id: 'north-korea', label: '대북·외교 정책' },
-      { id: 'constitution', label: '개헌 논의' },
       { id: 'real-estate', label: '부동산·주거 정책' },
       { id: 'education', label: '교육 개혁' },
       { id: 'ai-industry', label: 'AI·디지털 산업' },
@@ -495,7 +494,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
               {topic.id === 'free' ? (
                 <span className="flex flex-col items-center gap-0.5">
                   <span className="flex items-center gap-1 text-gray-800 text-[12px] font-semibold">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="3"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="16" cy="8" r="1.5" fill="currentColor"/><circle cx="8" cy="16" r="1.5" fill="currentColor"/><circle cx="16" cy="16" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="3"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="16" cy="8" r="1.5" fill="currentColor"/><circle cx="8" cy="16" r="1.5" fill="currentColor"/><circle cx="16" cy="16" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>
                     자유토론
                   </span>
                   <span className="text-gray-500 text-[10px]">1분마다 전환</span>
