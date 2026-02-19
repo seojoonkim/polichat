@@ -76,8 +76,8 @@ export const DEBATE_CONFIGS = {
     speakerB: 'jinjungkwon' as const,
     speakerAName: '김어준',
     speakerBName: '진중권',
-    speakerAColor: '#454545',
-    speakerBColor: '#808080',
+    speakerAColor: '#5A5A5A',
+    speakerBColor: '#5A5A5A',
     topics: [
       { id: 'free', label: '자유토론' },
       { id: 'cho-justice', label: '조국·사법정의' },
