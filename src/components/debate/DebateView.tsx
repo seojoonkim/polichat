@@ -335,69 +335,87 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
       setCurrentSpeaker(speaker);
       setCurrentText('');
 
-      // sleep(500) 제거 - 스트리밍이 시작되면 바로 표시됨
+      // 라운드 실행 (API 오류 시 1회 재시도)
+      let roundSuccess = false;
 
-      try {
-        const currentTopic = selectedTopic === 'free' ? freeTopicRef.current : initialTopic;
-        
-        let streamedText = '';
-        let currentBubble = '';
-        let bubbleCount = 0;       // 이미 확정된 말풍선 수
-        let sentencesInBubble = 0; // 현재 말풍선 내 문장 수
-        const MAX_BUBBLES = 3;
-        const MAX_SENTENCES_PER_BUBBLE = 2;
-
-        const text = await streamRound(speaker, currentTopic, lastText, style, async (chunk) => {
-          if (abortRef.current) return;
-          for (const char of chunk) {
-            if (abortRef.current) return;
-            streamedText += char;
-            currentBubble += char;
-            setCurrentText(currentBubble);
-            await sleep(55);
-
-            // 문장 끝 감지
-            const isSentenceEnd = /[.!?]$/.test(currentBubble.trimEnd());
-            if (isSentenceEnd && currentBubble.trim().length > 10) {
-              sentencesInBubble++;
-
-              // 말풍선당 최대 2문장 & 최대 2개까지 분리 (3번째는 나머지로 처리)
-              if (sentencesInBubble >= MAX_SENTENCES_PER_BUBBLE && bubbleCount < MAX_BUBBLES - 1) {
-                const bubble = currentBubble.trim();
-                const msg: DebateMessage = { speaker, text: bubble, timestamp: Date.now() };
-                allMessages.push(msg);
-                setCurrentText('');
-                setMessages((prev) => [...prev, msg]);
-                scrollToBottom();
-                currentBubble = '';
-                sentencesInBubble = 0;
-                bubbleCount++;
-                await sleep(300); // 말풍선 사이 짧은 pause
-              }
-            }
-          }
-        });
-
-        if (abortRef.current) break;
-
-        // 남은 텍스트(마지막 문장이 . 없이 끝난 경우) 처리
-        if (currentBubble.trim()) {
-          const msg: DebateMessage = { speaker, text: currentBubble.trim(), timestamp: Date.now() };
-          allMessages.push(msg);
-          setMessages((prev) => [...prev, msg]);
+      for (let attempt = 0; attempt < 2 && !roundSuccess; attempt++) {
+        if (attempt > 0) {
+          // 재시도 전 잠깐 대기 (currentSpeaker 유지 → 빈 화면 방지)
+          await sleep(1500);
+          if (abortRef.current) break;
         }
 
+        try {
+          const currentTopic = selectedTopic === 'free' ? freeTopicRef.current : initialTopic;
+
+          let streamedText = '';
+          let currentBubble = '';
+          let bubbleCount = 0;
+          let sentencesInBubble = 0;
+          const MAX_BUBBLES = 3;
+          const MAX_SENTENCES_PER_BUBBLE = 2;
+
+          const text = await streamRound(speaker, currentTopic, lastText, style, async (chunk) => {
+            if (abortRef.current) return;
+            for (const char of chunk) {
+              if (abortRef.current) return;
+              streamedText += char;
+              currentBubble += char;
+              setCurrentText(currentBubble);
+              await sleep(55);
+
+              // 문장 끝 감지
+              const isSentenceEnd = /[.!?]$/.test(currentBubble.trimEnd());
+              if (isSentenceEnd && currentBubble.trim().length > 10) {
+                sentencesInBubble++;
+
+                // 말풍선당 최대 2문장 & 최대 2개까지 분리 (3번째는 나머지로 처리)
+                if (sentencesInBubble >= MAX_SENTENCES_PER_BUBBLE && bubbleCount < MAX_BUBBLES - 1) {
+                  const bubble = currentBubble.trim();
+                  const msg: DebateMessage = { speaker, text: bubble, timestamp: Date.now() };
+                  allMessages.push(msg);
+                  setCurrentText('');
+                  setMessages((prev) => [...prev, msg]);
+                  scrollToBottom();
+                  currentBubble = '';
+                  sentencesInBubble = 0;
+                  bubbleCount++;
+                  await sleep(300);
+                }
+              }
+            }
+          });
+
+          if (abortRef.current) break;
+
+          // 남은 텍스트 처리
+          if (currentBubble.trim()) {
+            const msg: DebateMessage = { speaker, text: currentBubble.trim(), timestamp: Date.now() };
+            allMessages.push(msg);
+            setMessages((prev) => [...prev, msg]);
+          }
+
+          setCurrentText('');
+          setCurrentSpeaker(null);
+          scrollToBottom();
+          lastText = text;
+          roundSuccess = true;
+
+          await sleep(900);
+        } catch (e) {
+          console.error(`[debate] Stream error (attempt ${attempt + 1}):`, e);
+          // attempt 0 실패 → attempt 1 재시도 (currentSpeaker 유지로 빈 화면 안 됨)
+        }
+      }
+
+      // 2회 모두 실패 → 해당 라운드 스킵, 빈 화면 없이 다음 화자로
+      if (!roundSuccess && !abortRef.current) {
         setCurrentText('');
         setCurrentSpeaker(null);
-
-        scrollToBottom();
-        lastText = text;
-        
-        await sleep(900); // 다음 화자 전 충분한 pause
-      } catch (e) {
-        console.error('[debate] Stream error:', e);
-        break;
+        await sleep(500);
       }
+
+      if (abortRef.current) break;
     }
 
     setCurrentSpeaker(null);
