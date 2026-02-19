@@ -260,7 +260,8 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
     topic: string,
     opponentLastMessage: string,
     style: string,
-    onToken?: (text: string) => Promise<void> | void
+    onToken?: (text: string) => Promise<void> | void,
+    recentHistory?: DebateMessage[]
   ): Promise<string> => {
     return new Promise((resolve, reject) => {
       let fullText = '';
@@ -291,7 +292,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
       fetch('/api/debate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic, speaker, opponentLastMessage, style, debateType }),
+        body: JSON.stringify({ topic, speaker, opponentLastMessage, style, debateType, recentHistory: recentHistory ?? [] }),
         signal: abortCtrl.signal,
       })
         .then((res) => {
@@ -403,6 +404,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           const MAX_BUBBLES = 3;
           const MAX_SENTENCES_PER_BUBBLE = 2;
 
+          const recentHistory = allMessages.slice(-10);
           const text = await streamRound(speaker, currentTopic, lastText, style, async (chunk) => {
             if (abortRef.current) return;
             for (const char of chunk) {
@@ -432,7 +434,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
                 }
               }
             }
-          });
+          }, recentHistory);
 
           if (abortRef.current) break;
 

@@ -45,7 +45,7 @@ export default async function handler(req, res) {
 
   if (req.method !== 'POST') return res.status(405).end();
 
-  const { topic, opponentLastMessage, speaker, style, debateType = 'seoul' } = req.body;
+  const { topic, opponentLastMessage, speaker, style, debateType = 'seoul', recentHistory = [] } = req.body;
   const apiKey = process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY;
 
   if (!apiKey) {
@@ -95,6 +95,20 @@ export default async function handler(req, res) {
   let systemPrompt = persona.baseSystem;
   if (style && style !== 'free') {
     systemPrompt = getStylePrompt(style, speaker, opponentLastMessage, topic, debateType);
+  }
+
+  // 최근 대화 히스토리를 시스템 프롬프트에 주입 (기억력 향상)
+  if (recentHistory && recentHistory.length > 0) {
+    const NAMES = {
+      ohsehoon: '오세훈 시장',
+      jungwono: '정원오 구청장',
+      jungcr: '정청래 대표',
+      jangdh: '장동혁 대표',
+    };
+    const historyText = recentHistory
+      .map(msg => `${NAMES[msg.speaker] || msg.speaker}: ${msg.text}`)
+      .join('\n');
+    systemPrompt += `\n\n📜 지금까지 오간 발언 (맥락 유지에 활용하세요 — 이전에 한 주장을 반복하지 말고, 상대가 이미 꺼낸 논거는 정면으로 반박하세요):\n${historyText}`;
   }
 
   const messages = opponentLastMessage
