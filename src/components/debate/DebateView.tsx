@@ -364,14 +364,12 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
         
         if (abortRef.current) break;
 
-        // 스트리밍 완료 → 버블로 분리해서 messages에 추가
-        const bubbles = splitIntoBubbles(text);
+        // 스트리밍 완료 → 전체 텍스트를 하나의 말풍선으로 추가 (분리 X)
         setCurrentText('');
         setCurrentSpeaker(null);
 
-        for (const bubble of bubbles) {
-          if (abortRef.current) break;
-          const msg: DebateMessage = { speaker, text: bubble, timestamp: Date.now() };
+        if (text.trim()) {
+          const msg: DebateMessage = { speaker, text: text.trim(), timestamp: Date.now() };
           allMessages.push(msg);
           setMessages((prev) => [...prev, msg]);
         }
@@ -379,7 +377,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
         scrollToBottom();
         lastText = text;
         
-        await sleep(600); // 다음 화자 전 pause
+        await sleep(900); // 다음 화자 전 충분한 pause
       } catch (e) {
         console.error('[debate] Stream error:', e);
         break;
