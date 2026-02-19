@@ -118,7 +118,7 @@ export default function PoliticianSelector({ politicians }: Props) {
 
       <div
         className="mx-auto px-4 pt-10 pb-8 relative z-10"
-        style={{ maxWidth: '600px' }}
+        style={{ maxWidth: '700px' }}
       >
         {/* Hero */}
         <div className="text-center mb-8">

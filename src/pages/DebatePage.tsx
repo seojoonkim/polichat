@@ -7,7 +7,7 @@ export default function DebatePage() {
 
   return (
     <div className="flex justify-center min-h-screen bg-gray-900">
-      <div className="w-full" style={{ maxWidth: '600px' }}>
+      <div className="w-full" style={{ maxWidth: '700px' }}>
         <DebateView debateType={debateType} />
       </div>
     </div>

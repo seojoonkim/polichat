@@ -116,7 +116,7 @@ export default function ChatPage() {
                 ? 'animate-fade-out'
                 : ''
           }`}
-          style={{ maxWidth: '600px' }}
+          style={{ maxWidth: '700px' }}
         >
           <ChatLayout politician={activePolitician} />
         </div>

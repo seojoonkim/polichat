@@ -189,7 +189,7 @@ export default function ChatLayout({ politician }: Props) {
   return (
     <div 
       className="app-bg fixed top-0 left-0 right-0 flex flex-col overflow-hidden"
-      style={{ maxWidth: '600px', margin: '0 auto', height: '100svh' }}
+      style={{ maxWidth: '700px', margin: '0 auto', height: '100svh' }}
     >
       {/* 헤더: 절대 스크롤 안 됨 */}
       <ChatHeader politician={politician} />
