@@ -99,29 +99,16 @@ export default function PoliticianSelector({ politicians }: Props) {
   const setCurrentPolitician = useChatStore((s) => s.setCurrentPolitician);
   const cardsRef = useRef<(HTMLDivElement | null)[]>([]);
 
-  // IntersectionObserver for staggered reveal
+  // 페이지 로드 즉시 모든 카드 stagger reveal (스크롤 불필요)
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const el = entry.target as HTMLElement;
-            const delay = el.dataset.revealDelay || '0';
-            setTimeout(() => {
-              el.classList.add('revealed');
-            }, Number(delay));
-            observer.unobserve(el);
-          }
-        });
-      },
-      { threshold: 0.1, rootMargin: '0px 0px -30px 0px' }
-    );
-
+    const timers: ReturnType<typeof setTimeout>[] = [];
     cardsRef.current.forEach((el) => {
-      if (el) observer.observe(el);
+      if (!el) return;
+      const delay = Number(el.dataset.revealDelay || '0');
+      const t = setTimeout(() => el.classList.add('revealed'), delay);
+      timers.push(t);
     });
-
-    return () => observer.disconnect();
+    return () => timers.forEach(clearTimeout);
   }, [politicians]);
 
   return (
