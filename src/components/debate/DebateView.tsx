@@ -360,8 +360,10 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           const isLastBubble = bi === bubbles.length - 1;
           if (!bubbleText || abortRef.current) break;
 
-          setCurrentSpeaker(speaker);
-          setCurrentText('');
+          // 첫 버블만 speaker 설정 (이후 버블은 이미 설정되어 있음)
+          if (bi === 0) {
+            setCurrentSpeaker(speaker);
+          }
 
           let displayed = '';
           for (const char of bubbleText) {
@@ -375,13 +377,18 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
 
           const msg: DebateMessage = { speaker, text: bubbleText, timestamp: Date.now() };
           allMessages.push(msg);
-          // 마지막 버블이면 speaker도 동시에 지워서 TypingIndicator 깜빡임 방지
-          if (isLastBubble) setCurrentSpeaker(null);
           setCurrentText('');
           setMessages((prev) => [...prev, msg]);
           scrollToBottom();
 
-          await sleep(400);
+          if (isLastBubble) {
+            // 마지막 버블 → 다음 화자 전 여유
+            setCurrentSpeaker(null);
+            await sleep(600);
+          } else {
+            // 같은 화자 연속 말풍선 → 끊김 없이 바로 이어지게
+            await sleep(50);
+          }
         }
 
         // 이미 위에서 setCurrentSpeaker(null) 처리됨 (혹시 break된 경우 대비)
