@@ -158,7 +158,7 @@ export default function DebateView() {
 
     setMessages(prev => [...prev, {
       speaker: 'ohsehoon' as const,
-      text: `🎲 주제 전환! 새 주제: "${next.label}"`,
+      text: `주제 전환! 새 주제: "${next.label}"`,
       timestamp: Date.now(),
       isTopicChange: true,
     }]);
@@ -441,7 +441,7 @@ export default function DebateView() {
 
   if (phase === 'setup') {
     return (
-      <div className="fixed inset-0 flex flex-col overflow-y-auto" style={{ background: 'linear-gradient(160deg, #2c4a7c 0%, #1a3060 45%, #0f1e42 100%)' }}>
+      <div className="fixed inset-0 flex flex-col overflow-y-auto" style={{ background: 'linear-gradient(160deg, #3e3c52 0%, #2c2b3e 45%, #1e1d2c 100%)' }}>
         {/* 헤더 */}
         <div
           className="flex items-center gap-3 px-4 pb-4"
@@ -451,9 +451,13 @@ export default function DebateView() {
             onClick={() => navigate('/')}
             className="text-white/60 hover:text-white transition-colors"
           >
-            ← 뒤로
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            뒤로
           </button>
-          <h1 className="text-white font-bold text-lg">🥊 AI 토론 배틀</h1>
+          <h1 className="text-white font-bold text-lg flex items-center gap-2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/><path d="M19 21l2-2"/></svg>
+            AI 토론 배틀
+          </h1>
         </div>
 
         {/* 후보 미리보기 */}
@@ -482,7 +486,10 @@ export default function DebateView() {
         </div>
 
         <div className="px-4 mb-2">
-          <p className="text-white/70 text-sm font-semibold">📌 토론 주제를 선택하세요</p>
+          <p className="text-white/70 text-sm font-semibold flex items-center gap-2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg>
+            토론 주제를 선택하세요
+          </p>
         </div>
 
         {/* 주제 그리드 */}
@@ -515,7 +522,10 @@ export default function DebateView() {
 
         {/* 토론 방식 선택 */}
         <div className="px-4 mb-2">
-          <p className="text-white/70 text-sm font-semibold">🎤 토론 방식을 선택하세요</p>
+          <p className="text-white/70 text-sm font-semibold flex items-center gap-2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+            토론 방식을 선택하세요
+          </p>
         </div>
 
         <div className="px-4 grid grid-cols-3 gap-2 mb-4">
@@ -531,10 +541,15 @@ export default function DebateView() {
                 selectedStyle === 'policy' ? 'rgba(167,139,250,0.8)' : 'rgba(167,139,250,0.2)',
             }}
           >
-            <div className="text-white font-bold text-sm">🎯 정책 토론</div>
+            <div className="text-white font-bold text-sm flex items-center justify-center gap-1">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+              정책 토론
+            </div>
             <div className="text-white/60 text-[10px] text-center mt-0.5">수치·공약 중심</div>
             {selectedStyle === 'policy' && (
-              <span className="absolute top-1.5 right-1.5 text-purple-400 text-xs">✓</span>
+              <span className="absolute top-1.5 right-1.5 text-purple-400 flex items-center justify-center">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
             )}
           </button>
 
@@ -550,10 +565,15 @@ export default function DebateView() {
                 selectedStyle === 'emotional' ? 'rgba(167,139,250,0.8)' : 'rgba(167,139,250,0.2)',
             }}
           >
-            <div className="text-white font-bold text-sm">🔥 감정 토론</div>
+            <div className="text-white font-bold text-sm flex items-center justify-center gap-1">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              감정 토론
+            </div>
             <div className="text-white/60 text-[10px] text-center mt-0.5">격렬 공격 스타일</div>
             {selectedStyle === 'emotional' && (
-              <span className="absolute top-1.5 right-1.5 text-purple-400 text-xs">✓</span>
+              <span className="absolute top-1.5 right-1.5 text-purple-400 flex items-center justify-center">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
             )}
           </button>
 
@@ -569,10 +589,15 @@ export default function DebateView() {
                 selectedStyle === 'consensus' ? 'rgba(167,139,250,0.8)' : 'rgba(167,139,250,0.2)',
             }}
           >
-            <div className="text-white font-bold text-sm">🤝 합의 도출</div>
+            <div className="text-white font-bold text-sm flex items-center justify-center gap-1">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              합의 도출
+            </div>
             <div className="text-white/60 text-[10px] text-center mt-0.5">접점·타협안 제시</div>
             {selectedStyle === 'consensus' && (
-              <span className="absolute top-1.5 right-1.5 text-purple-400 text-xs">✓</span>
+              <span className="absolute top-1.5 right-1.5 text-purple-400 flex items-center justify-center">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
             )}
           </button>
         </div>
@@ -582,15 +607,28 @@ export default function DebateView() {
           <button
             onClick={startDebate}
             disabled={!selectedTopic || !selectedStyle}
-            className="w-full py-4 rounded-2xl font-bold text-white text-lg transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full py-4 rounded-2xl font-bold text-white text-lg transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             style={{
               background: 'linear-gradient(135deg, #A78BFA, #7C3AED)',
               opacity: !selectedTopic || !selectedStyle ? 0.4 : 1,
             }}
           >
-            {selectedStyle === 'policy' ? '🎯 정책 토론 시작!' 
-              : selectedStyle === 'emotional' ? '🔥 감정 토론 시작!' 
-              : '🤝 합의 도출 시작!'}
+            {selectedStyle === 'policy' ? (
+              <>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                정책 토론 시작!
+              </>
+            ) : selectedStyle === 'emotional' ? (
+              <>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                감정 토론 시작!
+              </>
+            ) : (
+              <>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                합의 도출 시작!
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -611,7 +649,7 @@ export default function DebateView() {
   return (
     <div
       className="fixed inset-0 flex flex-col overflow-hidden"
-      style={{ background: 'linear-gradient(160deg, #3a3a50 0%, #272738 45%, #1c1c2c 100%)' }}
+      style={{ background: 'linear-gradient(160deg, #3e3c52 0%, #2c2b3e 45%, #1e1d2c 100%)' }}
     >
       {/* 헤더 */}
       <div
@@ -626,7 +664,7 @@ export default function DebateView() {
         {phase === 'running' && (
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1">
-              {/* 초시계 SVG */}
+              {/* 타이머 SVG */}
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-purple-300">
                 <circle cx="12" cy="13" r="8"/>
                 <path d="M12 9v4l2.5 2.5"/>
@@ -647,8 +685,18 @@ export default function DebateView() {
           </div>
         )}
         {(phase === 'judging' || phase === 'result') && (
-          <span className="text-yellow-400 text-sm font-bold">
-            {phase === 'judging' ? '⏳ 판정 중...' : '🏆 결과'}
+          <span className="text-yellow-400 text-sm font-bold flex items-center gap-1">
+            {phase === 'judging' ? (
+              <>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5"/></svg>
+                판정 중...
+              </>
+            ) : (
+              <>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>
+                결과
+              </>
+            )}
           </span>
         )}
       </div>
@@ -712,17 +760,19 @@ export default function DebateView() {
               setRound(0);
               setTimeLeft(360);
             }}
-            className="flex-1 py-3 rounded-xl text-sm font-bold text-white border transition-colors hover:bg-white/10"
+            className="flex-1 py-3 rounded-xl text-sm font-bold text-white border transition-colors hover:bg-white/10 flex items-center justify-center gap-2"
             style={{ borderColor: 'rgba(255,255,255,0.2)' }}
           >
-            🔄 다시 토론
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.6"/></svg>
+            다시 토론
           </button>
           <button
             onClick={() => navigate('/')}
-            className="flex-1 py-3 rounded-xl text-sm font-bold text-white border transition-colors hover:bg-white/10"
+            className="flex-1 py-3 rounded-xl text-sm font-bold text-white border transition-colors hover:bg-white/10 flex items-center justify-center gap-2"
             style={{ borderColor: 'rgba(255,255,255,0.2)' }}
           >
-            🏠 홈으로
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            홈으로
           </button>
         </div>
       )}
@@ -782,12 +832,12 @@ function MessageBubble({
       {/* 말풍선 */}
       <div className="max-w-[75%]">
         <span
-          className={`text-[12px] font-bold block mb-1 ${isOsh ? 'text-right' : 'text-left'}`}
+          className={`text-[12px] font-bold block mb-1 flex items-center gap-1 ${isOsh ? 'justify-end' : 'justify-start'}`}
           style={{ color }}
         >
           {name}
           {isActive && (
-            <span className="text-white/40 animate-pulse ml-1">💬</span>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/40 animate-pulse"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           )}
         </span>
         <div
@@ -889,9 +939,13 @@ function JudgmentCard({
       }}
     >
       <div className="text-center mb-4">
-        <div className="text-white/60 text-xs mb-1">🏆 AI 판정 결과</div>
+        <div className="text-white/60 text-xs mb-1 flex items-center justify-center gap-1">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>
+          AI 판정 결과
+        </div>
         <div className="text-xl font-black" style={{ color: winnerColor }}>
-          승자: {winnerName} 👑
+          승자: {winnerName}
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="inline-block ml-1"><path d="M13 2l3.293 3.293a1 1 0 0 1 .083 1.32l-.83.828a1 1 0 0 1-1.402 0l-4.584-4.584a2 2 0 0 1 2.34-3.157z"/><path d="M2 11a1 1 0 0 1 1-1h3v2H3a1 1 0 0 1-1-1z"/><path d="M21 11a1 1 0 0 0-1-1h-3v2h3a1 1 0 0 0 1-1z"/><path d="M13 20l3-3h-6l3 3z"/></svg>
         </div>
       </div>
 
@@ -950,7 +1004,10 @@ function JudgmentCard({
         className="rounded-xl p-3 text-sm text-white/80 leading-relaxed"
         style={{ background: 'rgba(255,255,255,0.05)' }}
       >
-        <div className="text-xs text-white/40 mb-1">💬 AI 심판 총평</div>
+        <div className="text-xs text-white/40 mb-1 flex items-center gap-1">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          AI 심판 총평
+        </div>
         {judgment.reason}
       </div>
     </div>
