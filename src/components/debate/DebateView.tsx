@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router';
 // const TOPIC_ICONS: Record<string, React.ReactNode> = { ... };
 
 const TOPICS: Array<{ id: string; label: string }> = [
-  { id: 'free', label: '🎲 자유토론' },
+  { id: 'free', label: '자유토론' },
   { id: 'redevelopment', label: '재개발 vs 도시재생' },
   { id: 'gentrification', label: '젠트리피케이션 대응' },
   { id: 'housing', label: '주거 정책 방향' },
@@ -503,18 +503,27 @@ export default function DebateView() {
                 height: '52px',
                 background:
                   selectedTopic === topic.id
-                    ? 'linear-gradient(135deg, rgba(201,21,30,0.3), rgba(0,78,162,0.3))'
+                    ? 'linear-gradient(135deg, rgba(167,139,250,0.3), rgba(124,58,237,0.2))'
                     : 'rgba(0,0,0,0.04)',
                 borderColor:
-                  selectedTopic === topic.id ? 'rgba(255,215,0,0.6)' : 'rgba(0,0,0,0.1)',
+                  selectedTopic === topic.id ? 'rgba(167,139,250,0.8)' : 'rgba(0,0,0,0.1)',
               }}
             >
-              <span className="text-gray-800 text-[12px] font-semibold leading-tight">{topic.label}</span>
-              {topic.id === 'free' && (
-                <span className="text-gray-500 text-[10px] mt-0.5">2분마다 전환</span>
+              {topic.id === 'free' ? (
+                <span className="flex flex-col items-center gap-0.5">
+                  <span className="flex items-center gap-1 text-gray-800 text-[12px] font-semibold">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+                    자유토론
+                  </span>
+                  <span className="text-gray-500 text-[10px]">2분마다 전환</span>
+                </span>
+              ) : (
+                <span className="text-gray-800 text-[12px] font-semibold leading-tight">{topic.label}</span>
               )}
               {selectedTopic === topic.id && (
-                <span className="absolute top-1.5 right-1.5 text-yellow-400 text-xs">✓</span>
+                <span className="absolute top-1.5 right-1.5 text-purple-500 flex items-center">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </span>
               )}
             </button>
           ))}
@@ -542,7 +551,7 @@ export default function DebateView() {
             }}
           >
             <div className="text-gray-800 font-bold text-sm flex items-center justify-center gap-1">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
               정책 토론
             </div>
             <div className="text-gray-600 text-[10px] text-center mt-0.5">수치·공약 중심</div>
@@ -615,7 +624,7 @@ export default function DebateView() {
           >
             {selectedStyle === 'policy' ? (
               <>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                 정책 토론 시작!
               </>
             ) : selectedStyle === 'emotional' ? (
