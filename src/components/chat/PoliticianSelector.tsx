@@ -123,14 +123,14 @@ export default function PoliticianSelector({ politicians }: Props) {
         {/* Hero */}
         <div className="text-center mb-8">
           {/* Logo */}
-          <div className="flex items-center justify-center gap-2 mb-5 animate-fade-in">
+          <div className="flex items-center justify-center gap-1 mb-5 animate-fade-in">
             <img src="/logo.svg" alt="Polichat" className="w-14 h-14" />
             <h1
               style={{
-                fontFamily: "'Space Grotesk', sans-serif",
-                fontWeight: 800,
-                fontSize: '40px',
-                letterSpacing: '-0.03em',
+                fontFamily: "'Righteous', sans-serif",
+                fontWeight: 400,
+                fontSize: '42px',
+                letterSpacing: '-0.01em',
                 lineHeight: 1,
                 color: '#0C0C1A',
               }}
