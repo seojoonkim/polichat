@@ -55,22 +55,24 @@ function splitIntoBubbles(text: string): string[] {
   const sentences = text.split(/(?<=[.!?。])\s+/).filter(s => s.trim().length > 0);
   if (sentences.length <= 1) return [text];
 
-  // 최대 2개 말풍선으로 분리 — 내용 손실 없이 전체 보존
-  // 첫 번째 말풍선: 80자 이내에서 자연스러운 문장 단위로 끊기
-  let firstBubble = sentences[0] ?? '';
-  let splitAt = 1;
+  // 최대 3개 말풍선으로 분리 — 내용 손실 없이 전체 보존
+  // 앞 2개 말풍선: 80자 이내 자연스러운 문장 단위 / 3번째: 나머지 전체
+  const bubbles: string[] = [];
+  let current = '';
 
-  if (
-    sentences.length > 1 &&
-    firstBubble.length < 80 &&
-    firstBubble.length + (sentences[1]?.length ?? 0) <= 80
-  ) {
-    firstBubble += ' ' + (sentences[1] ?? '');
-    splitAt = 2;
+  for (const s of sentences) {
+    if (bubbles.length >= 2) {
+      // 3번째 말풍선은 남은 텍스트 전부 담기
+      current += (current ? ' ' : '') + s;
+    } else if (current.length > 0 && current.length + s.length > 80) {
+      bubbles.push(current.trim());
+      current = s;
+    } else {
+      current += (current ? ' ' : '') + s;
+    }
   }
-
-  const rest = sentences.slice(splitAt).join(' ').trim();
-  return rest ? [firstBubble, rest] : [firstBubble];
+  if (current) bubbles.push(current.trim());
+  return bubbles;
 }
 
 // ─── 메인 컴포넌트 ─────────────────────────────────────────────────────────────
