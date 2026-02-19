@@ -22,8 +22,8 @@ function useBodyScrollUnlock() {
 
     return () => {
       targets.forEach((el, i) => {
-        el.style.overflow = saved[i].overflow;
-        el.style.position = saved[i].position;
+        el.style.overflow = saved[i]?.overflow ?? '';
+        el.style.position = saved[i]?.position ?? '';
       });
       document.documentElement.style.overflowY = '';
     };
