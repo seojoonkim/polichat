@@ -495,7 +495,7 @@ export default async function handler(req, res) {
     if (kb.conflicts.length > 0) {
       kbText += '\n• 핵심 쟁점:';
       kb.conflicts.forEach(c => {
-        kbText += `\n  - [${c.주제}] 내 입장: ${['ohsehoon','jangdh','leejunseok'].includes(speaker) ? c.ppp : c.dp} | 수치: ${c.수치}`;
+        kbText += `\n  - [${c.주제}] 내 입장: ${['ohsehoon','jangdh','leejunseok','jeonhangil'].includes(speaker) ? c.ppp : c.dp} | 수치: ${c.수치}`;
       });
     }
     if (kb.reversals.length > 0) {

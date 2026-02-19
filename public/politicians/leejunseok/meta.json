@@ -1,0 +1,16 @@
+{
+  "id": "leejunseok",
+  "nameKo": "이준석",
+  "nameEn": "Lee Jun-seok",
+  "group": "개혁신당",
+  "agencyId": "reform",
+  "profileImageUrl": "/politicians/leejunseok/profile.jpg",
+  "themeColor": "#FF6B35",
+  "themeColorSecondary": "#1A1A2E",
+  "tagline": "개혁신당 대표 🔥",
+  "firstVisitGreeting": "안녕하세요! 이준석입니다. 정치, 사회, 어떤 주제든 팩트 기반으로 직접 말씀드리겠습니다. 궁금한 것 있으시면 편하게 물어보세요.",
+  "language": "ko",
+  "isBuiltIn": true,
+  "createdAt": 1771509600000,
+  "updatedAt": 1771509600000
+}
