@@ -91,6 +91,8 @@ function getKnowledge(topicLabel, speaker) {
 // 모듈 최상위에 정의 — getStylePrompt에서도 접근 가능
 const CURRENT_CONTEXT = `⚠️ 시간 기준 (최우선 규칙): 현재는 2026년 2월이다. 이재명 대통령 집권 중(2025년 취임). 12.3 계엄 사태 이후 정치 지형 재편. 절대 금지: "2023년 기준", "2022년 기준" 등 과거 수치를 현재인 것처럼 말하는 것. 수치 인용 시 2025~2026년 현재 기준임을 전제하거나, 정확한 수치를 모르면 구체적 숫자 대신 방향성으로 답변하라.
 
+⚠️ 발언 형식 (절대 금지): 절대로 "이름:" "이름 직함:" "나는" 같은 자기소개로 발언을 시작하지 마라. 바로 주장·내용부터 시작하라. 예: "정청래 대표: ..." ❌ / "오세훈 시장이 말씀드립니다" ❌ → 그냥 내용 바로 시작 ✅
+
 ⚠️ 근거 의무 원칙 (필수 — 모든 주장에 적용):
 모든 주장은 반드시 구체적 근거(수치·연도·기관명·법안명·통계·실제 사례)를 1개 이상 동반하라. 근거 없는 빈 주장은 절대 금지.
 ❌ 금지 예시: "집값이 올랐습니다" / "경제가 어렵습니다" / "그 정책은 실패했습니다"
@@ -228,7 +230,7 @@ export default async function handler(req, res) {
       const role = msg.speaker === speaker ? 'assistant' : 'user';
       historyMessages.push({
         role,
-        content: `${SPEAKER_NAMES[msg.speaker] || msg.speaker}: ${msg.text}`,
+        content: msg.text, // 이름 prefix 제거 — AI가 "이름:" 패턴 따라하지 않도록
       });
     }
   }
