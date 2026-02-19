@@ -647,7 +647,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
               style={{ borderColor: config.speakerAColor }}
             />
             <span className="text-gray-800 text-sm font-bold">{config.speakerAName.split(' ')[0]}</span>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.92)', color: config.speakerAColor, border: `1px solid ${config.speakerAColor}80` }}>{debateType === 'seoul' ? '국민의힘' : '더불어민주당'}</span>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.92)', color: config.speakerAColor, border: `1px solid ${config.speakerAColor}80` }}>{debateType === 'seoul' ? '국민의힘' : debateType === 'leejeon' ? '개혁신당' : '더불어민주당'}</span>
           </div>
           <div className="w-12 flex-shrink-0 text-center text-yellow-400 font-black text-2xl">VS</div>
           <div className="flex-1 flex flex-col items-center gap-1">
@@ -658,7 +658,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
               style={{ borderColor: config.speakerBColor }}
             />
             <span className="text-gray-800 text-sm font-bold">{config.speakerBName.split(' ')[0]}</span>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.92)', color: config.speakerBColor, border: `1px solid ${config.speakerBColor}80` }}>{debateType === 'seoul' ? '더불어민주당' : '국민의힘'}</span>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.92)', color: config.speakerBColor, border: `1px solid ${config.speakerBColor}80` }}>{debateType === 'leejeon' ? '국민의힘' : debateType === 'seoul' ? '더불어민주당' : '국민의힘'}</span>
           </div>
         </div>
 

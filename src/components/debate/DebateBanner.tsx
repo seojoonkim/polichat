@@ -19,11 +19,16 @@ export default function DebateBanner({ debateType = 'seoul' }: DebateBannerProps
       candidateB: { name: '장동혁', party: '국민의힘', id: 'jangdh', color: '#C9151E' },
       tagline: '"국회 격돌"',
     },
+    leejeon: {
+      candidateA: { name: '이준석', party: '개혁신당', id: 'leejunseok', color: '#FF6B35' },
+      candidateB: { name: '전한길', party: '국민의힘', id: 'jeonhangil', color: '#C9151E' },
+      tagline: '"보수 내전 🔥"',
+    },
   };
 
-  const c = config[debateType];
+  const c = config[debateType] ?? config['seoul'];
   const isNational = debateType === 'national';
-  const navigationUrl = isNational ? '/debate?type=national' : '/debate';
+  const navigationUrl = debateType === 'leejeon' ? '/debate?type=leejeon' : isNational ? '/debate?type=national' : '/debate';
   const uid = debateType; // unique prefix for animation names
 
   return (
