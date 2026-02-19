@@ -109,6 +109,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
   const [judgment, setJudgment] = useState<Judgment | null>(null);
   const [coinFlipStage, setCoinFlipStage] = useState<'spinning' | 'revealed' | 'idle'>('idle');
   const [coinFlipWinner, setCoinFlipWinner] = useState<{ key: string; name: string } | null>(null);
+  const [showExitModal, setShowExitModal] = useState(false);
   const [timeLeft, setTimeLeft] = useState(360); // 6분 = 360초
 
   // 실행 취소용 ref
@@ -149,7 +150,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
 
   useEffect(() => {
     if (phase !== 'running') {
-      setTimeLeft(180);
+      setTimeLeft(360);
       return;
     }
 
@@ -174,10 +175,10 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
     }
   }, [timeLeft, phase]);
 
-  // 자유토론: 240초, 120초에서 랜덤 주제 전환
+  // 자유토론: 2분(120초) 뒤 랜덤 주제 전환 (한 번만)
   useEffect(() => {
     if (selectedTopic !== 'free' || phase !== 'running') return;
-    if (timeLeft !== 120 && timeLeft !== 60) return;
+    if (timeLeft !== 240) return; // 6분 중 2분 경과 시점 (360-120=240)
 
     const realTopics = config.topics.filter(t => t.id !== 'free');
     const next = realTopics[Math.floor(Math.random() * realTopics.length)];
@@ -548,7 +549,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
     await sleep(1800);
 
     setPhase('running');
-    setTimeLeft(180);
+    setTimeLeft(360);
     setCoinFlipStage('idle');
     setCurrentSpeaker(firstKey); // 코인 직후 첫 화자 TypingIndicator 즉시 표시
 
@@ -570,7 +571,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
     setMessages([]);
     setJudgment(null);
     setRound(0);
-    setTimeLeft(180);
+    setTimeLeft(360);
     setPhase('setup');
   };
 
@@ -809,7 +810,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
               </span>
             </div>
             <button
-              onClick={endDebate}
+              onClick={() => setShowExitModal(true)}
               className="text-xs px-3 py-1 rounded-full border text-gray-600 hover:text-gray-800 transition-colors"
               style={{ borderColor: 'rgba(0,0,0,0.1)' }}
             >
@@ -849,7 +850,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
             <div
               className="h-full transition-all duration-1000 relative overflow-visible"
               style={{
-                width: `${(timeLeft / 180) * 100}%`,
+                width: `${(timeLeft / 360) * 100}%`,
                 background: 'linear-gradient(270deg, #A78BFA, #7C3AED)',
               }}
             >
@@ -874,6 +875,39 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
 
       {/* 스크롤 영역 */}
       {/* 동전던지기 오버레이 */}
+      {/* 종료 확인 모달 */}
+      {showExitModal && (
+        <div
+          className="absolute inset-0 z-[60] flex items-center justify-center"
+          style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)' }}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl px-6 py-6 mx-6 w-full max-w-xs flex flex-col items-center"
+            style={{ animation: 'fadeInUp 0.2s ease' }}
+          >
+            <div className="text-2xl mb-3">⚠️</div>
+            <p className="text-gray-900 font-bold text-base mb-1 text-center">토론을 종료할까요?</p>
+            <p className="text-gray-500 text-sm mb-5 text-center">지금까지의 내용이 모두 사라집니다.</p>
+            <div className="flex gap-3 w-full">
+              <button
+                onClick={() => setShowExitModal(false)}
+                className="flex-1 py-2.5 rounded-xl border text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+                style={{ borderColor: 'rgba(0,0,0,0.12)' }}
+              >
+                취소
+              </button>
+              <button
+                onClick={() => { setShowExitModal(false); endDebate(); }}
+                className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white transition-colors"
+                style={{ background: '#E53E3E' }}
+              >
+                종료
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {phase === 'coinflip' && coinFlipWinner && (
         <div
           className="absolute inset-0 z-50 flex flex-col items-center justify-center"
@@ -1043,7 +1077,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
               setCurrentText('');
               setJudgment(null);
               setRound(0);
-              setTimeLeft(180);
+              setTimeLeft(360);
             }}
             className="flex-1 py-3 rounded-xl text-sm font-bold text-gray-800 border transition-colors hover:bg-gray-100 flex items-center justify-center gap-2"
             style={{ borderColor: 'rgba(0,0,0,0.1)' }}
