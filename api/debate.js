@@ -3,6 +3,9 @@ export const config = {
   maxDuration: 60,
 };
 
+// 모듈 최상위에 정의 — getStylePrompt에서도 접근 가능
+const CURRENT_CONTEXT = `⚠️ 시간 기준 (최우선 규칙): 현재는 2026년 2월이다. 이재명 대통령 집권 중(2025년 취임). 12.3 계엄 사태 이후 정치 지형 재편. 절대 금지: "2023년 기준", "2022년 기준" 등 과거 수치를 현재인 것처럼 말하는 것. 수치 인용 시 2025~2026년 현재 기준임을 전제하거나, 정확한 수치를 모르면 구체적 숫자 대신 방향성으로 답변하라.`;
+
 function getStylePrompt(style, speaker, opponentLastMessage, topicLabel, debateType = 'seoul') {
   const NAMES = {
     ohsehoon: '오세훈 서울시장',
@@ -19,10 +22,10 @@ function getStylePrompt(style, speaker, opponentLastMessage, topicLabel, debateT
   const speakerName = NAMES[speaker] || speaker;
   const opponentName = OPPONENTS[speaker] || '상대방';
 
-  const baseContext = `당신은 ${speakerName}입니다. 주제: ${topicLabel}. 상대방(${opponentName})의 마지막 발언: "${opponentLastMessage}"`;
+  const baseContext = `당신은 ${speakerName}입니다. ${CURRENT_CONTEXT}\n주제: ${topicLabel}. 상대방(${opponentName})의 마지막 발언: "${opponentLastMessage}"`;
 
   if (style === 'policy') {
-    return `${baseContext}\n\n정책 토론 방식: 구체적인 수치, 통계, 정책 공약, 예산 규모 등 데이터 기반으로 발언하세요. 감정보다 논리와 근거 중심으로 2-3문장으로 답변하세요.`;
+    return `${baseContext}\n\n정책 토론 방식: 구체적인 수치, 통계, 정책 공약, 예산 규모 등 데이터 기반으로 발언하세요. 단, 반드시 2025~2026년 현재 기준으로만 말하고, 2023년 이전 수치를 현재인 것처럼 인용하지 마세요. 감정보다 논리와 근거 중심으로 2-3문장으로 답변하세요.`;
   } else if (style === 'emotional') {
     return `${baseContext}\n\n감정 토론 방식: 상대방을 강하게 몰아붙이고 격렬하게 충돌하세요. 허점을 발견하면 바로 끊고 반박하고, 비꼬는 표현·냉소·비아냥을 적극 사용하세요. "그게 말이 됩니까?", "어이가 없네요", "정말 황당합니다", "그건 말장난이잖아요", "지금 농담하시는 겁니까" 같은 직설적이고 거친 표현 OK. 단, 욕설·인신공격·혐오표현 금지. 방송 토론 극한 수위로 2-3문장 답변하세요.`;
   } else if (style === 'consensus') {
@@ -49,7 +52,7 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'OPENROUTER_API_KEY not configured' });
   }
 
-  const CURRENT_CONTEXT = `[현재 시점: 2026년 2월. 이재명 대통령 집권 중(2025년 취임). 12.3 계엄 사태 이후 정치 지형 재편. 반드시 2025~2026년 현재 기준으로 발언하고, "2023년", "2022년" 등 과거 수치를 현재인 것처럼 인용하지 말 것. 최신 정치·경제 상황을 반영해 발언하세요.]`;
+  // CURRENT_CONTEXT는 모듈 최상위에서 정의됨 (getStylePrompt와 공유)
 
   const PERSONAS = {
     ohsehoon: {
