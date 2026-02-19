@@ -107,7 +107,7 @@ export default function ChatPage() {
   // Show chat view (no banner in chat)
   if (activePolitician) {
     return (
-      <div className="min-h-screen bg-gray-100 flex justify-center">
+      <div className="min-h-screen flex justify-center" style={{ background: '#0D0F1A' }}>
         <div
           className={`w-full h-screen ${
             phase === 'enter'
