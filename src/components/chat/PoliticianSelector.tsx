@@ -160,7 +160,7 @@ export default function PoliticianSelector({ politicians }: Props) {
                 lineHeight: 1,
               }}
             >
-              Polichat
+              Polichat.kr
             </h1>
           </div>
 
