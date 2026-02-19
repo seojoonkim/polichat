@@ -112,7 +112,7 @@ export default function PoliticianSelector({ politicians }: Props) {
   }, [politicians]);
 
   return (
-    <div className="min-h-screen overflow-y-auto overflow-x-hidden relative" style={{ background: '#0D0F1A' }}>
+    <div style={{ background: '#0D0F1A', minHeight: '100vh' }}>
     <div className="polichat-bg min-h-screen overflow-y-auto overflow-x-hidden relative hide-scrollbar" style={{ maxWidth: '700px', margin: '0 auto' }}>
       {/* Mesh gradient background */}
       <div className="policy-pattern" />
@@ -149,7 +149,7 @@ export default function PoliticianSelector({ politicians }: Props) {
                   fontWeight: 800,
                   fontSize: '19px',
                   letterSpacing: '-0.03em',
-                  color: '#2D0B6B',
+                  color: '#1A0845',
                 }}
               >
                 AI 정치인과 직접 대화하세요

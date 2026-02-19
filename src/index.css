@@ -174,7 +174,7 @@ body {
 
 /* ===== Logo animated gradient ===== */
 .logo-text-gradient {
-  background: linear-gradient(270deg, #2D0B6B, #7C3AED, #9333EA, #4C1D95, #2D0B6B);
+  background: linear-gradient(270deg, #0D0630, #3B0F8C, #5B21B6, #2D0B6B, #0D0630);
   background-size: 300% 300%;
   background-clip: text;
   -webkit-background-clip: text;
