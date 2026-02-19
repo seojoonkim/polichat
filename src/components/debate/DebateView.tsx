@@ -120,7 +120,7 @@ interface Judgment {
   reason: string;
 }
 
-type Phase = 'setup' | 'coinflip' | 'running' | 'judging' | 'result';
+type Phase = 'setup' | 'coinflip' | 'running' | 'judging' | 'result' | 'finished';
 
 // ─── 유틸 ─────────────────────────────────────────────────────────────────────
 
@@ -224,7 +224,10 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
   // 타이머가 0이 되면 토론 종료
   useEffect(() => {
     if (phase === 'running' && timeLeft === 0) {
-      endDebate();
+      abortRef.current = true;
+      setCurrentSpeaker(null);
+      setCurrentText('');
+      setPhase('finished');
     }
   }, [timeLeft, phase]);
 
@@ -321,8 +324,8 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
 
     if (!abortRef.current) {
       setCurrentSpeaker(null);
-      // 판정 없이 종료 — setup으로 복귀
-      setPhase('setup');
+      // 판정 없이 종료 — finished로 이동
+      setPhase('finished');
     }
   };
 
@@ -680,6 +683,47 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
     setTimeLeft(360);
     setPhase('setup');
   };
+
+  // ─── UI: 토론 종료 화면 ───────────────────────────────────────────────────────
+
+  if (phase === 'finished') {
+    const config = DEBATE_CONFIGS[debateType];
+    const aColor = config?.speakerAColor || '#3B82F6';
+    const bColor = config?.speakerBColor || '#EF4444';
+    
+    return (
+      <div className="app-bg flex flex-col" style={{ height: '100svh', maxWidth: '700px', margin: '0 auto', width: '100%' }}>
+        {/* 헤더 */}
+        <div style={{ background: `linear-gradient(135deg, ${aColor}, ${bColor})` }} className="px-4 py-3 flex items-center justify-between shrink-0">
+          <span className="text-white font-bold text-base">🏁 토론 종료</span>
+          <button onClick={endDebate} className="px-4 py-1.5 bg-white/20 hover:bg-white/30 text-white text-sm font-semibold rounded-full transition-all">
+            종료
+          </button>
+        </div>
+        {/* 메시지 기록 */}
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+          {messages.map((msg, i) => {
+            const isA = msg.speaker === config?.speakerA;
+            const speakerColor = isA ? aColor : bColor;
+            const speakerName = isA ? config?.speakerAName : config?.speakerBName;
+            return (
+              <div key={i} className={`flex gap-2 ${isA ? '' : 'flex-row-reverse'}`}>
+                <div className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ background: speakerColor }}>
+                  {speakerName?.[0]}
+                </div>
+                <div className="max-w-[75%]">
+                  <p className={`text-xs text-gray-400 mb-0.5 ${isA ? 'text-left' : 'text-right'}`}>{speakerName}</p>
+                  <div className="px-3 py-2 rounded-2xl text-sm text-gray-800 bg-white shadow-sm leading-relaxed">
+                    {msg.text}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
 
   // ─── UI: 설정 화면 ─────────────────────────────────────────────────────────
 
