@@ -124,7 +124,7 @@ export default function PoliticianSelector({ politicians }: Props) {
         <div className="text-center mb-8">
           {/* Logo */}
           <div className="flex items-center justify-center gap-2 mb-5 animate-fade-in">
-            <img src="/logo.svg" alt="Polichat" className="w-12 h-12" />
+            <img src="/logo.svg" alt="Polichat" className="w-14 h-14" />
             <h1
               style={{
                 fontFamily: "'Poppins', sans-serif",
