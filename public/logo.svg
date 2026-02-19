@@ -1,12 +1,12 @@
 <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Right speech bubble (dark gray) - rendered FIRST so it's behind -->
-  <path d="M37 30C37 24.477 41.477 20 47 20H61C66.523 20 71 24.477 71 30V46C71 51.523 66.523 56 61 56H57V64L49 56H47C41.477 56 37 51.523 37 46V30Z" fill="#3A3A3A"/>
-  <!-- Left speech bubble (light gray/white) - rendered SECOND so it's in front -->
-  <path d="M10 20C10 14.477 14.477 10 20 10H38C43.523 10 48 14.477 48 20V36C48 41.523 43.523 46 38 46H26L18 54V46H20C14.477 46 10 41.523 10 36V20Z" fill="#D4D4D4"/>
-  <!-- Three dots (...) in left bubble -->
-  <circle cx="23" cy="28" r="2.2" fill="#1C1C1E" opacity="0.85"/>
-  <circle cx="29" cy="28" r="2.2" fill="#1C1C1E" opacity="0.85"/>
-  <circle cx="35" cy="28" r="2.2" fill="#1C1C1E" opacity="0.85"/>
+  <!-- Right speech bubble (dark) - behind -->
+  <path d="M37 30C37 24.477 41.477 20 47 20H61C66.523 20 71 24.477 71 30V46C71 51.523 66.523 56 61 56H57V64L49 56H47C41.477 56 37 51.523 37 46V30Z" fill="#2D2D2D"/>
+  <!-- Left speech bubble (white + border) - in front -->
+  <path d="M10 20C10 14.477 14.477 10 20 10H38C43.523 10 48 14.477 48 20V36C48 41.523 43.523 46 38 46H26L18 54V46H20C14.477 46 10 41.523 10 36V20Z" fill="white" stroke="#C0C0C0" stroke-width="1.5"/>
+  <!-- Three dots in left bubble -->
+  <circle cx="23" cy="28" r="2.4" fill="#2D2D2D"/>
+  <circle cx="29" cy="28" r="2.4" fill="#2D2D2D"/>
+  <circle cx="35" cy="28" r="2.4" fill="#2D2D2D"/>
   <!-- Checkmark in right bubble -->
-  <path d="M49 40L53 44L61 36" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+  <path d="M49 40L53 44L61 36" stroke="white" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

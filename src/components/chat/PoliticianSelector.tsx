@@ -127,10 +127,10 @@ export default function PoliticianSelector({ politicians }: Props) {
             <img src="/logo.svg" alt="Polichat" className="w-14 h-14" />
             <h1
               style={{
-                fontFamily: "'Poppins', sans-serif",
-                fontWeight: 700,
+                fontFamily: "'Space Grotesk', sans-serif",
+                fontWeight: 800,
                 fontSize: '40px',
-                letterSpacing: '-0.04em',
+                letterSpacing: '-0.03em',
                 lineHeight: 1,
                 color: '#0C0C1A',
               }}
