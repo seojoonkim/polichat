@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router';
 
 // ─── 타입 ────────────────────────────────────────────────────────────────────
 
-export type DebateType = 'seoul' | 'national';
+export type DebateType = 'seoul' | 'national' | 'leejeon';
 
 // ─── 설정 상수 ────────────────────────────────────────────────────────────────
 
@@ -55,6 +55,23 @@ export const DEBATE_CONFIGS = {
       { id: 'tax-biz', label: '기업·세금 정책' },
     ],
   },
+  leejeon: {
+    speakerA: 'leejunseok' as const,
+    speakerB: 'jeonhangil' as const,
+    speakerAName: '이준석 대표',
+    speakerBName: '전한길',
+    speakerAColor: '#FF6B35',
+    speakerBColor: '#C9151E',
+    topics: [
+      { id: 'free', label: '자유토론' },
+      { id: 'election-fraud', label: '부정선거론' },
+      { id: 'conservative-identity', label: '보수의 정체성' },
+      { id: 'yoon-impeachment', label: '윤석열 탄핵' },
+      { id: 'gender-feminism', label: '젠더·페미니즘' },
+      { id: 'lee-scandal', label: '이준석 의혹' },
+      { id: 'jeon-remarks', label: '전한길 막말 논란' },
+    ],
+  },
 } as const;
 
 // ─── 상수 ───────────────────────────────────────────────────────────────────
@@ -98,7 +115,8 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
 
   // 설정 상태
   const [selectedTopic, setSelectedTopic] = useState<string>(config.topics[1]?.id || 'free');
-  const [selectedStyle, setSelectedStyle] = useState<'policy' | 'emotional' | 'consensus'>('policy');
+  const [_selectedStyle, setSelectedStyle] = useState<'policy' | 'emotional' | 'consensus'>('policy');
+  const selectedStyle = debateType === 'leejeon' ? 'emotional' : _selectedStyle;
 
   // 토론 상태
   const [phase, setPhase] = useState<Phase>('setup');
@@ -175,9 +193,10 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
     }
   }, [timeLeft, phase]);
 
-  // 자유토론: 2분(120초) 뒤 랜덤 주제 전환 (한 번만)
+  // 자유토론: 2분(120초) 뒤 랜덤 주제 전환 (서울/전국은 한 번만)
   useEffect(() => {
     if (selectedTopic !== 'free' || phase !== 'running') return;
+    if (debateType === 'leejeon') return; // leejeon은 아래 별도 useEffect에서 처리
     if (timeLeft !== 240) return; // 6분 중 2분 경과 시점 (360-120=240)
 
     const realTopics = config.topics.filter(t => t.id !== 'free');
@@ -187,7 +206,26 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
     freeTopicRef.current = next.label;
     topicChangedRef.current = true;
     pendingTopicChangeRef.current = next.label; // 현재 라운드 끝난 후 처리
-  }, [timeLeft, selectedTopic, phase, config]);
+  }, [timeLeft, selectedTopic, phase, config, debateType]);
+
+  // 자유토론 (leejeon 전용): 2분마다 반복 랜덤 주제 전환
+  useEffect(() => {
+    if (selectedTopic !== 'free' || phase !== 'running' || debateType !== 'leejeon') return;
+
+    const elapsed = 360 - timeLeft; // 경과 시간(초)
+    if (elapsed > 0 && elapsed % 120 === 0) {
+      const realTopics = config.topics.filter(t => t.id !== 'free');
+      // 현재 주제와 다른 주제 선택
+      const candidates = realTopics.filter(t => t.label !== freeTopicRef.current);
+      const pool = candidates.length > 0 ? candidates : realTopics;
+      const next = pool[Math.floor(Math.random() * pool.length)];
+      if (!next) return;
+
+      freeTopicRef.current = next.label;
+      topicChangedRef.current = true;
+      pendingTopicChangeRef.current = next.label;
+    }
+  }, [timeLeft, selectedTopic, phase, config, debateType]);
 
   // ─── 캐시 조회 ─────────────────────────────────────────────────────────────
 
@@ -665,7 +703,20 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           ))}
         </div>
 
-        {/* 토론 방식 선택 */}
+        {/* 토론 방식 선택 — leejeon은 감정토론 고정 */}
+        {debateType === 'leejeon' ? (
+          <div className="px-4 mb-4">
+            <p className="pc-section-label flex items-center gap-1.5 mb-2">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              토론 방식
+            </p>
+            <div className="rounded-xl px-4 py-3 text-center border" style={{ background: 'linear-gradient(135deg, rgba(239,68,68,0.12), rgba(249,115,22,0.08))', borderColor: 'rgba(239,68,68,0.4)' }}>
+              <div className="text-gray-800 font-bold text-sm flex items-center justify-center gap-1">🔥 감정 토론 (고정)</div>
+              <div className="text-gray-500 text-[10px] mt-0.5">이준석 vs 전한길은 격렬 공격 스타일만 지원합니다</div>
+            </div>
+          </div>
+        ) : (
+        <>
         <div className="px-4 mb-2">
           <p className="pc-section-label flex items-center gap-1.5">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
@@ -737,6 +788,8 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
             )}
           </button>
         </div>
+        </>
+        )}
 
         {/* 시작 버튼 */}
         <div className="p-4">

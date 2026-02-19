@@ -1,0 +1,126 @@
+{
+  "verifications": [
+    {
+      "claim": "TV조선 토론 취소 이유: 비논리적 발언 팩트체크 어려움",
+      "verified": true,
+      "evidence": "From lee_jeon_research.json and lee_jeon_claude.json: TV조선 내부 심의 부적격으로 무산, 비논리적·비과학적 발언 이유"
+    },
+    {
+      "claim": "전한길의 부정선거 주장: 증거 부족",
+      "verified": true,
+      "evidence": "Multiple files note lack of evidence; Lee challenges with debate"
+    },
+    {
+      "claim": "이준석의 AI 정책: 학습 데이터 활용 촉진",
+      "verified": true,
+      "evidence": "lee_jeon_research.json: '활용 금지 데이터 제외 최대한 AI 학습 활용' (2026년 발언)"
+    },
+    {
+      "claim": "전한길 강의 경력: 메가스터디, EBS 등",
+      "verified": true,
+      "evidence": "lee_jeon_claude.json and lee_jeon_research.json detail career as Korean history lecturer"
+    },
+    {
+      "claim": "윤석열 1심 유죄 판결 (2026.2.19)",
+      "verified": true,
+      "evidence": "lee_jeon_claude.json timeline and lee_jeon_news.json mention conviction and Jeon's shock"
+    },
+    {
+      "claim": "이준석 여성 혐오 발언 논란",
+      "verified": true,
+      "evidence": "All files mention '젓가락 발언' and gender controversies"
+    },
+    {
+      "claim": "전한길 반페미니즘 입장",
+      "verified": false,
+      "evidence": "Inferred from conservative ideology in files, but specific quotes missing; needs further search"
+    },
+    {
+      "claim": "보수 분열: 이준석 탈당으로 인함",
+      "verified": true,
+      "evidence": "Files detail Lee's departure from People's Power and founding Reform New Party"
+    }
+  ],
+  "uniqueInsights": {
+    "coreWorldviewDifference": "이준석은 실증적·합리적 세계관으로 정치 문제를 데이터와 논리로 접근하나, 전한길은 이념적·감정적 세계관으로 음모와 도덕적 투쟁으로 본다. 이로 인해 같은 보수 진영 내에서도 근본적 갈등 발생.",
+    "conservatismDebate": "이준석의 보수관은 젊은·개혁적·능력주의 중심 (반기득권, AI 혁신), 전한길의 보수관은 강경·전통적·반좌파 중심 (부정선거 척결, 윤석열 복권). 이 차이는 보수 정체성의 현대화 vs 전통 수호로 요약.",
+    "electionFraudLogic": {
+      "leeArgument": "부정선거는 비과학적 음모론; 증거 없음 증명 위해 무제한 토론 제안, 방송 심의 준수 강조. 논리적 팩트체크로 debunk.",
+      "jeonArgument": "부정선거는 실존; 결정적 증거에 사례금 제안, 4:1 구도 요구로 압박. TV 취소는 외부 압력 의혹 제기, 유튜브 등 자유 토론 주장."
+    }
+  },
+  "enrichedTopics": [
+    {
+      "id": "election-fraud",
+      "label": "부정선거론의 실체",
+      "whyExplosive": "가장 핵심 쟁점; 증거 vs 음모 대결로 감정적 충돌 불가피"
+    },
+    {
+      "id": "conservatism-definition",
+      "label": "보수의 진정한 정의",
+      "whyExplosive": "각자 보수관 차이로 정체성 논쟁 폭발, 분열 책임 공방"
+    },
+    {
+      "id": "gender-feminism",
+      "label": "젠더 정책과 페미니즘",
+      "whyExplosive": "이준석의 과거 발언 vs 전한길의 반페미 입장으로 개인 공격 유발"
+    },
+    {
+      "id": "yoon-impeachment",
+      "label": "윤석열 탄핵과 복권",
+      "whyExplosive": "전한길의 친윤 vs 이준석의 개혁으로 감정적 대립 극대화"
+    },
+    {
+      "id": "ai-digital-policy",
+      "label": "AI와 디지털 정책",
+      "whyExplosive": "이준석의 전문성 vs 전한길의 무관심으로 세대·전문성 격차 드러남"
+    },
+    {
+      "id": "political-reform",
+      "label": "정치 개혁과 기득권 타파",
+      "whyExplosive": "이준석의 반기득권 vs 전한길의 체제 불신으로 상반된 개혁안 충돌"
+    },
+    {
+      "id": "media-fairness",
+      "label": "미디어 공정성과 방송 심의",
+      "whyExplosive": "토론 취소 이유로 서로 압력 의혹 제기, 언론 편향 논쟁"
+    },
+    {
+      "id": "youth-politics",
+      "label": "청년 정치 참여",
+      "whyExplosive": "이준석의 젊은 리더십 vs 전한길의 전통 보수로 세대 갈등 폭발"
+    },
+    {
+      "id": "extremism",
+      "label": "극단주의 대처",
+      "whyExplosive": "서로를 극단으로 몰며 과격 발언 공방"
+    },
+    {
+      "id": "education-meritocracy",
+      "label": "교육과 능력주의",
+      "whyExplosive": "전한길 강사 경력 vs 이준석 능력주의로 교육 철학 충돌"
+    },
+    {
+      "id": "foreign-policy",
+      "label": "외교 안보 정책",
+      "whyExplosive": "강경 vs 실용 외교로 안보관 차이 드러남"
+    },
+    {
+      "id": "immigration",
+      "label": "이민 정책",
+      "whyExplosive": "능력 기반 vs 제한으로 보수 내 이민관 분쟁"
+    },
+    {
+      "id": "party-unity",
+      "label": "보수 정당 통합",
+      "whyExplosive": "이준석 탈당 vs 전한길 국민의힘으로 분열 책임 논란"
+    },
+    {
+      "id": "conspiracy-theories",
+      "label": "음모론과 과학적 사고",
+      "whyExplosive": "근본 세계관 차이로 논리 vs 감정 대결"
+    }
+  ],
+  "model": "grok-4",
+  "researchedAt": "2026-02-19"
+}

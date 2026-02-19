@@ -1,0 +1,20 @@
+{
+  "leejunseok": {
+    "profile": { "birth": "March 31, 1985", "education": "Harvard University graduate in Computer Science and Economics", "career": ["Politician", "Leader of the Reform Party"], "ideology": "Center-right with reformist tendencies", "speechStyle": "Direct and confrontational" },
+    "positions": { "경제": "Advocates for deregulation in housing markets and enhancing local economies through active policies", "정치개혁": "Suggests constitutional amendments to decentralize presidential powers", "교육": "Emphasizes education reform aligning curriculums with market needs", "노동": "Supports flexible labor markets", "외교안보": "Focuses on strengthening alliances with the US", "젠더이민": "Controversial statements regarding gender roles", "보수우파비판": "Criticizes outdated policies" },
+    "attackPoints": ["Rigid style leading to conflicts"],
+    "weakPoints": ["Alienating moderate supporters"]
+  },
+  "jeonhangil": {
+    "profile": { "birth": "August 21, 1970", "education": "Former history instructor", "career": ["Politician", "YouTube commentator", "People's Power Party member"], "ideology": "Strong conservative", "speechStyle": "Reserved, ideologically steadfast" },
+    "positions": { "경제": "Favors traditional economic policies", "정치개혁": "Opposes drastic reforms", "교육": "Supports existing frameworks with traditional values", "노동": "Critiques labor market flexibility", "외교안보": "Supports alliances with US", "젠더이민": "Emphasizes traditional roles", "반이준석": "Perceives Lee's reforms as radical" },
+    "attackPoints": ["Seen as outdated by younger liberals"],
+    "weakPoints": ["Lack of appeal on progressive reforms"]
+  },
+  "debateConflict": {
+    "background": "Scheduled debate between Lee Jun-seok and Jeon Han-gil was canceled.", "leePosition": "Advocates for open debates, blames Jeon for avoiding issues.", "jeonPosition": "Claims structural issues and internal pressures led to cancellation.", "coreConflicts": ["Ideological differences on reforms and social issues"], "timeline": "Scheduled for February 2026, canceled following disputes."
+  },
+  "suggestedTopics": [{"id": "party-dynamics", "label": "Dynamics of new parties in South Korea"}, {"id": "debate-cancellation", "label": "Impact of debate cancellations on public perceptions"}, {"id": "policy-comparison", "label": "Comparison of reformist versus traditional policies"}],
+  "model": "gpt-4o",
+  "researchedAt": "2026-02-19"
+}
