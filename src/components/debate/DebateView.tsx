@@ -774,7 +774,11 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
               config={config}
             />
           ) : (
-            <TypingIndicator speaker={currentSpeaker} config={config} />
+            // 같은 화자가 이미 말풍선을 발화 중인 경우 TypingIndicator 숨김
+            // (말풍선 분리 pause 시 상대방이 말하려는 것처럼 오해 방지)
+            messages.length === 0 || messages[messages.length - 1]?.speaker !== currentSpeaker ? (
+              <TypingIndicator speaker={currentSpeaker} config={config} />
+            ) : null
           )
         )}
 
