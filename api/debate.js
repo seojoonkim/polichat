@@ -46,11 +46,14 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
   const { topic, opponentLastMessage, speaker, style, debateType = 'seoul' } = req.body;
-  const apiKey = process.env.OPENROUTER_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY;
 
   if (!apiKey) {
-    return res.status(500).json({ error: 'OPENROUTER_API_KEY not configured' });
+    return res.status(500).json({ error: 'API key not configured' });
   }
+
+  const isOpenAI = apiKey.startsWith('sk-proj-') || (apiKey.startsWith('sk-') && !apiKey.startsWith('sk-or-'));
+  const apiBase = isOpenAI ? 'https://api.openai.com/v1' : 'https://openrouter.ai/api/v1';
 
   // CURRENT_CONTEXT는 모듈 최상위에서 정의됨 (getStylePrompt와 공유)
 
@@ -125,14 +128,18 @@ export default async function handler(req, res) {
     const apiAbort = new AbortController();
     const apiTimeout = setTimeout(() => apiAbort.abort(), 25000); // 25초 타임아웃
 
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey.trim()}`,
+    };
+    if (!isOpenAI) {
+      headers['HTTP-Referer'] = 'https://polichat.kr';
+      headers['X-Title'] = 'PoliChat Debate';
+    }
+
+    const response = await fetch(`${apiBase}/chat/completions`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-        'HTTP-Referer': 'https://polichat.kr',
-        'X-Title': 'PoliChat Debate',
-      },
+      headers,
       body: JSON.stringify({
         model: 'openai/gpt-4o-mini',
         max_tokens: 300,
