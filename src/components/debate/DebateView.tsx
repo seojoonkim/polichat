@@ -330,44 +330,42 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
         const currentTopic = selectedTopic === 'free' ? freeTopicRef.current : initialTopic;
         
         let streamedText = '';
+        let currentBubble = '';
         const text = await streamRound(speaker, currentTopic, lastText, style, async (chunk) => {
           if (abortRef.current) return;
-          // 글자 단위로 딜레이를 주어 절반 속도로 표시
           for (const char of chunk) {
             if (abortRef.current) return;
             streamedText += char;
-            setCurrentText(streamedText);
-            await sleep(55); // 글자당 ~55ms (자연스러운 타이핑 속도)
-          }
-        });
-        
-        if (abortRef.current) break;
+            currentBubble += char;
+            setCurrentText(currentBubble);
+            await sleep(55);
 
-        // 스트리밍 완료 → 문장 단위로 쪼개서 여러 말풍선으로 추가
-        setCurrentText('');
-        setCurrentSpeaker(null);
-
-        if (text.trim()) {
-          // 문장 단위 분리: 마침표/느낌표/물음표 기준, 100자 이상이면 쪼개기
-          const sentences = text.trim().split(/(?<=[.!?])\s+/).filter(s => s.trim());
-          const bubbles: string[] = [];
-          let current = '';
-          for (const s of sentences) {
-            if (current.length > 0 && current.length + s.length > 100) {
-              bubbles.push(current.trim());
-              current = s;
-            } else {
-              current += (current ? ' ' : '') + s;
+            // 문장 끝 감지 → 현재 말풍선 확정하고 새 말풍선 시작
+            const isSentenceEnd = /[.!?]$/.test(currentBubble.trimEnd());
+            if (isSentenceEnd && currentBubble.trim().length > 20) {
+              const bubble = currentBubble.trim();
+              const msg: DebateMessage = { speaker, text: bubble, timestamp: Date.now() };
+              allMessages.push(msg);
+              setCurrentText('');
+              setMessages((prev) => [...prev, msg]);
+              scrollToBottom();
+              currentBubble = '';
+              await sleep(300); // 말풍선 사이 짧은 pause
             }
           }
-          if (current) bubbles.push(current.trim());
+        });
 
-          for (const bubble of bubbles) {
-            const msg: DebateMessage = { speaker, text: bubble, timestamp: Date.now() };
-            allMessages.push(msg);
-            setMessages((prev) => [...prev, msg]);
-          }
+        if (abortRef.current) break;
+
+        // 남은 텍스트(마지막 문장이 . 없이 끝난 경우) 처리
+        if (currentBubble.trim()) {
+          const msg: DebateMessage = { speaker, text: currentBubble.trim(), timestamp: Date.now() };
+          allMessages.push(msg);
+          setMessages((prev) => [...prev, msg]);
         }
+
+        setCurrentText('');
+        setCurrentSpeaker(null);
 
         scrollToBottom();
         lastText = text;
