@@ -67,7 +67,7 @@ export default function DebateBanner({ debateType = 'seoul' }: DebateBannerProps
         <p className="text-white font-black text-[17px] tracking-tight drop-shadow-lg">{bannerConfig.tagline}</p>
       </div>
 
-      <div className="relative z-10 flex items-center justify-center gap-4 px-4 py-3">
+      <div className="relative z-10 grid grid-cols-3 items-center px-4 py-3">
         {/* 후보A */}
         <div className="flex flex-col items-center gap-1.5">
           <div
