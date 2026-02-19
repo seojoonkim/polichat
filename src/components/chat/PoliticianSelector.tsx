@@ -325,14 +325,23 @@ export default function PoliticianSelector({ politicians }: Props) {
 
         {/* Footer */}
         <div
-          className="mt-8 pb-4 text-center animate-fade-in-up"
+          className="mt-8 pb-6 px-4 animate-fade-in-up"
           style={{ animationDelay: '0.4s' }}
         >
-          <p className="text-xs text-slate-500 leading-relaxed">
-            AI가 생성한 응답입니다. 실제 정치인의 발언이 아닙니다.
-            <br />
-            <span className="text-slate-400">정책 정보는 공식 자료를 참고해 주세요.</span>
-          </p>
+          <div
+            className="rounded-2xl px-5 py-4 text-center"
+            style={{
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              backdropFilter: 'blur(8px)',
+            }}
+          >
+            <p className="text-[13px] font-medium leading-relaxed" style={{ color: 'rgba(255,255,255,0.75)' }}>
+              ⚠️ 본 사이트에 게시된 콘텐츠는 AI를 활용해 생성되었으며,
+              <br />
+              특정 정치인 및 평론가의 공식 견해를 대표하지 않습니다.
+            </p>
+          </div>
         </div>
       </div>
     </div>
