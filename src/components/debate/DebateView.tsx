@@ -115,7 +115,10 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
   const abortRef = useRef(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const freeTopicRef = useRef<string>('');
-  const topicChangedRef = useRef(false); // 주제 전환 시 lastText 리셋용
+  const topicChangedRef = useRef(false);
+  const pendingTopicChangeRef = useRef<string | null>(null); // 라운드 끝난 후 처리할 주제 전환
+  const speakerOrderRef = useRef<[string, string]>([config.speakerA, config.speakerB]);
+  const speakerIndexRef = useRef(0); // 순번 카운터 (주제 전환 시 리셋)
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
     messagesEndRef.current?.scrollIntoView({ behavior });
@@ -181,14 +184,8 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
     if (!next) return;
     
     freeTopicRef.current = next.label;
-    topicChangedRef.current = true; // 다음 라운드에서 lastText 초기화
-
-    setMessages(prev => [...prev, {
-      speaker: config.speakerA,
-      text: `주제 전환! 새 주제: "${next.label}"`,
-      timestamp: Date.now(),
-      isTopicChange: true,
-    }]);
+    topicChangedRef.current = true;
+    pendingTopicChangeRef.current = next.label; // 현재 라운드 끝난 후 처리
   }, [timeLeft, selectedTopic, phase, config]);
 
   // ─── 캐시 조회 ─────────────────────────────────────────────────────────────
@@ -362,15 +359,19 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
     setMessages([]);
     setCurrentText('');
 
+    // 스피커 순서 초기화
+    speakerOrderRef.current = speakerOrder || [config.speakerA, config.speakerB];
+    speakerIndexRef.current = 0;
+    pendingTopicChangeRef.current = null;
+
     const allMessages: DebateMessage[] = [];
     let lastText = '';
 
     for (let i = 0; i < 30; i++) {
       if (abortRef.current) break;
 
-      const speaker: string = speakerOrder
-        ? (speakerOrder[i % 2] as string)
-        : (i % 2 === 0 ? config.speakerA : config.speakerB);
+      const speaker: string = speakerOrderRef.current[speakerIndexRef.current % 2] as string;
+      speakerIndexRef.current++;
       setRound(i);
       setCurrentSpeaker(speaker);
       setCurrentText('');
@@ -462,6 +463,32 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
       }
 
       if (abortRef.current) break;
+
+      // 라운드 끝난 후 펜딩 주제 전환 처리
+      if (pendingTopicChangeRef.current && roundSuccess) {
+        const newTopic = pendingTopicChangeRef.current;
+        pendingTopicChangeRef.current = null;
+        lastText = '';
+        topicChangedRef.current = false;
+
+        // 주제 전환 카드 삽입
+        const changeMsg: DebateMessage = {
+          speaker: config.speakerA,
+          text: newTopic,
+          timestamp: Date.now(),
+          isTopicChange: true,
+        };
+        allMessages.push(changeMsg);
+        setMessages(prev => [...prev, changeMsg]);
+        scrollToBottom();
+
+        // 선공/후공 스왑
+        speakerOrderRef.current = [speakerOrderRef.current[1], speakerOrderRef.current[0]];
+        speakerIndexRef.current = 0;
+
+        // 드라마틱한 주제 전환 pause
+        await sleep(1800);
+      }
     }
 
     setCurrentSpeaker(null);
@@ -1017,19 +1044,54 @@ function MessageBubble({
     ? `${config.speakerAColor}20` 
     : `${config.speakerBColor}20`;
 
-  // 주제 변경 메시지인 경우
+  // 주제 전환 카드 — 게임스럽게
   if (msg.isTopicChange) {
     return (
-      <div className="flex justify-center items-center py-4">
+      <div className="flex justify-center items-center py-6 px-2">
         <div
-          className="rounded-2xl px-6 py-3 text-center"
+          className="w-full rounded-2xl overflow-hidden text-center"
           style={{
-            background: 'rgba(167, 139, 250, 0.1)',
-            borderLeft: '3px solid rgba(167, 139, 250, 0.4)',
+            background: 'linear-gradient(135deg, #1a0533 0%, #2d1060 50%, #1a0533 100%)',
+            boxShadow: '0 0 40px rgba(139,92,246,0.5), inset 0 1px 0 rgba(255,255,255,0.1)',
           }}
         >
-          <p className="text-gray-800 text-sm leading-relaxed">{msg.text}</p>
+          {/* 상단 스트라이프 */}
+          <div style={{ height: '3px', background: 'linear-gradient(90deg, transparent, #a855f7, #ec4899, #a855f7, transparent)' }} />
+
+          <div className="px-6 py-5">
+            <div
+              className="text-xs font-black tracking-[0.3em] mb-2"
+              style={{ color: 'rgba(216,180,254,0.7)' }}
+            >
+              ⚡ TOPIC CHANGE ⚡
+            </div>
+
+            <div
+              className="text-white font-black text-xl leading-tight mb-1"
+              style={{ textShadow: '0 0 20px rgba(216,180,254,0.8)' }}
+            >
+              {msg.text}
+            </div>
+
+            <div
+              className="text-xs mt-3 font-semibold tracking-widest"
+              style={{ color: 'rgba(196,181,253,0.6)' }}
+            >
+              — 새 라운드 시작 · 선공 교체 —
+            </div>
+          </div>
+
+          {/* 하단 스트라이프 */}
+          <div style={{ height: '3px', background: 'linear-gradient(90deg, transparent, #ec4899, #a855f7, #ec4899, transparent)' }} />
         </div>
+
+        <style>{`
+          @keyframes topicReveal {
+            0% { opacity: 0; transform: scale(0.85) translateY(10px); }
+            60% { transform: scale(1.03) translateY(-2px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+          }
+        `}</style>
       </div>
     );
   }
