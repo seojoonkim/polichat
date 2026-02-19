@@ -799,7 +799,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
         </div>
         {(phase === 'running' || phase === 'coinflip') && (
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 bg-gray-200 rounded-full px-3 py-1">
+            <div className="flex items-center gap-1.5 bg-gray-200 rounded-full px-3 h-8">
               <span className="text-purple-600 text-xs font-semibold">남은 시간</span>
               <span className="text-gray-800 font-bold text-base font-mono tracking-wide">
                 {String(Math.floor(timeLeft / 60)).padStart(2, '0')}:{String(timeLeft % 60).padStart(2, '0')}
@@ -807,7 +807,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
             </div>
             <button
               onClick={() => setShowExitModal(true)}
-              className="text-xs px-3 py-1 rounded-full border text-gray-600 hover:text-gray-800 transition-colors"
+              className="text-xs px-3 h-8 rounded-full border text-gray-600 hover:text-gray-800 transition-colors"
               style={{ borderColor: 'rgba(0,0,0,0.1)' }}
             >
               종료
