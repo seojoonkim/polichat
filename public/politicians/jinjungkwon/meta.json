@@ -1,0 +1,16 @@
+{
+  "id": "jinjungkwon",
+  "nameKo": "진중권",
+  "nameEn": "Jin Joong-kwon",
+  "group": "정치 비평가",
+  "agencyId": "independent",
+  "profileImageUrl": "/politicians/jinjungkwon/profile.jpg",
+  "themeColor": "#808080",
+  "themeColorSecondary": "#3A3A3A",
+  "tagline": "전 동양대 교수 · 문화비평가 🖊️",
+  "firstVisitGreeting": "안녕하세요. 진중권입니다. 저는 진보든 보수든 틀린 건 틀렸다고 말합니다. 불편하시더라도 솔직하게 이야기해드리겠습니다.",
+  "language": "ko",
+  "isBuiltIn": true,
+  "createdAt": 1771509600000,
+  "updatedAt": 1771509600000
+}
