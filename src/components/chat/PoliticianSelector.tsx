@@ -113,7 +113,7 @@ export default function PoliticianSelector({ politicians }: Props) {
 
   return (
     <div style={{ background: '#0D0F1A', minHeight: '100vh' }}>
-    <div className="polichat-bg min-h-screen overflow-y-auto overflow-x-hidden relative hide-scrollbar" style={{ maxWidth: '700px', margin: '0 auto' }}>
+    <div className="polichat-bg overflow-y-auto overflow-x-hidden relative hide-scrollbar" style={{ height: '100svh', maxWidth: '700px', margin: '0 auto' }}>
       {/* Mesh gradient background */}
       <div className="policy-pattern" />
 
