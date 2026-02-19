@@ -928,62 +928,78 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
               <span className="text-white text-sm mt-2 font-semibold">{config.speakerAName.split(' ')[0]}</span>
             </div>
 
-            {/* 3D 동전 */}
-            <div style={{ perspective: '400px' }}>
-              <div
-                style={{
-                  width: 96,
-                  height: 96,
-                  position: 'relative',
-                  transformStyle: 'preserve-3d',
-                  animation: coinFlipStage === 'spinning' ? 'coinSpin3D 0.45s linear infinite' : 'none',
-                  transition: coinFlipStage === 'revealed' ? 'transform 0.6s ease-out' : 'none',
-                  transform: coinFlipStage === 'revealed'
-                    ? (coinFlipWinner?.key === config.speakerA ? 'rotateY(0deg)' : 'rotateY(180deg)')
-                    : undefined,
-                }}
-              >
-                {/* 앞면: Speaker A */}
+            {/* 3D 동전 + 궤도 링 */}
+            <div style={{ position: 'relative', width: 120, height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {/* 궤도 링 (Saturn-style, 기울어진 타원) */}
+              {coinFlipStage === 'spinning' && (
                 <div style={{
-                  position: 'absolute', inset: 0,
-                  backfaceVisibility: 'hidden',
-                  WebkitBackfaceVisibility: 'hidden',
+                  position: 'absolute',
+                  width: 148,
+                  height: 148,
+                  border: '2.5px solid rgba(200,210,230,0.55)',
                   borderRadius: '50%',
-                  overflow: 'hidden',
-                  border: '4px solid #F5C842',
-                  boxShadow: '0 0 24px rgba(245,200,66,0.7), inset 0 0 12px rgba(245,200,66,0.3)',
-                }}>
-                  <img
-                    src={`/politicians/${config.speakerA}/profile.jpg`}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    alt={config.speakerAName}
-                  />
+                  boxShadow: '0 0 10px rgba(180,200,255,0.25)',
+                  animation: 'orbitRing 1.8s linear infinite',
+                  transformOrigin: 'center center',
+                  pointerEvents: 'none',
+                }} />
+              )}
+              <div style={{ perspective: '400px' }}>
+                <div
+                  style={{
+                    width: 96,
+                    height: 96,
+                    position: 'relative',
+                    transformStyle: 'preserve-3d',
+                    animation: coinFlipStage === 'spinning' ? 'coinSpin3D 0.45s linear infinite' : 'none',
+                    transition: coinFlipStage === 'revealed' ? 'transform 0.6s ease-out' : 'none',
+                    transform: coinFlipStage === 'revealed'
+                      ? (coinFlipWinner?.key === config.speakerA ? 'rotateY(0deg)' : 'rotateY(180deg)')
+                      : undefined,
+                  }}
+                >
+                  {/* 앞면: Speaker A — 실버 */}
                   <div style={{
                     position: 'absolute', inset: 0,
-                    background: 'radial-gradient(circle at 30% 30%, rgba(255,220,80,0.25) 0%, rgba(180,140,0,0.1) 100%)',
-                  }} />
-                </div>
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                    borderRadius: '50%',
+                    overflow: 'hidden',
+                    border: '4px solid #C8D0DC',
+                    boxShadow: '0 0 22px rgba(180,200,230,0.7), inset 0 0 12px rgba(200,215,240,0.35)',
+                  }}>
+                    <img
+                      src={`/politicians/${config.speakerA}/profile.jpg`}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      alt={config.speakerAName}
+                    />
+                    <div style={{
+                      position: 'absolute', inset: 0,
+                      background: 'radial-gradient(circle at 30% 25%, rgba(230,240,255,0.3) 0%, rgba(100,120,160,0.12) 100%)',
+                    }} />
+                  </div>
 
-                {/* 뒷면: Speaker B */}
-                <div style={{
-                  position: 'absolute', inset: 0,
-                  backfaceVisibility: 'hidden',
-                  WebkitBackfaceVisibility: 'hidden',
-                  transform: 'rotateY(180deg)',
-                  borderRadius: '50%',
-                  overflow: 'hidden',
-                  border: '4px solid #F5C842',
-                  boxShadow: '0 0 24px rgba(245,200,66,0.7), inset 0 0 12px rgba(245,200,66,0.3)',
-                }}>
-                  <img
-                    src={`/politicians/${config.speakerB}/profile.jpg`}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    alt={config.speakerBName}
-                  />
+                  {/* 뒷면: Speaker B — 실버 */}
                   <div style={{
                     position: 'absolute', inset: 0,
-                    background: 'radial-gradient(circle at 30% 30%, rgba(255,220,80,0.25) 0%, rgba(180,140,0,0.1) 100%)',
-                  }} />
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                    transform: 'rotateY(180deg)',
+                    borderRadius: '50%',
+                    overflow: 'hidden',
+                    border: '4px solid #C8D0DC',
+                    boxShadow: '0 0 22px rgba(180,200,230,0.7), inset 0 0 12px rgba(200,215,240,0.35)',
+                  }}>
+                    <img
+                      src={`/politicians/${config.speakerB}/profile.jpg`}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      alt={config.speakerBName}
+                    />
+                    <div style={{
+                      position: 'absolute', inset: 0,
+                      background: 'radial-gradient(circle at 30% 25%, rgba(230,240,255,0.3) 0%, rgba(100,120,160,0.12) 100%)',
+                    }} />
+                  </div>
                 </div>
               </div>
             </div>
@@ -1016,6 +1032,10 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
             @keyframes coinSpin3D {
               0%   { transform: rotateY(0deg); }
               100% { transform: rotateY(360deg); }
+            }
+            @keyframes orbitRing {
+              0%   { transform: rotateX(72deg) rotateZ(0deg); }
+              100% { transform: rotateX(72deg) rotateZ(360deg); }
             }
             @keyframes fadeInUp {
               from { opacity: 0; transform: translateY(12px); }
