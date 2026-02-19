@@ -179,7 +179,7 @@ body {
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: gradient-shift 5s ease-in-out infinite;
+  animation: gradient-shift 12s ease-in-out infinite;
 }
 
 @keyframes gradient-shift {
