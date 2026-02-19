@@ -441,7 +441,7 @@ export default function DebateView() {
 
   if (phase === 'setup') {
     return (
-      <div className="fixed inset-0 flex flex-col overflow-y-auto" style={{ background: 'linear-gradient(160deg, #3e3c52 0%, #2c2b3e 45%, #1e1d2c 100%)' }}>
+      <div className="fixed inset-0 flex flex-col overflow-y-auto" style={{ background: 'linear-gradient(160deg, #9896b4 0%, #7e7c9a 45%, #656382 100%)' }}>
         {/* 헤더 */}
         <div
           className="flex items-center gap-3 px-4 pb-4"
@@ -649,7 +649,7 @@ export default function DebateView() {
   return (
     <div
       className="fixed inset-0 flex flex-col overflow-hidden"
-      style={{ background: 'linear-gradient(160deg, #3e3c52 0%, #2c2b3e 45%, #1e1d2c 100%)' }}
+      style={{ background: 'linear-gradient(160deg, #9896b4 0%, #7e7c9a 45%, #656382 100%)' }}
     >
       {/* 헤더 */}
       <div
