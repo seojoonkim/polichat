@@ -410,6 +410,57 @@ function getStylePrompt(style, speaker, opponentLastMessage, topicLabel, debateT
   return `${baseContext}\n\n자유롭게 논쟁하되, 모든 주장에 반드시 구체적 수치·사례·데이터를 근거로 제시하고 ${opponentName}의 주장 허점을 날카롭게 지적하라. 총 4문장 이내.`;
 }
 
+// ── 테마 추출 함수: 과거 발언에서 핵심 키워드/개념 추출 ─────────────────────────
+function extractThemes(text) {
+  // 한국 정치 주요 사건·정책·인물·용어 패턴
+  const themePatterns = [
+    { pattern: /부정선거/g, name: '부정선거' },
+    { pattern: /선거/g, name: '선거 관련' },
+    { pattern: /건국펀드/g, name: '건국펀드' },
+    { pattern: /탄핵/g, name: '탄핵' },
+    { pattern: /젓가락/g, name: '젓가락 수저' },
+    { pattern: /성접대|접대/g, name: '성/접대 의혹' },
+    { pattern: /SW마에스트로/g, name: 'SW마에스트로' },
+    { pattern: /막말/g, name: '막말 논란' },
+    { pattern: /강간/g, name: '강간 의혹' },
+    { pattern: /노량진/g, name: '노량진' },
+    { pattern: /3권분립/g, name: '3권분립' },
+    { pattern: /하버드/g, name: '하버드 학위' },
+    { pattern: /개혁신당/g, name: '개혁신당' },
+    { pattern: /국민의힘.*입당|입당.*거부/g, name: '국민의힘 입당' },
+    { pattern: /TV조선/g, name: 'TV조선' },
+    { pattern: /소송\s*\d+건/g, name: '소송 건수' },
+    { pattern: /8\.34%/g, name: '8.34% 수치' },
+    { pattern: /291만/g, name: '291만' },
+    { pattern: /126건/g, name: '126건' },
+    { pattern: /노사모/g, name: '노사모' },
+    { pattern: /전유관/g, name: '전유관' },
+    { pattern: /재개발|재건축/g, name: '재개발/재건축' },
+    { pattern: /10\.15.*대책|10\.15/g, name: '10.15 부동산 대책' },
+    { pattern: /부동산|주택|집값/g, name: '부동산/주택' },
+    { pattern: /경제|GDP|성장/g, name: '경제/성장' },
+    { pattern: /복지|연금|기본/g, name: '복지/연금' },
+    { pattern: /법인세|세금|감세/g, name: '법인세/세금' },
+    { pattern: /검찰|수사|공수처/g, name: '검찰/사법' },
+    { pattern: /AI|기술|산업/g, name: 'AI/기술 정책' },
+    { pattern: /교육|의료|공공/g, name: '교육/의료/공공' },
+  ];
+
+  const found = new Set();
+  for (const { pattern, name } of themePatterns) {
+    if (pattern.test(text)) {
+      found.add(name);
+    }
+  }
+
+  // 찾은 테마가 없으면 기본값 반환
+  if (found.size === 0) {
+    return ['(이전 발언의 핵심 주제들)'];
+  }
+
+  return Array.from(found);
+}
+
 export default async function handler(req, res) {
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -505,11 +556,31 @@ export default async function handler(req, res) {
     systemPrompt += kbText;
   }
 
-  // ── 반복 금지 목록 주입 (현재 speaker가 이미 사용한 논점 추출) ──────────────
+  // ── 반복 금지 목록 주입 (현재 speaker가 이미 사용한 논점 추출 + 테마 추출) ────────
   const myPastMessages = (recentHistory || []).filter(msg => msg.speaker === speaker);
   if (myPastMessages.length > 0) {
-    const usedArgs = myPastMessages.map((m, i) => `${i + 1}. ${m.text}`).join('\n');
-    systemPrompt += `\n\n🚫 반복 절대 금지 — 네가 이미 한 발언들:\n${usedArgs}\n⚠️ 위 발언에 나온 논리·수치·사례·표현은 이번 발언에 단 하나도 반복하지 마라. 완전히 새로운 논거, 다른 사례, 새로운 수치로만 공격/방어하라. 같은 키워드라도 다른 맥락·각도에서 접근하라.`;
+    const usedTexts = myPastMessages.map((m, i) => `${i + 1}. ${m.text}`).join('\n');
+    
+    // 과거 발언들에서 핵심 테마/키워드 추출
+    const allText = myPastMessages.map(m => m.text).join(' ');
+    const themeKeywords = extractThemes(allText);
+    
+    systemPrompt += `\n\n🚫 반복 절대 금지 — 네가 이미 사용한 발언들:\n${usedTexts}`;
+    systemPrompt += `\n\n⛔ 이미 사용한 핵심 테마 (절대 다시 언급하지 마라): ${themeKeywords.join(', ')}`;
+    systemPrompt += `\n\n✅ 전략: 위에서 쓴 논거와 완전히 다른 각도·사례·수치·시기로 공격/방어하라. 예: 이미 '부정선거 소송 기각' 썼으면 → 이번엔 '전한길 건국펀드 불법모금' 또는 '국민의힘 입당 거부' 같은 완전히 다른 공격 사용.`;
+    
+    // 턴 수에 따른 전략 가이드
+    const turnNum = myPastMessages.length + 1;
+    if (turnNum <= 3) {
+      systemPrompt += '\n\n📍 초반부: 핵심 주장 + 강력한 데이터로 선제 공격.';
+    } else if (turnNum <= 7) {
+      systemPrompt += '\n\n📍 중반부: 상대방 논리의 구체적 허점 파고들기. 새로운 증거 제시.';
+    } else {
+      systemPrompt += '\n\n📍 후반부: 아직 꺼내지 않은 숨겨둔 카드 사용. 감정적 호소 또는 결정타.';
+    }
+    
+    systemPrompt += `\n\n⚡ 전략 다양화 의무: 매 발언마다 반드시 이전 발언과 다른 '공격 각도'를 사용하라.
+가능한 각도: ① 새로운 사실/수치 ② 상대방 말 인용+반박 ③ 제3자 증언/보도 ④ 역사적 선례 ⑤ 논리적 모순 지적 ⑥ 개인 신뢰성 공격 ⑦ 정책 효과 비판`;
   }
 
   // ── 대화 히스토리 → messages 배열로 전달 (LLM native 방식, 전체 기억) ───────
