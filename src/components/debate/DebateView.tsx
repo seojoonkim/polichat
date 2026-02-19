@@ -898,17 +898,64 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
               <span className="text-white text-sm mt-2 font-semibold">{config.speakerAName.split(' ')[0]}</span>
             </div>
 
-            {/* 동전 */}
-            <div
-              className="text-4xl select-none"
-              style={{
-                animation: coinFlipStage === 'spinning'
-                  ? 'coinSpin 0.25s linear infinite'
-                  : 'none',
-                display: 'inline-block',
-              }}
-            >
-              🪙
+            {/* 3D 동전 */}
+            <div style={{ perspective: '400px' }}>
+              <div
+                style={{
+                  width: 96,
+                  height: 96,
+                  position: 'relative',
+                  transformStyle: 'preserve-3d',
+                  animation: coinFlipStage === 'spinning' ? 'coinSpin3D 0.45s linear infinite' : 'none',
+                  transition: coinFlipStage === 'revealed' ? 'transform 0.6s ease-out' : 'none',
+                  transform: coinFlipStage === 'revealed'
+                    ? (coinFlipWinner?.key === config.speakerA ? 'rotateY(0deg)' : 'rotateY(180deg)')
+                    : undefined,
+                }}
+              >
+                {/* 앞면: Speaker A */}
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
+                  borderRadius: '50%',
+                  overflow: 'hidden',
+                  border: '4px solid #F5C842',
+                  boxShadow: '0 0 24px rgba(245,200,66,0.7), inset 0 0 12px rgba(245,200,66,0.3)',
+                }}>
+                  <img
+                    src={`/politicians/${config.speakerA}/profile.jpg`}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    alt={config.speakerAName}
+                  />
+                  <div style={{
+                    position: 'absolute', inset: 0,
+                    background: 'radial-gradient(circle at 30% 30%, rgba(255,220,80,0.25) 0%, rgba(180,140,0,0.1) 100%)',
+                  }} />
+                </div>
+
+                {/* 뒷면: Speaker B */}
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
+                  transform: 'rotateY(180deg)',
+                  borderRadius: '50%',
+                  overflow: 'hidden',
+                  border: '4px solid #F5C842',
+                  boxShadow: '0 0 24px rgba(245,200,66,0.7), inset 0 0 12px rgba(245,200,66,0.3)',
+                }}>
+                  <img
+                    src={`/politicians/${config.speakerB}/profile.jpg`}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    alt={config.speakerBName}
+                  />
+                  <div style={{
+                    position: 'absolute', inset: 0,
+                    background: 'radial-gradient(circle at 30% 30%, rgba(255,220,80,0.25) 0%, rgba(180,140,0,0.1) 100%)',
+                  }} />
+                </div>
+              </div>
             </div>
 
             {/* Speaker B */}
@@ -936,12 +983,9 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           )}
 
           <style>{`
-            @keyframes coinSpin {
-              0% { transform: rotateY(0deg) scaleX(1); }
-              25% { transform: rotateY(90deg) scaleX(0.1); }
-              50% { transform: rotateY(180deg) scaleX(1); }
-              75% { transform: rotateY(270deg) scaleX(0.1); }
-              100% { transform: rotateY(360deg) scaleX(1); }
+            @keyframes coinSpin3D {
+              0%   { transform: rotateY(0deg); }
+              100% { transform: rotateY(360deg); }
             }
             @keyframes fadeInUp {
               from { opacity: 0; transform: translateY(12px); }
