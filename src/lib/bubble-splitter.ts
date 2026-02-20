@@ -1,7 +1,7 @@
 export const BUBBLE_CONFIG = {
   MAX_BUBBLES: 3,
   MAX_SENTENCES_PER_BUBBLE: 2,
-  MIN_BUBBLE_LENGTH: 10,
+  MIN_BUBBLE_LENGTH: 25, // 10 → 25: 너무 짧은 문장에서 분할하지 않기
   SENTENCE_END_REGEX: /[.!?다요죠네]$/,
 } as const;
 
@@ -55,6 +55,14 @@ export function isSentenceEnd(text: string): boolean {
   if (lastChar === '.') {
     const prevChar = (trimmed.length >= 2 ? trimmed[trimmed.length - 2] : '') || '';
     if (/\d/.test(prevChar)) return false;
+  }
+
+  // 이모지 뒤에 있으면 분할 안 함
+  // 예: "보수의 대동이로 🤔" → 뒤에 내용이 더 올 가능성 높음
+  const emojiRegex = /\p{Emoji}/u;
+  if (trimmed.length >= 2) {
+    const beforeLast = trimmed.slice(-2, -1);
+    if (emojiRegex.test(beforeLast)) return false;
   }
 
   return true;
