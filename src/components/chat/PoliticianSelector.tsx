@@ -253,16 +253,16 @@ export default function PoliticianSelector({ politicians }: Props) {
                 className="w-full text-left group"
               >
                 <div
-                  className="pc-card-interactive w-full overflow-hidden"
-                  style={{ background: `linear-gradient(135deg, ${politician.themeColor}40 0%, ${politician.themeColor}10 60%)` }}
+                  className="pc-card-interactive w-full overflow-hidden rounded-2xl"
+                  style={{ background: `linear-gradient(135deg, ${politician.themeColor}50 0%, ${politician.themeColor}20 50%, ${politician.themeColor}10 100%)` }}
                 >
-                  <div className="flex items-center gap-4 px-4 py-3.5">
+                  <div className="flex items-center gap-5 px-5 py-4">
                     {/* Profile circle with color ring */}
                     <div className="relative shrink-0">
                       <div
-                        className="w-[69px] h-[69px] rounded-full overflow-hidden"
+                        className="w-[85px] h-[85px] rounded-full overflow-hidden"
                         style={{
-                          boxShadow: `0 0 0 2.5px white, 0 0 0 5px ${politician.themeColor}80`,
+                          boxShadow: `0 0 0 3px white, 0 0 0 6px ${politician.themeColor}90, 0 8px 20px ${politician.themeColor}30`,
                         }}
                       >
                         {politician.profileImageUrl ? (
@@ -291,8 +291,8 @@ export default function PoliticianSelector({ politicians }: Props) {
 
                     {/* Info */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <h3 className="font-bold text-[18px] text-gray-900 truncate">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-bold text-[20px] text-gray-950 truncate">
                           {politician.nameKo}
                         </h3>
                         <span
