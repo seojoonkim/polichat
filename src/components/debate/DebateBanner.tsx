@@ -29,18 +29,26 @@ export default function DebateBanner({ debateType = 'seoul' }: DebateBannerProps
       candidateB: { name: '진중권', party: '정치비평가', id: 'jinjungkwon', color: '#808080' },
       tagline: '"진보의 적은 누구인가"',
     },
+    hanhong: {
+      candidateA: { name: '한동훈', party: '국민의힘', id: 'handoonghoon', color: '#C9151E' },
+      candidateB: { name: '홍준표', party: '국민의힘', id: 'hongjunpyo', color: '#8B0000' },
+      tagline: '"보수의 미래를 건다"',
+    },
   };
 
   const c = config[debateType] ?? config['seoul'];
   const isNational = debateType === 'national';
   const isLeejeon = debateType === 'leejeon';
   const isKimjin = debateType === 'kimjin';
-  const navigationUrl = debateType === 'leejeon' ? '/debate?type=leejeon' : debateType === 'kimjin' ? '/debate?type=kimjin' : isNational ? '/debate?type=national' : '/debate';
+  const isHanhong = debateType === 'hanhong';
+  const navigationUrl = debateType === 'seoul' ? '/debate' : `/debate?type=${debateType}`;
 
   const cardBackground = isLeejeon
     ? 'linear-gradient(120deg, #1a0800 0%, #150510 40%, #1a0000 100%)'
     : isKimjin
     ? 'linear-gradient(120deg, #0f0f0f 0%, #141414 40%, #0f0f0f 100%)'
+    : isHanhong
+    ? 'linear-gradient(120deg, #2a0408 0%, #1a0008 40%, #2a0408 100%)'
     : isNational
     ? 'linear-gradient(120deg, #060b1a 0%, #1a1020 40%, #1a0608 100%)'
     : 'linear-gradient(120deg, #2a0408 0%, #1a1020 40%, #06112a 100%)';
@@ -51,6 +59,9 @@ export default function DebateBanner({ debateType = 'seoul' }: DebateBannerProps
     : isKimjin
     ? `radial-gradient(ellipse 90% 130% at 10% 50%, rgba(90,90,90,0.55) 0%, transparent 55%),
        radial-gradient(ellipse 90% 130% at 90% 50%, rgba(60,60,60,0.55) 0%, transparent 55%)`
+    : isHanhong
+    ? `radial-gradient(ellipse 90% 130% at 10% 50%, rgba(201,21,30,0.55) 0%, transparent 55%),
+       radial-gradient(ellipse 90% 130% at 90% 50%, rgba(139,0,0,0.55) 0%, transparent 55%)`
     : isNational
     ? `radial-gradient(ellipse 90% 130% at 10% 50%, rgba(0,78,162,0.55) 0%, transparent 55%),
        radial-gradient(ellipse 90% 130% at 90% 50%, rgba(201,21,30,0.55) 0%, transparent 55%)`

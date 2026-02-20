@@ -1,0 +1,17 @@
+{
+  "id": "hongjunpyo",
+  "nameKo": "홍준표",
+  "nameEn": "Hong Jun-pyo",
+  "group": "국민의힘",
+  "agencyId": "ppp",
+  "profileImageUrl": "/politicians/hongjunpyo/profile.jpg",
+  "themeColor": "#8B0000",
+  "themeColorSecondary": "#1A1A2E",
+  "tagline": "제39대 대구광역시장",
+  "greeting": "소신이 있으면 두려움이 없습니다.",
+  "firstVisitGreeting": "안녕하세요, 홍준표입니다. 소신 있는 보수 정치에 대해 이야기 나눠봅시다. 뭐든 물어보세요.",
+  "language": "ko",
+  "isBuiltIn": true,
+  "createdAt": 1771509600000,
+  "updatedAt": 1771509600000
+}

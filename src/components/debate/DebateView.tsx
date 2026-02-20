@@ -8,7 +8,7 @@ import Interjection from './Interjection';
 
 // ─── 타입 ────────────────────────────────────────────────────────────────────
 
-export type DebateType = 'seoul' | 'national' | 'leejeon' | 'kimjin';
+export type DebateType = 'seoul' | 'national' | 'leejeon' | 'kimjin' | 'hanhong';
 
 // ─── 설정 상수 ────────────────────────────────────────────────────────────────
 
@@ -95,6 +95,25 @@ export const DEBATE_CONFIGS = {
       { id: 'democracy', label: '한국 민주주의의 미래' },
     ],
     styles: ['policy', 'emotional', 'consensus'] as const,
+  },
+  hanhong: {
+    speakerA: 'handoonghoon' as const,
+    speakerB: 'hongjunpyo' as const,
+    speakerAName: '한동훈',
+    speakerBName: '홍준표',
+    speakerAColor: '#C9151E',
+    speakerBColor: '#8B0000',
+    topics: [
+      { id: 'free', label: '자유토론' },
+      { id: 'party-reform', label: '국민의힘 쇄신 vs 정통 보수' },
+      { id: 'yoon-eval', label: '윤석열 정부 평가와 책임론' },
+      { id: 'presidential', label: '차기 대선 전략과 후보론' },
+      { id: 'prosecution', label: '검찰 권력과 사법 개혁' },
+      { id: 'economy', label: '경제 정책 방향' },
+      { id: 'diplomacy', label: '대북·외교 정책' },
+      { id: 'constitution', label: '개헌 및 정치 제도 개혁' },
+      { id: 'decentralization', label: '지방 분권과 균형 발전' },
+    ],
   },
 } as const;
 
@@ -863,7 +882,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
               style={{ borderColor: config.speakerAColor }}
             />
             <span className="text-gray-800 text-sm font-bold">{config.speakerAName.split(' ')[0]}</span>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.92)', color: config.speakerAColor, border: `1px solid ${config.speakerAColor}80` }}>{debateType === 'seoul' ? '국민의힘' : debateType === 'leejeon' ? '개혁신당' : debateType === 'kimjin' ? '정치비평가' : '더불어민주당'}</span>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.92)', color: config.speakerAColor, border: `1px solid ${config.speakerAColor}80` }}>{{ seoul: '국민의힘', national: '더불어민주당', leejeon: '개혁신당', kimjin: '정치비평가', hanhong: '국민의힘' }[debateType]}</span>
           </div>
           <div className="w-12 flex-shrink-0 text-center text-yellow-400 font-black text-2xl">VS</div>
           <div className="flex-1 flex flex-col items-center gap-1">
@@ -874,7 +893,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
               style={{ borderColor: config.speakerBColor }}
             />
             <span className="text-gray-800 text-sm font-bold">{config.speakerBName.split(' ')[0]}</span>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.92)', color: config.speakerBColor, border: `1px solid ${config.speakerBColor}80` }}>{debateType === 'leejeon' ? '국민의힘' : debateType === 'seoul' ? '더불어민주당' : debateType === 'kimjin' ? '정치비평가' : '국민의힘'}</span>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.92)', color: config.speakerBColor, border: `1px solid ${config.speakerBColor}80` }}>{{ seoul: '더불어민주당', national: '국민의힘', leejeon: '국민의힘', kimjin: '정치비평가', hanhong: '국민의힘' }[debateType]}</span>
           </div>
         </div>
 

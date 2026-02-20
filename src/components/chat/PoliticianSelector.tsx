@@ -224,6 +224,7 @@ export default function PoliticianSelector({ politicians }: Props) {
           <DebateBanner debateType="national" />
           <DebateBanner debateType="leejeon" />
           <DebateBanner debateType="kimjin" />
+          <DebateBanner debateType="hanhong" />
         </div>
 
         {/* Section title */}

@@ -1,1 +1,1 @@
-export const BUILT_IN_POLITICIAN_IDS = ['leejm', 'kiminseok', 'jungcr', 'jangdh', 'ohsehoon', 'jungwono', 'leejunseok', 'jeonhangil', 'kimeoojun', 'jinjungkwon'] as const;
+export const BUILT_IN_POLITICIAN_IDS = ['leejm', 'kiminseok', 'jungcr', 'jangdh', 'ohsehoon', 'jungwono', 'leejunseok', 'jeonhangil', 'kimeoojun', 'jinjungkwon', 'handoonghoon', 'hongjunpyo'] as const;
