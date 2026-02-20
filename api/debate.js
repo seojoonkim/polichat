@@ -1311,8 +1311,27 @@ export default async function handler(req, res) {
 
   if (req.method !== 'POST') return res.status(405).end();
 
-  const { topic, opponentLastMessage, speaker, style, debateType = 'seoul', recentHistory = [], debateSummary = null, usedArgCount = 0, mustRebutClaim = null, lastAngles = [] } = req.body;
+  const payload = typeof req.body === 'string' ? (() => {
+    try { return JSON.parse(req.body); } catch { return {}; }
+  })() : (req.body || {});
+
+  const {
+    topic,
+    opponentLastMessage,
+    speaker,
+    style,
+    debateType = 'seoul',
+    recentHistory = [],
+    debateSummary = null,
+    usedArgCount = 0,
+    mustRebutClaim = null,
+    lastAngles = [],
+  } = payload;
   const apiKey = process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY;
+
+  if (!topic || !speaker) {
+    return res.status(400).json({ error: 'Invalid payload' });
+  }
 
   if (!apiKey) {
     return res.status(500).json({ error: 'API key not configured' });
@@ -1477,7 +1496,7 @@ export default async function handler(req, res) {
   }
 
   // ── 반복 금지 목록 주입 (현재 speaker가 이미 사용한 논점 추출 + 테마 추출) ────────
-  const myPastMessages = (recentHistory || []).filter(msg => msg.speaker === speaker);
+  const myPastMessages = (compactHistory || []).filter(msg => msg.speaker === speaker);
   if (myPastMessages.length > 0) {
     const usedTexts = myPastMessages.map((m, i) => `${i + 1}. ${m.text}`).join('\n');
     
@@ -1503,7 +1522,7 @@ export default async function handler(req, res) {
     systemPrompt += `\n✅ 위 논거 후보 중 아직 안 쓴 것으로 새로운 각도에서 공격/방어하라.`;
     
     // 에스컬레이션 기반 전략 가이드 (3막 구조)
-    const act = getAct(recentHistory.length);
+    const act = getAct(compactHistory.length);
     const actGuides = {
       low:  `📍 [${act.label}] 핵심 주장 + 강력한 데이터로 선제 공격. 상대를 탐색하며 페이스를 잡아라.`,
       mid:  `📍 [${act.label}] ${opponentName} 논리의 허점을 직접 파고들어라! 감정을 격화시켜 직접 충돌하라!`,
@@ -1557,7 +1576,7 @@ export default async function handler(req, res) {
   // ── B: 상대방 핵심 주장 반박 의무화 (3단 구조) ────────────────────────────
   const rebutClaim = mustRebutClaim || extractKeyClaim(opponentLastMessage);
   if (rebutClaim) {
-    const rebutAct = getAct(recentHistory.length);
+    const rebutAct = getAct(compactHistory.length);
     if (rebutAct.intensity === 'low') {
       // 1막: 단순 반박
       systemPrompt += `\n\n🎯 필수 반박 (이걸 직접 공격하지 않으면 패배): "${rebutClaim}"`;
@@ -1570,6 +1589,11 @@ Step 3 — 프레임 재설정: 토론의 프레임 자체를 바꿔라. "이건
 ⚠️ 3단계를 자연스럽게 4문장 이내로 압축하라.`;
     }
   }
+
+  const compactHistory = (recentHistory || []).slice(-8).map((m) => ({
+    ...m,
+    text: (m.text || '').slice(0, 220),
+  }));
 
   // ── 대화 히스토리 → messages 배열로 전달 (LLM native 방식, 전체 기억) ───────
   const SPEAKER_NAMES = {
@@ -1606,8 +1630,8 @@ Step 3 — 프레임 재설정: 토론의 프레임 자체를 바꿔라. "이건
   }
 
   const historyMessages = [];
-  if (recentHistory && recentHistory.length > 0) {
-    for (const msg of recentHistory) {
+  if (compactHistory && compactHistory.length > 0) {
+    for (const msg of compactHistory) {
       // 현재 speaker 발언 = assistant, 상대방 발언 = user
       const role = msg.speaker === speaker ? 'assistant' : 'user';
       historyMessages.push({
@@ -1667,9 +1691,16 @@ Step 3 — 프레임 재설정: 토론의 프레임 자체를 바꿔라. "이건
     clearTimeout(apiTimeout);
 
     if (!response.ok) {
-      const err = await response.text();
-      console.error('[debate] OpenRouter API error:', response.status, err);
-      res.write(`data: ${JSON.stringify({ error: `API error ${response.status}` })}\n\n`);
+      const err = await response.text().catch(() => '');
+      const shortErr = err ? err.slice(0, 500) : 'No response body';
+      console.error('[debate] OpenRouter API error:', response.status, shortErr);
+      res.write(`data: ${JSON.stringify({ error: `API error ${response.status}: ${shortErr}` })}\n\n`);
+      res.end();
+      return;
+    }
+
+    if (!response.body) {
+      res.write(`data: ${JSON.stringify({ error: 'No response stream body' })}\n\n`);
       res.end();
       return;
     }
