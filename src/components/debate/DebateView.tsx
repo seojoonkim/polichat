@@ -820,7 +820,9 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
               allMessages.push(modMsg);
               setMessages(prev => [...prev, modMsg]);
               scrollToBottom();
-              await sleep(2000);
+              // 사회자 타이핑 완료까지 대기: 시작딜레이(120) + 글자수×52ms + 여유(1000)
+              const modWait = 120 + modMsg.text.length * 52 + 1000;
+              await sleep(modWait);
             }
           }
         } catch (_e) {
@@ -1847,7 +1849,7 @@ function ModeratorMessage({ text }: { text: string }) {
       if (i >= text.length) { setDone(true); return; }
       setDisplayed(text.slice(0, i + 1));
       i++;
-      setTimeout(tick, 36);
+      setTimeout(tick, 52);
     };
     const start = setTimeout(tick, 120); // 약간 딜레이 후 시작
     return () => clearTimeout(start);
