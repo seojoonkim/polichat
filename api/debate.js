@@ -1438,20 +1438,6 @@ export default async function handler(req, res) {
   }
 
   // ── 논란·의혹 주제 강제 오버라이드 ───────────────────────────────────────
-  const isControversyTopic = /논란|의혹|막말|scandal|controvers/i.test(safeTopic);
-  if (isControversyTopic && ['leejunseok', 'jeonhangil'].includes(speaker)) {
-    const controversyOverride = speaker === 'leejunseok'
-      ? `\n\n🚨 주제 강제 지시: 지금 주제는 "개인 논란·의혹"이다. 정책 얘기 절대 금지. 오직 개인 논란 공방만 해라.
-- 공격: 전한길의 개인 논란 (강간 막말, 노량진 성희롱, 건국펀드 불법모금, 3권분립 폐지 망언, 전유관 입당 거부)
-- 방어: 내 의혹에 대한 적극 반박 (성 접대 공소권없음 해명, SW마에스트로 합법, 젓가락 발언 해명)
-⚠️ AI·디지털·경제·부동산 등 정책 주제 언급 즉시 감점. 개인 논란만.`
-      : `\n\n🚨 주제 강제 지시: 지금 주제는 "개인 논란·의혹"이다. 정책 얘기 절대 금지. 오직 개인 논란 공방만 해라.
-- 공격: 이준석의 개인 논란 (성 접대 의혹, 젓가락 발언, SW마에스트로 병역특혜, 노사모 출신, 탈당 배신)
-- 방어: 내 논란에 대한 적극 반박 (막말 맥락 왜곡, 건국펀드 합법, 표현의 자유)
-⚠️ AI·디지털·경제·부동산 등 정책 주제 언급 즉시 감점. 개인 논란만.`;
-    systemPrompt += controversyOverride;
-  }
-
   const OPPONENT_MAP = {
     leejunseok: '전한길',
     jeonhangil: '이준석 대표',
@@ -1464,11 +1450,26 @@ export default async function handler(req, res) {
     kimeoojun: '진중권',
     leejm: '상대방',
   };
-  const opponentName = OPPONENT_MAP[speaker] || '상대방';
+  const opponentName = OPPONENT_MAP[safeSpeaker] || '상대방';
+
+  const isControversyTopic = /논란|의혹|막말|scandal|controvers/i.test(safeTopic);
+  if (isControversyTopic && ['leejunseok', 'jeonhangil'].includes(safeSpeaker)) {
+    const controversyOverride = speaker === 'leejunseok'
+      ? `\n\n🚨 주제 강제 지시: 지금 주제는 "개인 논란·의혹"이다. 정책 얘기 절대 금지. 오직 개인 논란 공방만 해라.
+- 공격: 전한길의 개인 논란 (강간 막말, 노량진 성희롱, 건국펀드 불법모금, 3권분립 폐지 망언, 전유관 입당 거부)
+- 방어: 내 의혹에 대한 적극 반박 (성 접대 공소권없음 해명, SW마에스트로 합법, 젓가락 발언 해명)
+⚠️ AI·디지털·경제·부동산 등 정책 주제 언급 즉시 감점. 개인 논란만.`
+      : `\n\n🚨 주제 강제 지시: 지금 주제는 "개인 논란·의혹"이다. 정책 얘기 절대 금지. 오직 개인 논란 공방만 해라.
+- 공격: 이준석의 개인 논란 (성 접대 의혹, 젓가락 발언, SW마에스트로 병역특혜, 노사모 출신, 탈당 배신)
+- 방어: 내 논란에 대한 적극 반박 (막말 맥락 왜곡, 건국펀드 합법, 표현의 자유)
+⚠️ AI·디지털·경제·부동산 등 정책 주제 언급 즉시 감점. 개인 논란만.`;
+    systemPrompt += controversyOverride;
+  }
+
 
   // ── 정책 지식베이스 주입 ───────────────────────────────────────────────
   const kb = getKnowledge(safeTopic, safeSpeaker);
-  const kbHeader = isControversyTopic && ['leejunseok', 'jeonhangil'].includes(speaker)
+  const kbHeader = isControversyTopic && ['leejunseok', 'jeonhangil'].includes(safeSpeaker)
     ? '\n\n⚔️ 개인 논란 논거 풀 (아래 내용으로만 공방하라, 정책 X):'
     : '\n\n📚 정책 지식베이스 (이 데이터를 논거로 적극 활용하세요):';
   if (kb.myPosition || kb.conflicts.length > 0 || kb.seoulContext) {
@@ -1478,7 +1479,7 @@ export default async function handler(req, res) {
     if (kb.conflicts.length > 0) {
       kbText += '\n• 핵심 쟁점:';
       kb.conflicts.forEach(c => {
-        kbText += `\n  - [${c.주제}] 내 입장: ${['ohsehoon','jangdh','leejunseok','jeonhangil'].includes(speaker) ? c.ppp : c.dp} | 수치: ${c.수치}`;
+        kbText += `\n  - [${c.주제}] 내 입장: ${['ohsehoon','jangdh','leejunseok','jeonhangil'].includes(safeSpeaker) ? c.ppp : c.dp} | 수치: ${c.수치}`;
       });
     }
     if (kb.attackPoints && kb.attackPoints.length > 0) {
@@ -1499,27 +1500,27 @@ export default async function handler(req, res) {
     // ── 세부논거 풀 주입 ──
     if (kb.세부논거) {
       // leejeon 토픽 매핑
-      const leejeonTopicKey = /부정선거/.test(topic) ? '부정선거'
-        : /보수.*정체|정체.*보수/.test(topic) ? '보수정체성'
-        : /탄핵|윤석열/.test(topic) ? '윤석열탄핵'
-        : /젠더|페미/.test(topic) ? '젠더'
-        : /논란|의혹|막말|스캔들|성접대|병역|성희롱|강간/.test(topic) ? '논란의혹'
+      const leejeonTopicKey = /부정선거/.test(safeTopic) ? '부정선거'
+        : /보수.*정체|정체.*보수/.test(safeTopic) ? '보수정체성'
+        : /탄핵|윤석열/.test(safeTopic) ? '윤석열탄핵'
+        : /젠더|페미/.test(safeTopic) ? '젠더'
+        : /논란|의혹|막말|스캔들|성접대|병역|성희롱|강간/.test(safeTopic) ? '논란의혹'
         : null;
       // 서울/전국 토픽 매핑
-      const seoulTopicKey = /부동산|재건축|재개발|주거|주택|전세|임대|젠트리|강남/.test(topic) ? '재개발'
-        : /교통|버스|GTX|지하철|파업/.test(topic) ? '교통'
-        : /복지|기본소득|의료|돌봄/.test(topic) ? '복지'
-        : /청년|반지하|월세/.test(topic) ? '청년'
-        : /소상공인|자영업|골목|배달|임대료/.test(topic) ? '소상공인'
-        : /경제|민생|예산|세금|기업|물가/.test(topic) ? '경제민생'
-        : /연금|보험료|소득대체/.test(topic) ? '연금복지'
-        : /검찰|사법|공수처|수사|내란|계엄/.test(topic) ? '검찰사법'
+      const seoulTopicKey = /부동산|재건축|재개발|주거|주택|전세|임대|젠트리|강남/.test(safeTopic) ? '재개발'
+        : /교통|버스|GTX|지하철|파업/.test(safeTopic) ? '교통'
+        : /복지|기본소득|의료|돌봄/.test(safeTopic) ? '복지'
+        : /청년|반지하|월세/.test(safeTopic) ? '청년'
+        : /소상공인|자영업|골목|배달|임대료/.test(safeTopic) ? '소상공인'
+        : /경제|민생|예산|세금|기업|물가/.test(safeTopic) ? '경제민생'
+        : /연금|보험료|소득대체/.test(safeTopic) ? '연금복지'
+        : /검찰|사법|공수처|수사|내란|계엄/.test(safeTopic) ? '검찰사법'
         : null;
       const topicKey = leejeonTopicKey || seoulTopicKey;
       const fullPool = topicKey ? (kb.세부논거[topicKey] || []) : [];
       if (fullPool.length > 0) {
         // 논거 풀: usedArgCount offset으로 이미 본 논거 완전히 건너뜀 (A)
-        const argOffset = (usedArgCount || 0) % fullPool.length;
+        const argOffset = (safeUsedArgCount || 0) % fullPool.length;
         const rotated = [...fullPool.slice(argOffset), ...fullPool.slice(0, argOffset)];
         const argPool = rotated.slice(0, 8);
         kbText += `\n\n💡 이번 발언 논거 후보 (8개, 이미 쓴 것 제외하고 새로운 것 선택):\n` + argPool.map((a,i)=>`${i+1}. ${a}`).join('\n');
@@ -1534,7 +1535,7 @@ export default async function handler(req, res) {
   }));
 
   // ── 반복 금지 목록 주입 (현재 speaker가 이미 사용한 논점 추출 + 테마 추출) ────────
-  const myPastMessages = (compactHistory || []).filter(msg => msg.speaker === speaker);
+  const myPastMessages = (compactHistory || []).filter(msg => msg.speaker === safeSpeaker);
   if (myPastMessages.length > 0) {
     const usedTexts = myPastMessages.map((m, i) => `${i + 1}. ${m.text}`).join('\n');
     
@@ -1571,20 +1572,20 @@ export default async function handler(req, res) {
 가능한 각도: ① 새로운 사실/수치 ② ${opponentName} 말 인용+반박 ③ 제3자 증언/보도 ④ 역사적 선례 ⑤ 논리적 모순 지적 ⑥ 개인 신뢰성 공격 ⑦ 정책 효과 비판`;
 
     // 🎭 지문 삽입
-    const stageDir = getStageDirection(speaker, act.intensity);
+    const stageDir = getStageDirection(safeSpeaker, act.intensity);
     if (stageDir) {
       systemPrompt += `\n\n🎭 연출 지문: 이번 발언을 시작할 때 "${stageDir}"를 발언 맨 앞에 자연스럽게 삽입하라. 예: "${stageDir} 그 논리가 통한다고 생각하십니까?"`;
     }
 
     // 🗡️ 캐릭터 특화 공격 패턴
-    const attackPattern = CHARACTER_ATTACK_PATTERNS[speaker];
+    const attackPattern = CHARACTER_ATTACK_PATTERNS[safeSpeaker];
     if (attackPattern) {
       systemPrompt += `\n\n🗡️ 캐릭터 공격 패턴 (${attackPattern.method}):\n${attackPattern.instruction}`;
     }
 
     // 💣 반전 카드 (3막에서만 활성화)
     if (act.intensity === 'high') {
-      const cards = REVERSAL_CARDS[speaker];
+      const cards = REVERSAL_CARDS[safeSpeaker];
       if (cards && cards.length > 0) {
         const allMyText = myPastMessages.map(m => m.text).join(' ');
         const unusedCards = cards.filter(card => {
@@ -1613,7 +1614,7 @@ export default async function handler(req, res) {
 
 
   // ── B: 상대방 핵심 주장 반박 의무화 (3단 구조) ────────────────────────────
-  const rebutClaim = mustRebutClaim || extractKeyClaim(opponentLastMessage);
+  const rebutClaim = safeMustRebutClaim || extractKeyClaim(opponentLastMessage || '');
   if (rebutClaim) {
     const rebutAct = getAct(safeRecentHistory.length);
     if (rebutAct.intensity === 'low') {
@@ -1654,7 +1655,7 @@ Step 3 — 프레임 재설정: 토론의 프레임 자체를 바꿔라. "이건
   if (compactHistory && compactHistory.length > 0) {
     for (const msg of compactHistory) {
       // 현재 speaker 발언 = assistant, 상대방 발언 = user
-      const role = msg.speaker === speaker ? 'assistant' : 'user';
+      const role = msg.speaker === safeSpeaker ? 'assistant' : 'user';
       historyMessages.push({
         role,
         content: msg.text, // 이름 prefix 제거 — AI가 "이름:" 패턴 따라하지 않도록
@@ -1663,8 +1664,8 @@ Step 3 — 프레임 재설정: 토론의 프레임 자체를 바꿔라. "이건
   }
 
   const finalUserMessage = (opponentLastMessage || '')
-    ? `${opponentName} 발언: "${opponentLastMessage}" — 이에 대한 당신의 입장을 말씀해주세요.` : `"${safeTopic}" 주제로 토론을 시작합니다. 첫 발언을 해주세요.`
-    : `"${topic}" 주제로 토론을 시작합니다. 첫 발언을 해주세요.`;
+    ? `${opponentName} 발언: "${opponentLastMessage}" — 이에 대한 당신의 입장을 말씀해주세요.`
+    : `"${safeTopic}" 주제로 토론을 시작합니다. 첫 발언을 해주세요.`;
 
   const messages = [...historyMessages, { role: 'user', content: finalUserMessage }];
 
