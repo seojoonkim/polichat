@@ -139,6 +139,19 @@ function extractKeyClaimClient(text: string): string | null {
   return sentences[0]?.slice(0, 80) || null;
 }
 
+// 오래된 발언들에서 핵심 요약 생성 (컨텍스트 압축용)
+const RECENT_WINDOW = 20; // verbatim으로 전달할 최근 발언 수
+function buildDebateSummary(
+  olderMessages: DebateMessage[],
+  cfg: { speakerA: string; speakerB: string; speakerAName: string; speakerBName: string },
+): string {
+  if (olderMessages.length === 0) return '';
+  const extract = (text: string) => text.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 6)[0]?.slice(0, 60) || '';
+  const byA = olderMessages.filter(m => m.speaker === cfg.speakerA).map(m => extract(m.text)).filter(Boolean).slice(0, 5);
+  const byB = olderMessages.filter(m => m.speaker === cfg.speakerB).map(m => extract(m.text)).filter(Boolean).slice(0, 5);
+  return `(이전 ${olderMessages.length}개 발언 압축)\n${cfg.speakerAName} 주요 주장: ${byA.join(' / ')}\n${cfg.speakerBName} 주요 주장: ${byB.join(' / ')}`;
+}
+
 // ─── 메인 컴포넌트 ─────────────────────────────────────────────────────────────
 
 export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
@@ -351,7 +364,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
     style: string,
     onToken?: (text: string) => Promise<void> | void,
     recentHistory?: DebateMessage[],
-    opts?: { usedArgCount?: number; mustRebutClaim?: string | null; lastAngles?: string[] }
+    opts?: { usedArgCount?: number; mustRebutClaim?: string | null; lastAngles?: string[]; debateSummary?: string }
   ): Promise<string> => {
     return new Promise((resolve, reject) => {
       let fullText = '';
@@ -387,6 +400,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
         body: JSON.stringify({
           topic, speaker, opponentLastMessage, style, debateType,
           recentHistory: recentHistory ?? [],
+          debateSummary: opts?.debateSummary,
           usedArgCount: opts?.usedArgCount ?? 0,
           mustRebutClaim: opts?.mustRebutClaim ?? null,
           lastAngles: opts?.lastAngles ?? [],
@@ -522,7 +536,10 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           let bubbleCount = 0;
           let sentencesInBubble = 0;
 
-          const recentHistory = allMessages.slice(-10); // 최근 10개만 전달 (컨텍스트 폭증 방지)
+          // 최근 20개 verbatim + 이전 발언은 요약 압축
+          const olderMessages = allMessages.length > RECENT_WINDOW ? allMessages.slice(0, -RECENT_WINDOW) : [];
+          const debateSummary = olderMessages.length > 0 ? buildDebateSummary(olderMessages, config) : undefined;
+          const recentHistory = allMessages.slice(-RECENT_WINDOW);
           // B: 상대 주장 반박 의무화 — 내 턴이면 상대(lastText)의 핵심 주장 전달
           const mustRebutClaim = lastText ? opponentClaimRef.current : null;
           const text = await streamRound(speaker, currentTopic, lastText, style, async (chunk) => {
@@ -567,6 +584,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
             usedArgCount: usedArgCountRef.current[speaker] ?? 0,
             mustRebutClaim,
             lastAngles: lastAnglesRef.current[speaker] ?? [],
+            debateSummary,
           });
 
           if (abortRef.current) break;

@@ -1238,7 +1238,7 @@ export default async function handler(req, res) {
 
   if (req.method !== 'POST') return res.status(405).end();
 
-  const { topic, opponentLastMessage, speaker, style, debateType = 'seoul', recentHistory = [], usedArgCount = 0, mustRebutClaim = null, lastAngles = [] } = req.body;
+  const { topic, opponentLastMessage, speaker, style, debateType = 'seoul', recentHistory = [], debateSummary = null, usedArgCount = 0, mustRebutClaim = null, lastAngles = [] } = req.body;
   const apiKey = process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY;
 
   if (!apiKey) {
@@ -1463,6 +1463,11 @@ export default async function handler(req, res) {
     leejunseok: '이준석 대표',
     jeonhangil: '전한길',
   };
+
+  // 이전 라운드 요약 주입 (메모리 유지 + 컨텍스트 폭증 방지)
+  if (debateSummary) {
+    systemPrompt += `\n\n📝 이전 라운드 요약 (기억 유지용):\n${debateSummary}\n위 요약을 바탕으로 이전 주장을 반복하지 말고 새로운 각도로 논의를 발전시켜라.`;
+  }
 
   const historyMessages = [];
   if (recentHistory && recentHistory.length > 0) {
