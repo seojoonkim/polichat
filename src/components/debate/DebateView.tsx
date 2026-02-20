@@ -638,7 +638,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           let actionInserted = false;
 
           // 한국어 연결어 — "다" 뒤에 이 글자들이 오면 문장이 아직 끝나지 않은 것 (예: 하락했다는 점은)
-          const KR_CONNECTOR = /^[는은이가을를와과도로에서으로의하여해서므로지만]/;
+          const KR_CONNECTOR = /^[는은이가을를와과도고로에서으로의하여해서므로지만]/; // "고" 추가: 있다고/됐다고 연결어 처리
           let pendingFlush = false;  // "다"로 끝났지만 다음 글자 보고 결정
 
           const appendTextChunk = async (segment: string) => {

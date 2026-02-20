@@ -6,7 +6,6 @@
 // 공통 행동 묘사
 export const DEBATE_ACTIONS: string[] = [
   // ── 신체 동작 (20개) ──
-  '(안경을 고쳐 쓰며)',
   '(테이블을 가볍게 두드리며)',
   '(잠시 생각에 잠기며)',
   '(마이크를 가까이 당기며)',
@@ -132,6 +131,7 @@ export const SPEAKER_ACTIONS: Record<string, string[]> = {
     '(목소리를 높여 일갈하며)',
   ],
   handoonghoon: [
+    '(안경을 고쳐 쓰며)',
     '(안경 너머로 날카롭게 바라보며)',
     '(차분하게 자료를 가리키며)',
     '(정중하지만 단호한 어조로)',
@@ -196,17 +196,26 @@ export const SPEAKER_ACTIONS: Record<string, string[]> = {
  * @param speaker - 화자 ID (선택적, 인물별 특화 행동 포함)
  */
 export function getRandomAction(usedActions: Set<string>, speaker?: string): string {
-  // 인물 특화 + 공통 풀 합치기
   const speakerPool = speaker && SPEAKER_ACTIONS[speaker] ? SPEAKER_ACTIONS[speaker] : [];
-  const fullPool = [...speakerPool, ...DEBATE_ACTIONS];
+  const availableSpeaker = speakerPool.filter(a => !usedActions.has(a));
+  const availableCommon = DEBATE_ACTIONS.filter(a => !usedActions.has(a));
 
-  const available = fullPool.filter(a => !usedActions.has(a));
-  if (available.length === 0) {
+  // 모두 소진 시 초기화
+  if (availableSpeaker.length === 0 && availableCommon.length === 0) {
     usedActions.clear();
-    return fullPool[Math.floor(Math.random() * fullPool.length)]!;
+    const fallback = [...speakerPool, ...DEBATE_ACTIONS];
+    return fallback[Math.floor(Math.random() * fallback.length)]!;
   }
 
-  const chosen = available[Math.floor(Math.random() * available.length)]!;
+  let chosen: string;
+  // 인물 특화 행동 50% 우선 선택 → 개성 살리기 + 안경 등 인물별 고정 행동 분리
+  if (availableSpeaker.length > 0 && Math.random() < 0.5) {
+    chosen = availableSpeaker[Math.floor(Math.random() * availableSpeaker.length)]!;
+  } else {
+    const pool = availableCommon.length > 0 ? availableCommon : availableSpeaker;
+    chosen = pool[Math.floor(Math.random() * pool.length)]!;
+  }
+
   usedActions.add(chosen);
   return chosen;
 }
