@@ -1879,7 +1879,7 @@ function ModeratorMessage({ text }: { text: string }) {
           boxShadow: '0 0 12px rgba(150,180,255,0.25)',
         }}
       />
-      <span style={{ fontSize: 15, color: '#cbd5e1', fontStyle: 'italic', lineHeight: 1.6 }}>
+      <span style={{ fontSize: 17, color: '#cbd5e1', fontStyle: 'italic', lineHeight: 1.6 }}>
         {displayed}
         {!done && (
           <span
