@@ -609,10 +609,10 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           };
 
           // 말풍선 최대 글자 수 (초과 시 자동 분할 — 마침표 없는 정청래식 발언 대응)
-          const MAX_BUBBLE_CHARS = 85;
-          // 자동 분할 가능한 글자 (공백·쉼표·종결어미 직후)
-          const AUTO_SPLIT_CHARS = new Set([' ', ',', '。', '.', '!', '?']);
-          const AUTO_SPLIT_ENDINGS = /[다요죠네]$/;
+          const MAX_BUBBLE_CHARS = 100;
+          // 자동 분할 가능한 글자 — 반드시 문장 완결 지점에서만 (공백·쉼표는 제외)
+          const AUTO_SPLIT_PUNCT = new Set(['.', '!', '?', '。']);
+          const AUTO_SPLIT_ENDINGS = /[다요죠네니]$/;
 
           const appendTextChunk = async (segment: string) => {
             if (!segment) return;
@@ -629,11 +629,11 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
               setCurrentText(currentBubble);
               await sleep(40);
 
-              // 🆕 최대 글자 초과 자동 flush (마침표 없는 발언 대응)
+              // 🆕 최대 글자 초과 자동 flush — 반드시 문장 완결 지점에서만
               if (
                 bubbleCount < BUBBLE_CONFIG.MAX_BUBBLES - 1 &&
                 currentBubble.length >= MAX_BUBBLE_CHARS &&
-                (AUTO_SPLIT_CHARS.has(char) || AUTO_SPLIT_ENDINGS.test(currentBubble))
+                (AUTO_SPLIT_PUNCT.has(char) || AUTO_SPLIT_ENDINGS.test(currentBubble))
               ) {
                 await flushBubble();
               }
