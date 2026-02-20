@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { PROMPT_VERSION } from '@/constants/debate-config';
-import { BUBBLE_CONFIG, isSentenceEnd } from '@/lib/bubble-splitter';
+import { BUBBLE_CONFIG } from '@/lib/bubble-splitter';
 import TensionGauge, { calcTension } from './TensionGauge';
 import AudienceReaction from './AudienceReaction';
 import Interjection from './Interjection';
@@ -520,7 +520,6 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
       let streamedText = '';
       let currentBubble = '';
       let bubbleCount = 0;
-      let sentencesInBubble = 0;
 
       for (let attempt = 0; attempt < 2 && !roundSuccess; attempt++) {
         if (attempt > 0) {
@@ -530,7 +529,6 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           streamedText = '';
           currentBubble = '';
           bubbleCount = 0;
-          sentencesInBubble = 0;
           await sleep(500);
           if (abortRef.current) break;
         }
@@ -548,43 +546,64 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           const olderMessages = allMessages.length > RECENT_WINDOW ? allMessages.slice(0, -RECENT_WINDOW) : [];
           const debateSummary = olderMessages.length > 0 ? buildDebateSummary(olderMessages, config) : undefined;
           const recentHistory = allMessages.slice(-RECENT_WINDOW);
-          // B: 상대 주장 반박 의무화 — 내 턴이면 상대(lastText)의 핵심 주장 전달
-          const mustRebutClaim = lastText ? opponentClaimRef.current : null;
-          const text = await streamRound(speaker, currentTopic, lastText, style, async (chunk) => {
-            if (abortRef.current) return;
-            for (const char of chunk) {
+
+          const BUBBLE_DELIMITER = '||';
+          let pendingSeparator = '';
+
+          const flushBubble = async () => {
+            const bubble = currentBubble.trim();
+            if (!bubble) return;
+
+            if (bubbleCount >= BUBBLE_CONFIG.MAX_BUBBLES - 1) {
+              return;
+            }
+
+            const msg: DebateMessage = { speaker, text: bubble, timestamp: Date.now() };
+            allMessages.push(msg);
+            setMessages((prev) => [...prev, msg]);
+            scrollToBottom();
+            setCurrentText('');
+            currentBubble = '';
+            bubbleCount++;
+            await sleep(900);
+          };
+
+          const appendTextChunk = async (segment: string) => {
+            if (!segment) return;
+            for (const char of segment) {
               if (abortRef.current) return;
               // 새 버블 첫 글자로 오는 마침표 스킵 (버블 분리 후 "." 잔상 방지)
               if (currentBubble.length === 0 && char === '.') {
                 streamedText += char;
                 continue;
               }
+
               streamedText += char;
               currentBubble += char;
-
-              // 매 글자마다 렌더링 + 40ms sleep → 한 글자씩 자연스럽게 타이핑
               setCurrentText(currentBubble);
               await sleep(40);
+            }
+          };
 
-              // 문장 끝 감지 (bubble-splitter 유틸 사용)
-              if (isSentenceEnd(currentBubble)) {
-                sentencesInBubble++;
+          // B: 상대 주장 반박 의무화 — 내 턴이면 상대(lastText)의 핵심 주장 전달
+          const mustRebutClaim = lastText ? opponentClaimRef.current : null;
+          const text = await streamRound(speaker, currentTopic, lastText, style, async (chunk) => {
+            if (abortRef.current) return;
+            const incoming = `${pendingSeparator}${chunk.replace(/\r/g, '')}`;
+            const parts = incoming.split(BUBBLE_DELIMITER);
 
-                // 말풍선당 최대 2문장 & 최대 2개까지 분리 (3번째는 나머지로 처리)
-                if (sentencesInBubble >= BUBBLE_CONFIG.MAX_SENTENCES_PER_BUBBLE && bubbleCount < BUBBLE_CONFIG.MAX_BUBBLES - 1) {
-                  const bubble = currentBubble.trim();
-                  const msg: DebateMessage = { speaker, text: bubble, timestamp: Date.now() };
-                  allMessages.push(msg);
-                  setMessages((prev) => [...prev, msg]);
-                  scrollToBottom();
-                  // 라이브 버블 명시적 초기화 (이전 버블 텍스트 잔상 방지)
-                  setCurrentText('');
-                  currentBubble = '';
-                  sentencesInBubble = 0;
-                  bubbleCount++;
-                  await sleep(900); // 버블 간 자연스러운 호흡
-                }
-              }
+            const shouldKeepSuffixPipe = incoming.endsWith('|') && !incoming.endsWith('||');
+
+            const boundaryCount = shouldKeepSuffixPipe ? parts.length - 1 : parts.length;
+            for (let i = 0; i < boundaryCount; i++) {
+              await appendTextChunk(parts[i] ?? '');
+              await flushBubble();
+            }
+
+            if (shouldKeepSuffixPipe) {
+              pendingSeparator = '|';
+            } else {
+              pendingSeparator = parts[parts.length - 1] || '';
             }
           }, recentHistory, {
             usedArgCount: usedArgCountRef.current[speaker] ?? 0,
@@ -594,6 +613,11 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           });
 
           if (abortRef.current) break;
+
+          const finalText = `${text}`.replace(/\|\|/g, '').replace(/\|$/g, '');
+          if (pendingSeparator && pendingSeparator !== '|' && pendingSeparator.trim()) {
+            await appendTextChunk(pendingSeparator);
+          }
 
           // 남은 텍스트 처리
           if (currentBubble.trim()) {
@@ -605,9 +629,9 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           setCurrentText('');
           setCurrentSpeaker(null);
           scrollToBottom();
-          lastText = text;
+          lastText = finalText;
           // B: 방금 발언(text)에서 다음 턴 상대방이 반박할 핵심 주장 추출
-          opponentClaimRef.current = extractKeyClaimClient(text);
+          opponentClaimRef.current = extractKeyClaimClient(finalText);
           // 관중 반응 트리거 (새 메시지 완료마다)
           setAudienceReactionTrigger(prev => prev + 1);
           roundSuccess = true;

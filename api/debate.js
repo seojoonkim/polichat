@@ -1545,7 +1545,14 @@ export default async function handler(req, res) {
   // ── C: 공격 각도 강제 로테이션 ─────────────────────────────────────────────
   const availableAngles = ATTACK_ANGLES.filter(a => !(lastAngles || []).includes(a));
   const forcedAngle = availableAngles.length > 0 ? availableAngles[0] : ATTACK_ANGLES[0];
-  systemPrompt += `\n\n🎯 이번 발언 필수 공격 각도: ${forcedAngle}\n이 각도로 시작하라. 다른 각도로 시작 금지.`;
+  systemPrompt += `\n\n🎯 이번 발언 필수 공격 각도: ${forcedAngle}\n이 각도로 시작하라. 다른 각도로 시작 금지.`
+
+  // ── 말풍선 분리 규칙: 모델이 실제 문장 경계에서만 구분자 사용 ───────────────
+  systemPrompt += `\n\n🧩 말풍선 분리 규칙\n반드시 발언 내용을 ` +
+    `문장 경계에서만 "||"로 구분하세요.\n`+
+    `"다"/"요" 같은 종결 어미 자체가 아닌, 실제로 말을 끝내는 구문일 때만 "||"를 넣으세요.\n`+
+    `한 문장이 짧거나 감정표현(예: "그렇습니다.")이더라도 의미상 완결되면 구분 가능.\n`+
+    `불필요한 위치에는 "||"를 넣지 마세요.`;;
 
   // ── B: 상대방 핵심 주장 반박 의무화 (3단 구조) ────────────────────────────
   const rebutClaim = mustRebutClaim || extractKeyClaim(opponentLastMessage);
