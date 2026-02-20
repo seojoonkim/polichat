@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { PROMPT_VERSION } from '@/constants/debate-config';
-import { splitStreamedText } from '@/lib/bubble-splitter';
+import { isSentenceEnd, BUBBLE_CONFIG } from '@/lib/bubble-splitter';
 import TensionGauge, { calcTension } from './TensionGauge';
 import AudienceReaction from './AudienceReaction';
 import Interjection from './Interjection';
@@ -553,6 +553,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
       // 스트리밍 상태 변수: try 밖에 선언해서 catch에서도 접근 가능
       let streamedText = '';
       let currentBubble = '';
+      let bubbleCount = 0;
 
       for (let attempt = 0; attempt < 3 && !roundSuccess; attempt++) {
         if (attempt > 0) {
@@ -561,6 +562,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           setCurrentText('');
           streamedText = '';
           currentBubble = '';
+          bubbleCount = 0;
           await sleep(500);
           if (abortRef.current) break;
         }
@@ -593,6 +595,19 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
             return incoming;
           };
 
+          const flushCurrentBubble = async () => {
+            const bubble = currentBubble.trim();
+            if (!bubble) return;
+            const msg: DebateMessage = { speaker, text: bubble, timestamp: Date.now() };
+            allMessages.push(msg);
+            setMessages((prev) => [...prev, msg]);
+            scrollToBottom();
+            setCurrentText('');
+            currentBubble = '';
+            bubbleCount++;
+            await sleep(900);
+          };
+
           const appendTextChunk = async (segment: string) => {
             if (!segment) return;
             for (const char of segment) {
@@ -601,6 +616,14 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
               currentBubble += char;
               setCurrentText(currentBubble);
               await sleep(35);
+
+              // 실시간 문장 끝 감지 → 버블 flush
+              if (
+                bubbleCount < BUBBLE_CONFIG.MAX_BUBBLES - 1 &&
+                isSentenceEnd(currentBubble)
+              ) {
+                await flushCurrentBubble();
+              }
             }
           };
 
@@ -624,21 +647,17 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
 
           const finalText = `${text}`.replace(/\|\|/g, '').replace(/\|/g, '').trim();
 
-          // 스트리밍 완료 → 전체 텍스트를 문장 단위로 버블 분리
-          setCurrentText('');
+          // 스트리밍 완료 → 남은 텍스트 마지막 버블로 flush
           setCurrentSpeaker(null);
-
-          const bubbles = splitStreamedText(finalText);
-          for (let bi = 0; bi < bubbles.length; bi++) {
-            const bubbleText = (bubbles[bi] ?? '').trim();
-            if (!bubbleText) continue;
-            const msg: DebateMessage = { speaker, text: bubbleText, timestamp: Date.now() };
-            allMessages.push(msg);
-            setMessages((prev) => [...prev, msg]);
+          if (currentBubble.trim()) {
+            const lastMsg: DebateMessage = { speaker, text: currentBubble.trim(), timestamp: Date.now() };
+            allMessages.push(lastMsg);
+            setMessages((prev) => [...prev, lastMsg]);
+            setCurrentText('');
+            currentBubble = '';
             scrollToBottom();
-            if (bi < bubbles.length - 1) {
-              await sleep(900);
-            }
+          } else {
+            setCurrentText('');
           }
 
           scrollToBottom();
