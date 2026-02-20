@@ -578,9 +578,16 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
             return incoming;
           };
 
+          const MIN_BUBBLE_LENGTH = 18; // 이보다 짧으면 분리 안 함 ("다." 단독 버블 방지)
+
           const flushBubble = async () => {
             const bubble = currentBubble.trim();
             if (!bubble) return;
+
+            // 너무 짧은 버블 분리 방지 ("다." 등이 단독 버블로 나오는 현상)
+            if (bubble.length < MIN_BUBBLE_LENGTH && bubbleCount < BUBBLE_CONFIG.MAX_BUBBLES - 1) {
+              return;
+            }
 
             if (bubbleCount >= BUBBLE_CONFIG.MAX_BUBBLES - 1) {
               return;
@@ -615,7 +622,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
               streamedText += char;
               currentBubble += char;
               setCurrentText(currentBubble);
-              await sleep(25);
+              await sleep(35);
 
               // 🆕 최대 글자 초과 자동 flush — 반드시 문장 완결 지점에서만
               if (
