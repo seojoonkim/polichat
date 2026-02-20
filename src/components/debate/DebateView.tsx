@@ -553,6 +553,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
     usedArgCountRef.current = {};
     opponentClaimRef.current = null;
     lastAnglesRef.current = {};
+    usedActionsRef.current = new Set();
 
     const allMessages: DebateMessage[] = [];
     let lastText = '';
@@ -629,6 +630,10 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
             await sleep(900);
           };
 
+          // 30% 확률 행동 묘사 삽입 플래그
+          let shouldInsertAction = Math.random() < 0.3;
+          let actionInserted = false;
+
           const appendTextChunk = async (segment: string) => {
             if (!segment) return;
             for (const char of segment) {
@@ -637,6 +642,13 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
 
               // 새 버블 시작 시: 선행 구두점(마침표 등) 스킵
               if (currentBubble.length === 0 && /^[.!?\s]$/.test(char)) continue;
+
+              // 첫 버블에 행동 묘사 삽입 (AI가 이미 괄호로 시작하지 않은 경우만)
+              if (shouldInsertAction && !actionInserted && bubbleCount === 0 && currentBubble.length === 0 && char !== '(') {
+                const action = getRandomAction(usedActionsRef.current, speaker);
+                currentBubble = action + ' ';
+                actionInserted = true;
+              }
 
               currentBubble += char;
               setCurrentText(currentBubble);
@@ -1510,6 +1522,21 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
   );
 }
 
+// ─── 행동 묘사 이탤릭 렌더링 ──────────────────────────────────────────────────
+
+function renderBubbleText(text: string): React.ReactNode {
+  if (!text || text === '\u00A0') return text;
+  // (행동 묘사) 패턴을 이탤릭으로 렌더링
+  const parts = text.split(/(\([^)]+\))/g);
+  if (parts.length <= 1) return text;
+  return parts.map((part, i) => {
+    if (/^\([^)]+\)$/.test(part)) {
+      return <em key={i} className="italic text-gray-400 text-sm">{part}</em>;
+    }
+    return <span key={i}>{part}</span>;
+  });
+}
+
 // ─── 말풍선 컴포넌트 ──────────────────────────────────────────────────────────
 
 function MessageBubble({
@@ -1623,7 +1650,7 @@ function MessageBubble({
           }}
         >
           <p className="text-gray-800 text-[15px] leading-relaxed" style={{ color: '#1e293b' }}>
-            {msg.text || '\u00A0'}
+            {renderBubbleText(msg.text || '\u00A0')}
             {isActive && (
               <span
                 className="inline-block w-0.5 h-4 ml-0.5 align-middle animate-pulse"

@@ -2232,6 +2232,14 @@ export default async function handler(req, res) {
   const forcedAngle = availableAngles.length > 0 ? availableAngles[0] : ATTACK_ANGLES[0];
   systemPrompt += `\n\n🎯 이번 발언 필수 공격 각도: ${forcedAngle}\n이 각도로 시작하라. 다른 각도로 시작 금지.`
 
+  // ── 반복 방지 강화 (최우선) ────────────────────────────────────────────────
+  systemPrompt += `\n\n🚨 CRITICAL — 반복 절대 금지:
+- 이 응답 내에서 같은 수치·통계·숫자를 2번 이상 사용하지 마라.
+- 같은 논거·주장을 다른 표현으로 바꿔 말하는 것도 반복이다.
+- 매 문장이 반드시 새로운 정보를 도입해야 한다.
+- 이전 발언에서 이미 사용한 수치는 절대 재사용 금지.
+- 위반 시 토론 패배로 간주.`;
+
   // ── 말풍선 분리 규칙: 3단 발언 구조 ────────────────────────────────────────
   systemPrompt += `\n\n🧩 발언 구조 규칙 (필수)
 
