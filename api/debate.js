@@ -2171,10 +2171,23 @@ export default async function handler(req, res) {
     const allText = myPastMessages.map(m => m.text).join(' ');
     const themeKeywords = extractThemes(allText);
     
-    // 반복 방지: 최근 4개 발언만 요약 (토큰 절약)
-    const recentUsed = myPastMessages.slice(-4).map((m, i) => `${i+1}. ${m.text.slice(0, 60)}...`).join('\n');
-    systemPrompt += `\n\n🚫 반복 금지 — 최근 발언 요약:\n${recentUsed}`;
+    // 반복 방지: 최근 4개 발언 — 앞 50자 + 뒤 50자 동시 추출 (결론부 반복 포착)
+    const recentUsed = myPastMessages.slice(-4).map((m, i) => {
+      const t = m.text;
+      const head = t.slice(0, 50);
+      const tail = t.length > 80 ? '…' + t.slice(-50) : '';
+      return `${i+1}. ${head}${tail}`;
+    }).join('\n');
+    systemPrompt += `\n\n🚫 반복 금지 — 최근 발언 (앞/뒤 모두 참조):\n${recentUsed}`;
     systemPrompt += `\n⛔ 사용한 테마 (다시 언급 금지): ${themeKeywords.slice(0, 8).join(', ')}`;
+
+    // 결론 패턴 추출 (문장 끝 40자 — 반복되는 closing 문구 차단)
+    const conclusionPatterns = myPastMessages.slice(-3)
+      .map(m => m.text.replace(/[.!?]+$/, '').slice(-40).trim())
+      .filter(s => s.length > 10);
+    if (conclusionPatterns.length > 0) {
+      systemPrompt += `\n⛔ 결론부 반복 금지 (이 표현으로 끝내지 마라): ${conclusionPatterns.map(s => `"…${s}"`).join(' / ')}`;
+    }
 
     // 수치 반복 차단: 이미 사용한 숫자·퍼센트·연도 추출
     const allMyText = myPastMessages.map(m => m.text).join(' ');

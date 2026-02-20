@@ -647,14 +647,14 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
               // pendingFlush 중: 다음 글자가 연결어면 flush 취소, 아니면 즉시 flush
               if (pendingFlush) {
                 pendingFlush = false;
-                if (KR_CONNECTOR.test(char)) {
-                  // 연결어 → flush 취소, 그냥 계속
+                // 연결어 OR 닫는 따옴표 → flush 취소 (인용문 내부 "수치?", "말씀?" 패턴)
+                if (KR_CONNECTOR.test(char) || char === '"' || char === '\u201C' || char === '\u201D') {
                   currentBubble += char;
                   setCurrentText(currentBubble);
                   await sleep(35);
                   continue;
                 } else {
-                  // 연결어 아님 → 실제 문장 끝이었음 → flush 후 이 글자 새 버블 시작
+                  // 실제 문장 끝 → flush 후 이 글자 새 버블 시작
                   await flushCurrentBubble();
                   if (currentBubble.length === 0 && /^[.!?\s]$/.test(char)) continue;
                 }
@@ -682,11 +682,12 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
                 isSentenceEnd(textForEnd) &&
                 !textForEnd.trimStart().startsWith('(')
               ) {
-                // "다"로 끝나는 경우: 다음 글자 보고 결정 (연결어 여부 확인)
-                if (/[다]$/.test(textForEnd)) {
+                // "다" 또는 "?" 로 끝나는 경우: 다음 글자 보고 결정
+                // "?": 인용문 내부일 수 있음 ("수치가 어디입니까?" 뒤에 "라고 하셨는데" 패턴)
+                if (/[다?]$/.test(textForEnd)) {
                   pendingFlush = true;
                 } else {
-                  // .!? 나 요/죠/네요로 끝나는 경우: 즉시 flush
+                  // . ! 요/죠/네요로 끝나는 경우: 즉시 flush
                   await flushCurrentBubble();
                 }
               }
@@ -1551,7 +1552,12 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
 
 function renderBubbleText(text: string): React.ReactNode {
   if (!text || text === '\u00A0') return text;
-  // (행동 묘사) 패턴을 이탤릭으로 렌더링
+  // 스트리밍 중: 아직 닫히지 않은 괄호로 시작하는 경우 (예: "(마이크를 가까이 당기며")
+  // `)` 없으면 전체를 이탤릭으로 처리 → 완성 시 번쩍임 방지
+  if (/^\([^)]*$/.test(text)) {
+    return <em className="italic text-gray-400 text-sm">{text}</em>;
+  }
+  // 완성된 (행동 묘사) 패턴을 이탤릭으로 렌더링
   const parts = text.split(/(\([^)]+\))/g);
   if (parts.length <= 1) return text;
   return parts.map((part, i) => {
