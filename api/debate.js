@@ -1572,7 +1572,26 @@ Step 3 — 프레임 재설정: 토론의 프레임 자체를 바꿔라. "이건
     jangdh: '장동혁 대표',
     leejunseok: '이준석 대표',
     jeonhangil: '전한길',
+    kiminseok: '김민석',
+    jinjungkwon: '진중권',
+    kimeoojun: '김어준',
+    leejm: '이재명',
   };
+
+  // opponentName: handler 스코프에 선언 (없으면 opponentLastMessage 있을 때 ReferenceError 발생)
+  const OPPONENT_MAP = {
+    leejunseok: '전한길',
+    jeonhangil: '이준석 대표',
+    ohsehoon: '정원오 구청장',
+    jungwono: '오세훈 시장',
+    jungcr: '장동혁 대표',
+    jangdh: '정청래 대표',
+    kiminseok: '진중권',
+    jinjungkwon: '김어준',
+    kimeoojun: '진중권',
+    leejm: '상대방',
+  };
+  const opponentName = OPPONENT_MAP[speaker] || '상대방';
 
   // 이전 라운드 요약 주입 (메모리 유지 + 컨텍스트 폭증 방지)
   if (debateSummary) {
