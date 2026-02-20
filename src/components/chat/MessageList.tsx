@@ -1,3 +1,4 @@
+import { TaglineRenderer } from '@/components/common/TaglineRenderer';
 import { useEffect, useRef, useCallback } from 'react';
 import type { Message } from '@/types/chat';
 import type { PoliticianMeta } from '@/types/politician';
@@ -106,7 +107,7 @@ export default function MessageList({ messages, politician, isStreaming }: Props
             className="text-sm text-gray-400 mt-1 animate-fade-in-up"
             style={{ animationDelay: '0.2s', opacity: 0 }}
           >
-            {politician.tagline}
+            <TaglineRenderer text={politician.tagline} />
           </p>
           <p
             className="text-xs text-gray-300 mt-5 animate-fade-in-up"

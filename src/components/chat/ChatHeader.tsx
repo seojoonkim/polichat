@@ -1,3 +1,4 @@
+import { TaglineRenderer } from '@/components/common/TaglineRenderer';
 import { useState, useMemo } from 'react';
 import type { PoliticianMeta } from '@/types/politician';
 import { useChatStore } from '@/stores/chat-store';
@@ -87,7 +88,7 @@ export default function ChatHeader({ politician }: Props) {
             <span className="font-normal text-sm opacity-70 ml-1.5">| {politician.group}</span>
           </div>
           <div className="text-xs opacity-80 truncate">
-            {politician.tagline}
+            <TaglineRenderer text={politician.tagline} />
           </div>
         </div>
 

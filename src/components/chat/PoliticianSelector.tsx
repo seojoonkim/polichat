@@ -1,3 +1,4 @@
+import { TaglineRenderer } from '@/components/common/TaglineRenderer';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import type { PoliticianMeta } from '@/types/politician';
 import { useChatStore } from '@/stores/chat-store';
@@ -361,7 +362,7 @@ export default function PoliticianSelector({ politicians }: Props) {
                         </span>
                       </div>
                       <p className="text-[13px] text-gray-700 line-clamp-1 mb-1.5 leading-snug">
-                        {politician.tagline}
+                        <TaglineRenderer text={politician.tagline} />
                       </p>
                       <TypingPreview name={politician.nameKo} />
                     </div>
