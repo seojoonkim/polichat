@@ -549,6 +549,18 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
 
           const BUBBLE_DELIMITER = '||';
           let pendingSeparator = '';
+          const CHUNK_DEDUP_MIN_OVERLAP = 6;
+
+          const removeReplayFromChunk = (incoming: string): string => {
+            if (!incoming) return '';
+            const maxOverlap = Math.min(incoming.length, currentBubble.length);
+            for (let i = maxOverlap; i >= CHUNK_DEDUP_MIN_OVERLAP; i--) {
+              if (currentBubble.endsWith(incoming.slice(0, i))) {
+                return incoming.slice(i);
+              }
+            }
+            return incoming;
+          };
 
           const flushBubble = async () => {
             const bubble = currentBubble.trim();
@@ -589,8 +601,8 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           const mustRebutClaim = lastText ? opponentClaimRef.current : null;
           const text = await streamRound(speaker, currentTopic, lastText, style, async (chunk) => {
             if (abortRef.current) return;
-            // pendingSeparator: 아직 출력 안 된 raw 텍스트 (이전 청크에서 잘린 '|' 포함)
-            const incoming = pendingSeparator + chunk.replace(/\r/g, '');
+            // pendingSeparator: 아직 출력 안 된 raw 텍스트 (이전 청크에서 잘린 '|' 포함) + 중복 재전송 보정
+            const incoming = removeReplayFromChunk((pendingSeparator + chunk).replace(/\r/g, ''));
             pendingSeparator = '';
 
             const parts = incoming.split(BUBBLE_DELIMITER);
