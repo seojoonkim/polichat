@@ -254,7 +254,7 @@ export default function PoliticianSelector({ politicians }: Props) {
               >
                 <div
                   className="pc-card-interactive w-full overflow-hidden"
-                  style={{ background: `linear-gradient(135deg, ${politician.themeColor}18 0%, rgba(255,255,255,0.0) 60%)` }}
+                  style={{ background: `linear-gradient(135deg, ${politician.themeColor}40 0%, ${politician.themeColor}10 60%)` }}
                 >
                   <div className="flex items-center gap-4 px-4 py-3.5">
                     {/* Profile circle with color ring */}
@@ -332,8 +332,8 @@ export default function PoliticianSelector({ politicians }: Props) {
           <div
             className="rounded-2xl px-5 py-4 text-center"
             style={{
-              background: 'rgba(0,0,0,0.18)',
-              border: '1px solid rgba(0,0,0,0.12)',
+              background: 'linear-gradient(270deg, #0D0630, #3B0F8C, #5B21B6, #2D0B6B, #0D0630)',
+              border: '1px solid rgba(255,255,255,0.08)',
             }}
           >
             <p className="text-[13px] font-semibold leading-relaxed" style={{ color: 'rgba(255,255,255,0.92)' }}>
