@@ -547,6 +547,9 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
     setMessages([]);
     setCurrentText('');
 
+    // 모바일(640px 미만)은 화면이 좁아 글자가 빠르게 쌓여 보임 → 딜레이 더 줌
+    const charDelay = window.innerWidth < 640 ? 62 : 45;
+
     // 스피커 순서 초기화
     speakerOrderRef.current = speakerOrder || [config.speakerA, config.speakerB];
     speakerIndexRef.current = 0;
@@ -654,7 +657,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
                 if (KR_CONNECTOR.test(char) || char === '"' || char === '\u201C' || char === '\u201D') {
                   currentBubble += char;
                   setCurrentText(currentBubble);
-                  await sleep(45);
+                  await sleep(charDelay);
                   continue;
                 } else {
                   // 실제 문장 끝 → flush 후 이 글자 새 버블 시작
@@ -675,7 +678,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
 
               currentBubble += char;
               setCurrentText(currentBubble);
-              await sleep(45);
+              await sleep(charDelay);
 
               // 실시간 문장 끝 감지 → 버블 flush 대기
               const textForEnd = stripActionForSentenceEnd(currentBubble);
