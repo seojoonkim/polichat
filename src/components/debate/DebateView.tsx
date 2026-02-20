@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { PROMPT_VERSION } from '@/constants/debate-config';
-import { BUBBLE_CONFIG } from '@/lib/bubble-splitter';
+import { splitStreamedText } from '@/lib/bubble-splitter';
 import TensionGauge, { calcTension } from './TensionGauge';
 import AudienceReaction from './AudienceReaction';
 import Interjection from './Interjection';
@@ -534,7 +534,6 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
       // 스트리밍 상태 변수: try 밖에 선언해서 catch에서도 접근 가능
       let streamedText = '';
       let currentBubble = '';
-      let bubbleCount = 0;
 
       for (let attempt = 0; attempt < 3 && !roundSuccess; attempt++) {
         if (attempt > 0) {
@@ -543,7 +542,6 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           setCurrentText('');
           streamedText = '';
           currentBubble = '';
-          bubbleCount = 0;
           await sleep(500);
           if (abortRef.current) break;
         }
@@ -563,8 +561,6 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           const recentHistory = allMessages.slice(-RECENT_WINDOW);
           const historyForRound = attempt > 0 ? recentHistory.slice(-6) : recentHistory;
 
-          const BUBBLE_DELIMITER = '||';
-          let pendingSeparator = '';
           const CHUNK_DEDUP_MIN_OVERLAP = 6;
 
           const removeReplayFromChunk = (incoming: string): string => {
@@ -578,74 +574,14 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
             return incoming;
           };
 
-          const MIN_BUBBLE_LENGTH = 18; // 이보다 짧으면 분리 안 함 ("다." 단독 버블 방지)
-          // 다음 파트가 이 패턴으로 시작하면 연결어 → flush 취소 (문장 중간 분리 방지)
-          const KR_CONNECTOR = /^[는은이가을를와과도로에서으로의하여해서므로지만아어거기]/;
-          // 한국어 문장 종결어미 — 이걸로 끝나지 않으면 LLM이 ||를 문장 중간에 넣은 것
-          const KR_SENTENCE_END = /[다요죠네]\s*$|습니다\s*$|니다\s*$|합니다\s*$|겠습니다\s*$|것입니다\s*$/;
-
-          const flushBubble = async (nextPart?: string) => {
-            const bubble = currentBubble.trim();
-            if (!bubble) return;
-
-            // 너무 짧은 버블 분리 방지 ("다." 등이 단독 버블로 나오는 현상)
-            if (bubble.length < MIN_BUBBLE_LENGTH && bubbleCount < BUBBLE_CONFIG.MAX_BUBBLES - 1) {
-              return;
-            }
-
-            // 🆕 불완전 문장 분리 방지 — LLM이 ||를 "있습니||다." 처럼 종결어미 중간에 삽입한 경우 차단
-            if (!KR_SENTENCE_END.test(bubble) && bubbleCount < BUBBLE_CONFIG.MAX_BUBBLES - 1) {
-              return;
-            }
-
-            // 다음 파트가 조사/연결어로 시작하면 분리 취소 (관형절 끊김 방지)
-            if (nextPart && KR_CONNECTOR.test(nextPart.trimStart()) && bubbleCount < BUBBLE_CONFIG.MAX_BUBBLES - 1) {
-              return;
-            }
-
-            if (bubbleCount >= BUBBLE_CONFIG.MAX_BUBBLES - 1) {
-              return;
-            }
-
-            const msg: DebateMessage = { speaker, text: bubble, timestamp: Date.now() };
-            allMessages.push(msg);
-            setMessages((prev) => [...prev, msg]);
-            scrollToBottom();
-            setCurrentText('');
-            currentBubble = '';
-            bubbleCount++;
-            await sleep(900);
-          };
-
-          // 말풍선 최대 글자 수 (초과 시 자동 분할 — 마침표 없는 정청래식 발언 대응)
-          const MAX_BUBBLE_CHARS = 100;
-          // 자동 분할 가능한 글자 — 반드시 문장 완결 지점에서만 (공백·쉼표는 제외)
-          const AUTO_SPLIT_PUNCT = new Set(['.', '!', '?', '。']);
-          const AUTO_SPLIT_ENDINGS = /[다요죠네니]$/;
-
           const appendTextChunk = async (segment: string) => {
             if (!segment) return;
             for (const char of segment) {
               if (abortRef.current) return;
-              // 새 버블 첫 글자로 오는 마침표 스킵 (버블 분리 후 "." 잔상 방지)
-              if (currentBubble.length === 0 && char === '.') {
-                streamedText += char;
-                continue;
-              }
-
               streamedText += char;
               currentBubble += char;
               setCurrentText(currentBubble);
               await sleep(35);
-
-              // 🆕 최대 글자 초과 자동 flush — 반드시 문장 완결 지점에서만
-              if (
-                bubbleCount < BUBBLE_CONFIG.MAX_BUBBLES - 1 &&
-                currentBubble.length >= MAX_BUBBLE_CHARS &&
-                (AUTO_SPLIT_PUNCT.has(char) || AUTO_SPLIT_ENDINGS.test(currentBubble))
-              ) {
-                await flushBubble();
-              }
             }
           };
 
@@ -654,28 +590,9 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           const reqId = `c-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
           const text = await streamRound(speaker, currentTopic, lastText, style, reqId, async (chunk) => {
             if (abortRef.current) return;
-            // pendingSeparator: 아직 출력 안 된 raw 텍스트 (이전 청크에서 잘린 '|' 포함) + 중복 재전송 보정
-            const incoming = removeReplayFromChunk((pendingSeparator + chunk).replace(/\r/g, ''));
-            pendingSeparator = '';
-
-            const parts = incoming.split(BUBBLE_DELIMITER);
-
-            // 완성된 버블: parts[0..length-2] (|| 구분자가 확인됨)
-            for (let i = 0; i < parts.length - 1; i++) {
-              await appendTextChunk(parts[i] ?? '');
-              // 다음 파트를 전달 → 조사/연결어로 시작하면 flush 취소 (관형절 중간 끊김 방지)
-              await flushBubble(parts[i + 1]);
-            }
-
-            // 마지막 파트: 아직 || 확인 안 됨 → 즉시 타이핑으로 출력, flush 없음
-            const lastPart = parts[parts.length - 1] ?? '';
-            if (lastPart.endsWith('|')) {
-              // '|' 하나가 청크 경계에서 잘림 → 다음 '|'와 합쳐질 수 있음 → 보류
-              await appendTextChunk(lastPart.slice(0, -1));
-              pendingSeparator = '|';
-            } else {
-              await appendTextChunk(lastPart);
-            }
+            // 스트리밍 중: || 구분자 무시, 단순 텍스트 누적 + 타이핑 효과
+            const incoming = removeReplayFromChunk(chunk.replace(/\r/g, '').replace(/\|\|/g, '').replace(/\|/g, ''));
+            await appendTextChunk(incoming);
           }, historyForRound, {
             usedArgCount: usedArgCountRef.current[speaker] ?? 0,
             mustRebutClaim,
@@ -686,22 +603,25 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
 
           if (abortRef.current) break;
 
-          const finalText = `${text}`.replace(/\|\|/g, '').replace(/\|$/g, '');
-          // 스트림 끝 후 pending 텍스트 잔여분 처리 ('|' 단독은 버림)
-          if (pendingSeparator && pendingSeparator !== '|') {
-            await appendTextChunk(pendingSeparator);
-            pendingSeparator = '';
-          }
+          const finalText = `${text}`.replace(/\|\|/g, '').replace(/\|/g, '').trim();
 
-          // 남은 텍스트 처리
-          if (currentBubble.trim()) {
-            const msg: DebateMessage = { speaker, text: currentBubble.trim(), timestamp: Date.now() };
-            allMessages.push(msg);
-            setMessages((prev) => [...prev, msg]);
-          }
-
+          // 스트리밍 완료 → 전체 텍스트를 문장 단위로 버블 분리
           setCurrentText('');
           setCurrentSpeaker(null);
+
+          const bubbles = splitStreamedText(finalText);
+          for (let bi = 0; bi < bubbles.length; bi++) {
+            const bubbleText = (bubbles[bi] ?? '').trim();
+            if (!bubbleText) continue;
+            const msg: DebateMessage = { speaker, text: bubbleText, timestamp: Date.now() };
+            allMessages.push(msg);
+            setMessages((prev) => [...prev, msg]);
+            scrollToBottom();
+            if (bi < bubbles.length - 1) {
+              await sleep(900);
+            }
+          }
+
           scrollToBottom();
           lastText = finalText;
           // B: 방금 발언(text)에서 다음 턴 상대방이 반박할 핵심 주장 추출

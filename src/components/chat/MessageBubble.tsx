@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import type { Message } from '@/types/chat';
 import type { PoliticianMeta } from '@/types/politician';
+import { getPoliticianPhrases } from '@/lib/politician-phrases';
 
 interface Props {
   message: Message;
@@ -54,6 +55,46 @@ function TypingDots({ color }: { color: string }) {
       <span className="w-1.5 h-1.5 rounded-full typing-dot" style={{ backgroundColor: color }} />
       <span className="w-1.5 h-1.5 rounded-full typing-dot" style={{ backgroundColor: color }} />
       <span className="w-1.5 h-1.5 rounded-full typing-dot" style={{ backgroundColor: color }} />
+    </span>
+  );
+}
+
+// 로테이팅 트레이드마크 발언
+function RotatingPhrase({ politicianId, color }: { politicianId: string; color: string }) {
+  const phrases = useMemo(() => getPoliticianPhrases(politicianId), [politicianId]);
+  const [index, setIndex] = useState(0);
+  const [fade, setFade] = useState(true);
+
+  useEffect(() => {
+    if (!phrases || phrases.length === 0) return;
+    const interval = setInterval(() => {
+      setFade(false);
+      setTimeout(() => {
+        setIndex(i => (i + 1) % phrases.length);
+        setFade(true);
+      }, 300);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, [phrases]);
+
+  if (!phrases || phrases.length === 0) {
+    return (
+      <span className="flex items-center gap-2">
+        <TypingDots color={color} />
+        <span className="text-xs text-gray-400">답변을 준비하고 있습니다...</span>
+      </span>
+    );
+  }
+
+  return (
+    <span className="flex items-center gap-2">
+      <TypingDots color={color} />
+      <span
+        className="text-xs transition-opacity duration-300"
+        style={{ color: `${color}99`, opacity: fade ? 1 : 0 }}
+      >
+        &ldquo;{phrases[index]}&rdquo;
+      </span>
     </span>
   );
 }
@@ -309,7 +350,7 @@ export default function MessageBubble({ message, politician, isNew = false, onBu
               border: `1px solid ${politician.themeColor}18`,
             }}
           >
-            <TypingDots color={politician.themeColor} />
+            <RotatingPhrase politicianId={politician.id} color={politician.themeColor} />
           </div>
         </div>
       </div>
