@@ -1658,7 +1658,7 @@ Step 3 — 프레임 재설정: 토론의 프레임 자체를 바꿔라. "이건
       headers,
       body: JSON.stringify({
         model: isOpenAI ? 'gpt-4o-mini' : 'openai/gpt-4o-mini',
-        max_tokens: 300,
+        max_tokens: 500,
         stream: true,
         messages: openaiMessages,
       }),

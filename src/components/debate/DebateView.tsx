@@ -589,21 +589,26 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           const mustRebutClaim = lastText ? opponentClaimRef.current : null;
           const text = await streamRound(speaker, currentTopic, lastText, style, async (chunk) => {
             if (abortRef.current) return;
-            const incoming = `${pendingSeparator}${chunk.replace(/\r/g, '')}`;
+            // pendingSeparator: 아직 출력 안 된 raw 텍스트 (이전 청크에서 잘린 '|' 포함)
+            const incoming = pendingSeparator + chunk.replace(/\r/g, '');
+            pendingSeparator = '';
+
             const parts = incoming.split(BUBBLE_DELIMITER);
 
-            const shouldKeepSuffixPipe = incoming.endsWith('|') && !incoming.endsWith('||');
-
-            const boundaryCount = shouldKeepSuffixPipe ? parts.length - 1 : parts.length;
-            for (let i = 0; i < boundaryCount; i++) {
+            // 완성된 버블: parts[0..length-2] (|| 구분자가 확인됨)
+            for (let i = 0; i < parts.length - 1; i++) {
               await appendTextChunk(parts[i] ?? '');
               await flushBubble();
             }
 
-            if (shouldKeepSuffixPipe) {
+            // 마지막 파트: 아직 || 확인 안 됨 → 즉시 타이핑으로 출력, flush 없음
+            const lastPart = parts[parts.length - 1] ?? '';
+            if (lastPart.endsWith('|')) {
+              // '|' 하나가 청크 경계에서 잘림 → 다음 '|'와 합쳐질 수 있음 → 보류
+              await appendTextChunk(lastPart.slice(0, -1));
               pendingSeparator = '|';
             } else {
-              pendingSeparator = parts[parts.length - 1] || '';
+              await appendTextChunk(lastPart);
             }
           }, recentHistory, {
             usedArgCount: usedArgCountRef.current[speaker] ?? 0,
@@ -615,8 +620,10 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           if (abortRef.current) break;
 
           const finalText = `${text}`.replace(/\|\|/g, '').replace(/\|$/g, '');
-          if (pendingSeparator && pendingSeparator !== '|' && pendingSeparator.trim()) {
+          // 스트림 끝 후 pending 텍스트 잔여분 처리 ('|' 단독은 버림)
+          if (pendingSeparator && pendingSeparator !== '|') {
             await appendTextChunk(pendingSeparator);
+            pendingSeparator = '';
           }
 
           // 남은 텍스트 처리
