@@ -272,16 +272,32 @@ export function useChat(systemPrompt: string, knowledge?: Record<KnowledgeCatego
         },
         onError: (err) => {
           setStreaming(false);
-          // placeholder ID로 정확한 메시지만 삭제 (slice 대신 filter)
-          useChatStore.setState((state) => ({
-            messages: state.messages.filter((m) => m.id !== placeholderId),
-          }));
+          const latest = useChatStore.getState();
+          const placeholderIndex = latest.messages.findIndex((m) => m.id === placeholderId);
+
+          // placeholder가 이미 일부 응답을 받은 상태면 메시지 유지(삭제 아님)
+          if (placeholderIndex === -1) {
+            // should not happen, but safety
+          } else if (!latest.messages[placeholderIndex]?.content?.trim()) {
+            useChatStore.setState((state) => ({
+              messages: state.messages.filter((m) => m.id !== placeholderId),
+            }));
+          }
+
           // Still persist the user message
           setTimeout(() => persistMessages(), 50);
+
           if (err.message.includes('401')) {
             setError('API 키가 유효하지 않습니다. 서버 설정을 확인해주세요.');
+          } else if (err.message.includes('429')) {
+            setError('요청이 한동안 과부하 상태입니다. 잠시 후 다시 시도해주세요.');
           } else {
             setError(`오류가 발생했습니다: ${err.message}`);
+          }
+
+          // 응답이 있는 부분이 있으면 그대로 노출 상태로 두고 종료
+          if (latest.messages[placeholderIndex]?.content?.trim()) {
+            return;
           }
         },
       });
