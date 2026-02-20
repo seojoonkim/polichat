@@ -581,6 +581,8 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           const MIN_BUBBLE_LENGTH = 18; // 이보다 짧으면 분리 안 함 ("다." 단독 버블 방지)
           // 다음 파트가 이 패턴으로 시작하면 연결어 → flush 취소 (문장 중간 분리 방지)
           const KR_CONNECTOR = /^[는은이가을를와과도로에서으로의하여해서므로지만아어거기]/;
+          // 한국어 문장 종결어미 — 이걸로 끝나지 않으면 LLM이 ||를 문장 중간에 넣은 것
+          const KR_SENTENCE_END = /[다요죠네]\s*$|습니다\s*$|니다\s*$|합니다\s*$|겠습니다\s*$|것입니다\s*$/;
 
           const flushBubble = async (nextPart?: string) => {
             const bubble = currentBubble.trim();
@@ -588,6 +590,11 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
 
             // 너무 짧은 버블 분리 방지 ("다." 등이 단독 버블로 나오는 현상)
             if (bubble.length < MIN_BUBBLE_LENGTH && bubbleCount < BUBBLE_CONFIG.MAX_BUBBLES - 1) {
+              return;
+            }
+
+            // 🆕 불완전 문장 분리 방지 — LLM이 ||를 "있습니||다." 처럼 종결어미 중간에 삽입한 경우 차단
+            if (!KR_SENTENCE_END.test(bubble) && bubbleCount < BUBBLE_CONFIG.MAX_BUBBLES - 1) {
               return;
             }
 
