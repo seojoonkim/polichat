@@ -613,14 +613,20 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
             for (const char of segment) {
               if (abortRef.current) return;
               streamedText += char;
+
+              // 새 버블 시작 시: 선행 구두점(마침표 등) 스킵
+              if (currentBubble.length === 0 && /^[.!?\s]$/.test(char)) continue;
+
               currentBubble += char;
               setCurrentText(currentBubble);
               await sleep(35);
 
               // 실시간 문장 끝 감지 → 버블 flush
+              // 단, 괄호로 시작하는 발언은 닫힘 ) 이후에만 flush
               if (
                 bubbleCount < BUBBLE_CONFIG.MAX_BUBBLES - 1 &&
-                isSentenceEnd(currentBubble)
+                isSentenceEnd(currentBubble) &&
+                !currentBubble.trimStart().startsWith('(')
               ) {
                 await flushCurrentBubble();
               }
