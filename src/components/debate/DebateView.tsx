@@ -1531,14 +1531,14 @@ function renderBubbleText(text: string): React.ReactNode {
   // 스트리밍 중: 아직 닫히지 않은 괄호로 시작하는 경우 (예: "(마이크를 가까이 당기며")
   // `)` 없으면 전체를 이탤릭으로 처리 → 완성 시 번쩍임 방지
   if (/^\([^)]*$/.test(text)) {
-    return <em className="italic text-gray-400 text-sm">{text}</em>;
+    return <em className="italic">{text}</em>;
   }
   // 완성된 (행동 묘사) 패턴을 이탤릭으로 렌더링
   const parts = text.split(/(\([^)]+\))/g);
   if (parts.length <= 1) return text;
   return parts.map((part, i) => {
     if (/^\([^)]+\)$/.test(part)) {
-      return <em key={i} className="italic text-gray-400 text-sm">{part}</em>;
+      return <em key={i} className="italic">{part}</em>;
     }
     return <span key={i}>{part}</span>;
   });
