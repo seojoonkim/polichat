@@ -386,11 +386,11 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
         }
       }, 25000);
 
-      // 전체 스트림 30초 hard limit
+      // 전체 스트림 90초 hard limit (onToken sleep 포함한 전체 처리 시간 여유 확보)
       const hardTimeout = setTimeout(() => {
         abortCtrl.abort();
         reject(new Error('Stream hard timeout'));
-      }, 30000);
+      }, 90000);
 
       const cleanup = () => {
         clearTimeout(firstTokenTimeout);
@@ -556,6 +556,11 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
             if (abortRef.current) return;
             for (const char of chunk) {
               if (abortRef.current) return;
+              // 새 버블 첫 글자로 오는 마침표 스킵 (버블 분리 후 "." 잔상 방지)
+              if (currentBubble.length === 0 && char === '.') {
+                streamedText += char;
+                continue;
+              }
               streamedText += char;
               currentBubble += char;
               charBuf += char;
@@ -619,8 +624,16 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           await sleep(900);
         } catch (e) {
           console.error(`[debate] Stream error (attempt ${attempt + 1}):`, e);
-          // 이미 커밋된 버블 있으면 부분 성공으로 처리 → 화면에서 사라지지 않음
-          if (allMessages.length > messagesSnapshotLength) {
+          // 이미 커밋된 버블 있거나, 스트리밍 중 partial text가 있으면 부분 성공 처리
+          // → 화면에서 사라지지 않음 ("보이다 사라짐" 버그 방지)
+          const hasPartial = allMessages.length > messagesSnapshotLength || streamedText.trim().length > 0;
+          if (hasPartial) {
+            // 현재 스트리밍 중이던 텍스트도 커밋 (버블로 확정)
+            if (currentBubble.trim()) {
+              const msg: DebateMessage = { speaker, text: currentBubble.trim(), timestamp: Date.now() };
+              allMessages.push(msg);
+              setMessages((prev) => [...prev, msg]);
+            }
             lastText = streamedText || lastText;
             setCurrentText('');
             setCurrentSpeaker(null);
