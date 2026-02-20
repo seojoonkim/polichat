@@ -1169,7 +1169,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
               <img
                 src={`/politicians/${config.speakerA}/profile.jpg`}
                 className="w-20 h-20 rounded-full border-[3px] object-cover"
-                style={{ borderColor: config.speakerAColor }}
+                style={{ borderColor: config.speakerAColor, filter: 'grayscale(1) contrast(1.1)' }}
               />
               <span className="text-white text-sm mt-2 font-semibold">{config.speakerAName.split(' ')[0]}</span>
             </div>
@@ -1216,7 +1216,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
                   }}>
                     <img
                       src={`/politicians/${config.speakerA}/profile.jpg`}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'grayscale(1) contrast(1.1)' }}
                       alt={config.speakerAName}
                     />
                     <div style={{
@@ -1238,7 +1238,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
                   }}>
                     <img
                       src={`/politicians/${config.speakerB}/profile.jpg`}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'grayscale(1) contrast(1.1)' }}
                       alt={config.speakerBName}
                     />
                     <div style={{
@@ -1261,7 +1261,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
               <img
                 src={`/politicians/${config.speakerB}/profile.jpg`}
                 className="w-20 h-20 rounded-full border-[3px] object-cover"
-                style={{ borderColor: config.speakerBColor }}
+                style={{ borderColor: config.speakerBColor, filter: 'grayscale(1) contrast(1.1)' }}
               />
               <span className="text-white text-sm mt-2 font-semibold">{config.speakerBName.split(' ')[0]}</span>
             </div>
