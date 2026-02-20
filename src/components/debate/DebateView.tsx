@@ -495,6 +495,16 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
     });
   };
 
+  const summarizeDebateError = (err: unknown): string => {
+    if (typeof err === 'string') return err.slice(0, 280);
+    if (err instanceof Error) return err.message || 'Unknown error';
+    try {
+      return JSON.stringify(err).slice(0, 280);
+    } catch {
+      return String(err);
+    }
+  };
+
   // ─── 실시간 생성 모드 ──────────────────────────────────────────────────────
 
   const runLiveDebate = async (initialTopic: string, style: string, speakerOrder?: [string, string]) => {
@@ -670,7 +680,8 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
 
           await sleep(900);
         } catch (e) {
-          console.error(`[debate] Stream error (attempt ${attempt + 1}):`, e);
+          const debErr = summarizeDebateError(e);
+          console.error(`[debate] Stream error (attempt ${attempt + 1}):`, debErr);
           // 이미 커밋된 버블 있거나, 스트리밍 중 partial text가 있으면 부분 성공 처리
           // → 화면에서 사라지지 않음 ("보이다 사라짐" 버그 방지)
           const hasPartial = allMessages.length > messagesSnapshotLength || streamedText.trim().length > 0;
@@ -687,11 +698,18 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
             scrollToBottom();
             opponentClaimRef.current = extractKeyClaimClient(lastText);
             setAudienceReactionTrigger(prev => prev + 1);
+            const partialErrMsg: DebateMessage = {
+              speaker: "__moderator__",
+              text: `⚠️ ${speaker} 응답 중 오류: ${debErr.slice(0, 220)}`,
+              timestamp: Date.now(),
+            };
+            allMessages.push(partialErrMsg);
+            setMessages((prev) => [...prev, partialErrMsg]);
             roundSuccess = true;
             await sleep(900);
           } else {
             // 완전 실패 여유: 공백 구간을 만들지 않도록 fallback 말풍선 추가하고 다음 턴으로 진행
-            const fallbackText = `${speaker} 측 응답 생성 중 일시 오류가 발생했어요 (오류 ${attempt + 1}회). 다음 화자 진행합니다.`;
+            const fallbackText = `${speaker} 측 응답 생성 중 오류 발생으로 라운드 생략합니다 (오류 ${attempt + 1}회). ${debErr.slice(0, 180)} (다음 화자 진행).`;
             const fallbackMsg: DebateMessage = { speaker, text: fallbackText, timestamp: Date.now() };
             allMessages.push(fallbackMsg);
             setMessages((prev) => [...prev, fallbackMsg]);
