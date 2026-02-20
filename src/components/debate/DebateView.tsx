@@ -608,6 +608,12 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
             await sleep(900);
           };
 
+          // 말풍선 최대 글자 수 (초과 시 자동 분할 — 마침표 없는 정청래식 발언 대응)
+          const MAX_BUBBLE_CHARS = 85;
+          // 자동 분할 가능한 글자 (공백·쉼표·종결어미 직후)
+          const AUTO_SPLIT_CHARS = new Set([' ', ',', '。', '.', '!', '?']);
+          const AUTO_SPLIT_ENDINGS = /[다요죠네]$/;
+
           const appendTextChunk = async (segment: string) => {
             if (!segment) return;
             for (const char of segment) {
@@ -622,6 +628,15 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
               currentBubble += char;
               setCurrentText(currentBubble);
               await sleep(40);
+
+              // 🆕 최대 글자 초과 자동 flush (마침표 없는 발언 대응)
+              if (
+                bubbleCount < BUBBLE_CONFIG.MAX_BUBBLES - 1 &&
+                currentBubble.length >= MAX_BUBBLE_CHARS &&
+                (AUTO_SPLIT_CHARS.has(char) || AUTO_SPLIT_ENDINGS.test(currentBubble))
+              ) {
+                await flushBubble();
+              }
             }
           };
 
