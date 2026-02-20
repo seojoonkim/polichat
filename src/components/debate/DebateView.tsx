@@ -411,10 +411,22 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
         }),
         signal: abortCtrl.signal,
       })
-        .then((res) => {
+        .then(async (res) => {
           if (!res.ok) {
+            const errText = await res.text().catch(() => '');
+            let errMsg = `HTTP ${res.status}`;
+            try {
+              const parsed = JSON.parse(errText);
+              if (parsed?.error) {
+                errMsg = `${errMsg}: ${parsed.error}`;
+              }
+            } catch {
+              if (errText) {
+                errMsg = `${errMsg}: ${errText.slice(0, 200)}`;
+              }
+            }
             cleanup();
-            reject(new Error(`HTTP ${res.status}`));
+            reject(new Error(errMsg));
             return;
           }
           const reader = res.body!.getReader();
@@ -546,6 +558,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           const olderMessages = allMessages.length > RECENT_WINDOW ? allMessages.slice(0, -RECENT_WINDOW) : [];
           const debateSummary = olderMessages.length > 0 ? buildDebateSummary(olderMessages, config) : undefined;
           const recentHistory = allMessages.slice(-RECENT_WINDOW);
+          const historyForRound = attempt > 0 ? recentHistory.slice(-6) : recentHistory;
 
           const BUBBLE_DELIMITER = '||';
           let pendingSeparator = '';
@@ -622,7 +635,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
             } else {
               await appendTextChunk(lastPart);
             }
-          }, recentHistory, {
+          }, historyForRound, {
             usedArgCount: usedArgCountRef.current[speaker] ?? 0,
             mustRebutClaim,
             lastAngles: lastAnglesRef.current[speaker] ?? [],
@@ -664,7 +677,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           if (hasPartial) {
             // 현재 스트리밍 중이던 텍스트도 커밋 (버블로 확정)
             if (currentBubble.trim()) {
-              const msg: DebateMessage = { speaker, text: currentBubble.trim(), timestamp: Date.now() };
+              const msg: DebateMessage = { speaker, text: currentBubble.trim(), timestamp: Date.now() }; 
               allMessages.push(msg);
               setMessages((prev) => [...prev, msg]);
             }
@@ -674,6 +687,17 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
             scrollToBottom();
             opponentClaimRef.current = extractKeyClaimClient(lastText);
             setAudienceReactionTrigger(prev => prev + 1);
+            roundSuccess = true;
+            await sleep(900);
+          } else {
+            // 완전 실패여도 공백 구간을 만들지 않도록 폴백 말풍선 추가
+            const fallbackText = `${speaker} 측 응답 생성 중 일시 오류가 발생했어요. 다시 한 번 뒤로 돌아갑니다.`;
+            const fallbackMsg: DebateMessage = { speaker, text: fallbackText, timestamp: Date.now() };
+            allMessages.push(fallbackMsg);
+            setMessages((prev) => [...prev, fallbackMsg]);
+            setCurrentText('');
+            setCurrentSpeaker(null);
+            scrollToBottom();
             roundSuccess = true;
             await sleep(900);
           }
