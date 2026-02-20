@@ -1656,7 +1656,7 @@ function MessageBubble({
             border: `1px solid ${color}25`,
           }}
         >
-          <p className="text-gray-800 text-[15px] leading-relaxed" style={{ color: '#1e293b' }}>
+          <p className="text-gray-800 text-[16px] leading-relaxed" style={{ color: '#1e293b' }}>
             {renderBubbleText(msg.text || '\u00A0')}
             {isActive && (
               <span
@@ -1879,7 +1879,7 @@ function ModeratorMessage({ text }: { text: string }) {
           boxShadow: '0 0 12px rgba(150,180,255,0.25)',
         }}
       />
-      <span style={{ fontSize: 14, color: '#cbd5e1', fontStyle: 'italic', lineHeight: 1.6 }}>
+      <span style={{ fontSize: 15, color: '#cbd5e1', fontStyle: 'italic', lineHeight: 1.6 }}>
         {displayed}
         {!done && (
           <span

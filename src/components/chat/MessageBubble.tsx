@@ -135,7 +135,7 @@ function TypingBubble({
 
   return (
     <div
-      className="w-fit max-w-full px-4 py-2.5 rounded-2xl rounded-tl-sm text-[15px] leading-relaxed shadow-sm text-gray-800 animate-bubble-in"
+      className="w-fit max-w-full px-4 py-2.5 rounded-2xl rounded-tl-sm text-[16px] leading-relaxed shadow-sm text-gray-800 animate-bubble-in"
       style={{
         backgroundColor: `${color}08`,
         border: `1px solid ${color}18`,
@@ -258,7 +258,7 @@ export default function MessageBubble({ message, politician, isNew = false, onBu
         <div className="flex flex-col items-end gap-0.5">
           <div className="relative">
             <div
-              className="max-w-[78%] px-4 py-2.5 rounded-2xl rounded-br-sm text-white text-[15px] leading-relaxed shadow-sm"
+              className="max-w-[78%] px-4 py-2.5 rounded-2xl rounded-br-sm text-white text-[16px] leading-relaxed shadow-sm"
               style={{
                 background: `linear-gradient(135deg, ${politician.themeColor}, ${politician.themeColorSecondary})`,
               }}
@@ -318,7 +318,7 @@ export default function MessageBubble({ message, politician, isNew = false, onBu
             {displayParts.map((part, idx) => (
               <div
                 key={idx}
-                className="w-fit max-w-full px-4 py-2.5 rounded-2xl rounded-tl-sm text-[15px] leading-relaxed shadow-sm text-gray-800"
+                className="w-fit max-w-full px-4 py-2.5 rounded-2xl rounded-tl-sm text-[16px] leading-relaxed shadow-sm text-gray-800"
                 style={{
                   backgroundColor: `${politician.themeColor}08`,
                   border: `1px solid ${politician.themeColor}18`,
@@ -390,7 +390,7 @@ export default function MessageBubble({ message, politician, isNew = false, onBu
           {completedBubbles.map((part, idx) => (
             <div
               key={`completed-${idx}`}
-              className="w-fit max-w-full px-4 py-2.5 rounded-2xl rounded-tl-sm text-[15px] leading-relaxed shadow-sm text-gray-800"
+              className="w-fit max-w-full px-4 py-2.5 rounded-2xl rounded-tl-sm text-[16px] leading-relaxed shadow-sm text-gray-800"
               style={{
                 backgroundColor: `${politician.themeColor}08`,
                 border: `1px solid ${politician.themeColor}18`,
