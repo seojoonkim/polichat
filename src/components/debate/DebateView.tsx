@@ -634,11 +634,31 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           let shouldInsertAction = Math.random() < 0.3;
           let actionInserted = false;
 
+          // 한국어 연결어 — "다" 뒤에 이 글자들이 오면 문장이 아직 끝나지 않은 것 (예: 하락했다는 점은)
+          const KR_CONNECTOR = /^[는은이가을를와과도로에서으로의하여해서므로지만]/;
+          let pendingFlush = false;  // "다"로 끝났지만 다음 글자 보고 결정
+
           const appendTextChunk = async (segment: string) => {
             if (!segment) return;
             for (const char of segment) {
               if (abortRef.current) return;
               streamedText += char;
+
+              // pendingFlush 중: 다음 글자가 연결어면 flush 취소, 아니면 즉시 flush
+              if (pendingFlush) {
+                pendingFlush = false;
+                if (KR_CONNECTOR.test(char)) {
+                  // 연결어 → flush 취소, 그냥 계속
+                  currentBubble += char;
+                  setCurrentText(currentBubble);
+                  await sleep(35);
+                  continue;
+                } else {
+                  // 연결어 아님 → 실제 문장 끝이었음 → flush 후 이 글자 새 버블 시작
+                  await flushCurrentBubble();
+                  if (currentBubble.length === 0 && /^[.!?\s]$/.test(char)) continue;
+                }
+              }
 
               // 새 버블 시작 시: 선행 구두점(마침표 등) 스킵
               if (currentBubble.length === 0 && /^[.!?\s]$/.test(char)) continue;
@@ -654,8 +674,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
               setCurrentText(currentBubble);
               await sleep(35);
 
-              // 실시간 문장 끝 감지 → 버블 flush
-              // 행동 묘사 제거 후 본문 기준으로 판단
+              // 실시간 문장 끝 감지 → 버블 flush 대기
               const textForEnd = stripActionForSentenceEnd(currentBubble);
               if (
                 bubbleCount < BUBBLE_CONFIG.MAX_BUBBLES - 1 &&
@@ -663,7 +682,13 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
                 isSentenceEnd(textForEnd) &&
                 !textForEnd.trimStart().startsWith('(')
               ) {
-                await flushCurrentBubble();
+                // "다"로 끝나는 경우: 다음 글자 보고 결정 (연결어 여부 확인)
+                if (/[다]$/.test(textForEnd)) {
+                  pendingFlush = true;
+                } else {
+                  // .!? 나 요/죠/네요로 끝나는 경우: 즉시 flush
+                  await flushCurrentBubble();
+                }
               }
             }
           };
