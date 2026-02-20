@@ -1302,6 +1302,7 @@ function extractKeyClaim(text) {
 }
 
 export default async function handler(req, res) {
+  try {
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -1741,5 +1742,22 @@ Step 3 — 프레임 재설정: 토론의 프레임 자체를 바꿔라. "이건
     console.error('[debate] Error:', e.message);
     res.write(`data: ${JSON.stringify({ error: e.message })}\n\n`);
     res.end();
+  }
+
+  } catch (fatal) {
+    const fatalMsg = fatal && typeof fatal === 'object' && 'message' in fatal ? String(fatal.message) : 'Unknown error';
+    console.error('[debate] Unhandled error:', fatalMsg, fatal);
+    try {
+      res.write(`data: ${JSON.stringify({ error: fatalMsg })}\n\n`);
+      res.end();
+    } catch (_sinkErr) {
+      try {
+        if (typeof res.status === 'function') {
+          res.status(500).json({ error: fatalMsg });
+        }
+      } catch {
+        // ignore
+      }
+    }
   }
 }
