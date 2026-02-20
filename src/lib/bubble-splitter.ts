@@ -53,7 +53,7 @@ export function isSentenceEnd(text: string): boolean {
   // 예: "40.3%"에서 "40." → 앞 글자가 숫자이면 소수점
   const lastChar = trimmed[trimmed.length - 1];
   if (lastChar === '.') {
-    const prevChar = trimmed.length >= 2 ? trimmed[trimmed.length - 2] : '';
+    const prevChar = (trimmed.length >= 2 ? trimmed[trimmed.length - 2] : '') || '';
     if (/\d/.test(prevChar)) return false;
   }
 
