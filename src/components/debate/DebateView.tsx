@@ -177,6 +177,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
   const [coinFlipWinner, setCoinFlipWinner] = useState<{ key: string; name: string } | null>(null);
   const [showExitModal, setShowExitModal] = useState(false);
   const [timeLeft, setTimeLeft] = useState(300); // 5분 = 300초
+  const timeLeftRef = useRef(300); // 최신 timeLeft를 항상 참조
   const [audienceReactionTrigger, setAudienceReactionTrigger] = useState(0); // 관중 반응 트리거
 
   // 실행 취소용 ref
@@ -242,8 +243,10 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
         const next = prev - 1;
         if (next <= 0) {
           abortRef.current = true;
+          timeLeftRef.current = 0;
           return 0;
         }
+        timeLeftRef.current = next;
         return next;
       });
     }, 1000);
@@ -353,7 +356,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
     requestId: string,
     onToken?: (text: string) => Promise<void> | void,
     recentHistory?: DebateMessage[],
-    opts?: { usedArgCount?: number; mustRebutClaim?: string | null; lastAngles?: string[]; debateSummary?: string }
+    opts?: { usedArgCount?: number; mustRebutClaim?: string | null; lastAngles?: string[]; debateSummary?: string; timeLeft?: number }
   ): Promise<string> => {
     return new Promise((resolve, reject) => {
       let fullText = '';
@@ -389,6 +392,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
         body: JSON.stringify({
           requestId,
           topic, speaker, opponentLastMessage, style, debateType,
+          timeLeft: opts?.timeLeft ?? timeLeftRef.current,
           recentHistory: recentHistory ?? [],
           debateSummary: opts?.debateSummary,
           usedArgCount: opts?.usedArgCount ?? 0,
@@ -655,6 +659,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
             mustRebutClaim,
             lastAngles: lastAnglesRef.current[speaker] ?? [],
             debateSummary,
+            timeLeft: timeLeftRef.current,
           });
 
           if (abortRef.current) break;
@@ -1168,42 +1173,16 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
       {/* 진행률 바 — 남은 시간 표시 (왼쪽에서 오른쪽으로 줄어듦) */}
       {phase === 'running' && (
         <>
-          <style>{`
-            @keyframes timerWobble {
-              0%, 100% { transform: rotate(0deg); }
-              25% { transform: rotate(-22deg); }
-              75% { transform: rotate(22deg); }
-            }
-            .timer-wobble { animation: timerWobble 0.45s ease-in-out infinite; }
-          `}</style>
-          {/* 긴장도 게이지 */}
+          {/* 통합 단계 + 타이머 게이지 */}
           {phase === 'running' && (
-            <TensionGauge messages={messages} round={_round} maxRound={30} />
+            <TensionGauge
+              messages={messages}
+              round={_round}
+              maxRound={30}
+              timeLeft={timeLeft}
+              totalTime={300}
+            />
           )}
-          <div className="relative bg-gray-200 flex justify-end overflow-visible" style={{ height: '3px' }}>
-            <div
-              className="h-full transition-all duration-1000 relative overflow-visible"
-              style={{
-                width: `${(timeLeft / 300) * 100}%`,
-                background: 'linear-gradient(270deg, #A78BFA, #7C3AED)',
-              }}
-            >
-              {/* 아이콘: 바의 왼쪽 끝(줄어드는 쪽)에 고정 */}
-              <div
-                className="absolute overflow-visible pointer-events-none"
-                style={{ left: '-11px', top: '50%', transform: 'translateY(-50%)' }}
-              >
-                <div className="timer-wobble" style={{ background: 'var(--pc-bg, #F6F6FA)', borderRadius: '50%', padding: '1px', lineHeight: 0 }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="13" r="8"/>
-                    <path d="M12 9v4l2.5 2.5"/>
-                    <path d="M9 3h6"/>
-                    <path d="M12 3v2"/>
-                  </svg>
-                </div>
-              </div>
-            </div>
-          </div>
         </>
       )}
 

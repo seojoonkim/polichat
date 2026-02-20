@@ -1048,7 +1048,7 @@ const CURRENT_CONTEXT = `⚠️ 시간 기준 (최우선 규칙): 현재는 2026
 ✅ 필수 예시: "2025년 서울 아파트 평균 매매가가 전년 대비 상승했고(한국부동산원)" / "국민연금 소진 예상이 2055년으로 앞당겨졌으며" / "LH 부채 160조를 넘어선 상황에서" / "법인세 최고세율을 24%로 인하한 이후" / "10.15 부동산 대책으로 서울 전역에 3중 규제가 적용된 결과"
 근거를 먼저 제시하고 → 그 의미와 주장을 덧붙이는 구조로 발언하라.`;
 
-function getStylePrompt(style, speaker, opponentLastMessage, topicLabel, debateType = 'seoul', historyLength = 0) {
+function getStylePrompt(style, speaker, opponentLastMessage, topicLabel, debateType = 'seoul', historyLength = 0, timeLeft = null) {
   const NAMES = {
     ohsehoon: '오세훈 서울시장',
     jungwono: '정원오 성동구청장',
@@ -1073,7 +1073,7 @@ function getStylePrompt(style, speaker, opponentLastMessage, topicLabel, debateT
   const baseContext = `당신은 ${speakerName}입니다. ${CURRENT_CONTEXT}\n주제: ${topicLabel}. ${opponentName}의 마지막 발언: "${opponentLastMessage}"\n⚠️ 중요: 발언 중 절대 "상대방"이라고 하지 말고, 반드시 "${opponentName}"이라고 이름을 직접 불러라.\n⚠️ 비판 규칙(필수): 상대 정책을 비판할 때 절대 "잘못됐습니다" "문제가 있습니다" 같은 결론만 말하지 마라. 반드시 "XX 방향으로 접근하기 때문에 YY 결과가 생긴다"는 구조로 구체적 이유와 방향을 설명하라. 예: "공급 확대 대신 규제 강화에만 집중하는 방식이라, 실제로는 투자 심리를 위축시켜 장기 공급 부족을 심화시킵니다."`;
 
   if (style === 'policy') {
-    const act = getAct(historyLength);
+    const act = getAct(historyLength, timeLeft);
     const policyEscalation = {
       low:  '차분하고 논리적으로. 상대를 탐색하며 핵심 입장을 정리하라.',
       mid:  '더 공격적으로. 상대 논리의 허점을 직접 찌르고, 날카롭게 반박하라. "그 논리라면~"으로 시작해도 좋다.',
@@ -1131,7 +1131,7 @@ function getStylePrompt(style, speaker, opponentLastMessage, topicLabel, debateT
     const emoRotated = [...emotionPool.slice(emoStart), ...emotionPool.slice(0, emoStart)];
     const emoSlice = emoRotated.slice(0, 6).map(e => `"${e}"`).join(', ');
 
-    const act = getAct(historyLength);
+    const act = getAct(historyLength, timeLeft);
     const emotionalEscalation = {
       low:  '[1막 탐색] 감정은 아직 절제하라. 논리와 데이터 중심으로 탐색하되, 가끔 날카로운 한마디를 던져라. 60% 논리 + 40% 감정.',
       mid:  '[2막 격돌] 감정을 본격적으로 드러내라! 상대에게 직접 질문 던지고, 목소리 높이고, 허점 발견 즉시 끊어라. 40% 논리 + 60% 감정.',
@@ -1233,7 +1233,13 @@ const ESCALATION_CONFIG = {
   act3: { rounds: [19, 30], label: '3막 결전', intensity: 'high' },
 };
 
-function getAct(totalRounds) {
+function getAct(totalRounds, timeLeft = null) {
+  // 시간 정보가 있으면 시간 기반 우선 (5분=300초 3등분)
+  if (timeLeft !== null && timeLeft >= 0) {
+    if (timeLeft > 200) return ESCALATION_CONFIG.act1; // 0~100초 경과: 탐색
+    if (timeLeft > 100) return ESCALATION_CONFIG.act2; // 100~200초 경과: 격돌
+    return ESCALATION_CONFIG.act3;                      // 200~300초 경과: 결전
+  }
   if (totalRounds <= 8)  return ESCALATION_CONFIG.act1;
   if (totalRounds <= 18) return ESCALATION_CONFIG.act2;
   return ESCALATION_CONFIG.act3;
@@ -1337,7 +1343,9 @@ export default async function handler(req, res) {
     usedArgCount = 0,
     mustRebutClaim = null,
     lastAngles = [],
+    timeLeft = null,
   } = payload;
+  const safeTimeLeft = (Number.isFinite(Number(timeLeft)) && Number(timeLeft) >= 0) ? Number(timeLeft) : null;
 
   const safeTopic = (typeof topic === 'string' ? topic.trim() : '') || '자유토론';
   const safeSpeaker = typeof speaker === 'string' ? speaker : '';
@@ -1447,7 +1455,7 @@ export default async function handler(req, res) {
   // 스타일에 따른 시스템 프롬프트 결정
   let systemPrompt = persona.baseSystem;
   if (safeStyle && safeStyle !== 'free') {
-    systemPrompt = getStylePrompt(safeStyle, safeSpeaker, opponentLastMessage || '', safeTopic, safeDebateType, safeRecentHistory.length);
+    systemPrompt = getStylePrompt(safeStyle, safeSpeaker, opponentLastMessage || '', safeTopic, safeDebateType, safeRecentHistory.length, safeTimeLeft);
   }
 
   // ── 논란·의혹 주제 강제 오버라이드 ───────────────────────────────────────
@@ -1574,7 +1582,7 @@ export default async function handler(req, res) {
     systemPrompt += `\n✅ 위 논거 후보 중 아직 안 쓴 것으로 새로운 각도에서 공격/방어하라.`;
     
     // 에스컬레이션 기반 전략 가이드 (3막 구조)
-    const act = getAct(compactHistory.length);
+    const act = getAct(compactHistory.length, safeTimeLeft);
     const actGuides = {
       low:  `📍 [${act.label}] 핵심 주장 + 강력한 데이터로 선제 공격. 상대를 탐색하며 페이스를 잡아라.`,
       mid:  `📍 [${act.label}] ${opponentName} 논리의 허점을 직접 파고들어라! 감정을 격화시켜 직접 충돌하라!`,
@@ -1635,7 +1643,7 @@ export default async function handler(req, res) {
   // ── B: 상대방 핵심 주장 반박 의무화 (3단 구조) ────────────────────────────
   const rebutClaim = safeMustRebutClaim || extractKeyClaim(opponentLastMessage || '');
   if (rebutClaim) {
-    const rebutAct = getAct(safeRecentHistory.length);
+    const rebutAct = getAct(safeRecentHistory.length, safeTimeLeft);
     if (rebutAct.intensity === 'low') {
       // 1막: 단순 반박
       systemPrompt += `\n\n🎯 필수 반박 (이걸 직접 공격하지 않으면 패배): "${rebutClaim}"`;
