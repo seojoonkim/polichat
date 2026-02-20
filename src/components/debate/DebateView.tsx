@@ -654,7 +654,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
                 if (KR_CONNECTOR.test(char) || char === '"' || char === '\u201C' || char === '\u201D') {
                   currentBubble += char;
                   setCurrentText(currentBubble);
-                  await sleep(35);
+                  await sleep(45);
                   continue;
                 } else {
                   // 실제 문장 끝 → flush 후 이 글자 새 버블 시작
@@ -675,7 +675,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
 
               currentBubble += char;
               setCurrentText(currentBubble);
-              await sleep(35);
+              await sleep(45);
 
               // 실시간 문장 끝 감지 → 버블 flush 대기
               const textForEnd = stripActionForSentenceEnd(currentBubble);
@@ -1844,7 +1844,7 @@ function ModeratorMessage({ text }: { text: string }) {
       if (i >= text.length) { setDone(true); return; }
       setDisplayed(text.slice(0, i + 1));
       i++;
-      setTimeout(tick, 28);
+      setTimeout(tick, 36);
     };
     const start = setTimeout(tick, 120); // 약간 딜레이 후 시작
     return () => clearTimeout(start);
