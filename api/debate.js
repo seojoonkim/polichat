@@ -1312,9 +1312,19 @@ export default async function handler(req, res) {
 
   if (req.method !== 'POST') return res.status(405).end();
 
+  const requestId = `d-${Date.now()}-${Math.random().toString(16).slice(2, 12)}`;
   const payload = typeof req.body === 'string' ? (() => {
     try { return JSON.parse(req.body); } catch { return {}; }
   })() : (req.body || {});
+  const payloadMeta = (() => {
+    const history = Array.isArray(payload?.recentHistory) ? payload.recentHistory : [];
+    const last = history[history.length - 1];
+    return {
+      historyLen: history.length,
+      lastSpeaker: last?.speaker || null,
+      lastTextLen: last?.text ? String(last.text).length : 0,
+    };
+  })();
 
   const {
     topic,
@@ -1334,17 +1344,20 @@ export default async function handler(req, res) {
   const safeStyle = (typeof style === 'string' && style.length > 0) ? style : 'policy';
   const safeDebateType = ['seoul', 'national', 'leejeon', 'kimjin'].includes(debateType) ? debateType : 'seoul';
   const safeRecentHistory = Array.isArray(recentHistory) ? recentHistory.filter((m) => m && typeof m === 'object') : [];
+  res.setHeader('X-Request-Id', requestId);
   const safeDebateSummary = typeof debateSummary === 'string' ? debateSummary : null;
   const safeMustRebutClaim = typeof mustRebutClaim === 'string' ? mustRebutClaim : null;
   const safeUsedArgCount = Number.isFinite(Number(usedArgCount)) ? Number(usedArgCount) : 0;
   const safeLastAngles = Array.isArray(lastAngles) ? lastAngles.filter((a) => typeof a === 'string') : [];
 
   console.log('[debate] request', {
+    requestId,
     speaker: safeSpeaker,
     style: safeStyle,
     debateType: safeDebateType,
     topic: safeTopic,
     historyLen: safeRecentHistory.length,
+    payloadMeta,
   });
   const apiKey = process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY;
 
@@ -1647,8 +1660,8 @@ Step 3 — 프레임 재설정: 토론의 프레임 자체를 바꿔라. "이건
 
 
   // 이전 라운드 요약 주입 (메모리 유지 + 컨텍스트 폭증 방지)
-  if (debateSummary) {
-    systemPrompt += `\n\n📝 이전 라운드 요약 (기억 유지용):\n${debateSummary}\n위 요약을 바탕으로 이전 주장을 반복하지 말고 새로운 각도로 논의를 발전시켜라.`;
+  if (safeDebateSummary) {
+    systemPrompt += `\n\n📝 이전 라운드 요약 (기억 유지용):\n${safeDebateSummary}\n위 요약을 바탕으로 이전 주장을 반복하지 말고 새로운 각도로 논의를 발전시켜라.`;
   }
 
   const historyMessages = [];
@@ -1678,7 +1691,7 @@ Step 3 — 프레임 재설정: 토론의 프레임 자체를 바꿔라. "이건
 
   // META 이벤트 먼저 전송: 프론트가 다음 턴 상태 업데이트에 사용 (A+C)
   const nextArgCount = (usedArgCount || 0) + 8;
-  res.write(`data: ${JSON.stringify({ meta: { nextArgCount, usedAngle: forcedAngle } })}\n\n`);
+  res.write(`data: ${JSON.stringify({ meta: { nextArgCount, usedAngle: forcedAngle, requestId } })}\n\n`);
 
   try {
     // OpenRouter API (OpenAI 호환 포맷)
@@ -1758,21 +1771,21 @@ Step 3 — 프레임 재설정: 토론의 프레임 자체를 바꿔라. "이건
     res.write(`data: [DONE]\n\n`);
     res.end();
   } catch (e) {
-    console.error('[debate] Error:', e.message);
-    res.write(`data: ${JSON.stringify({ error: e.message })}\n\n`);
+    console.error('[debate] Error:', requestId, e && e.message ? e.message : String(e));
+    res.write(`data: ${JSON.stringify({ error: e.message, requestId })}\n\n`);
     res.end();
   }
 
   } catch (fatal) {
     const fatalMsg = fatal && typeof fatal === 'object' && 'message' in fatal ? String(fatal.message) : 'Unknown error';
-    console.error('[debate] Unhandled error:', fatalMsg, fatal);
+    console.error('[debate] Unhandled error:', requestId, fatalMsg, fatal);
     try {
-      res.write(`data: ${JSON.stringify({ error: fatalMsg })}\n\n`);
+      res.write(`data: ${JSON.stringify({ error: fatalMsg, requestId })}\n\n`);
       res.end();
     } catch (_sinkErr) {
       try {
-        if (typeof res.status === 'function') {
-          res.status(500).json({ error: fatalMsg });
+        if (!res.writableEnded && typeof res.status === 'function') {
+          res.status(500).json({ error: fatalMsg, requestId });
         }
       } catch {
         // ignore

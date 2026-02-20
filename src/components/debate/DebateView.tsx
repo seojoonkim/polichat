@@ -366,6 +366,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
     topic: string,
     opponentLastMessage: string,
     style: string,
+    requestId: string,
     onToken?: (text: string) => Promise<void> | void,
     recentHistory?: DebateMessage[],
     opts?: { usedArgCount?: number; mustRebutClaim?: string | null; lastAngles?: string[]; debateSummary?: string }
@@ -402,6 +403,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          requestId,
           topic, speaker, opponentLastMessage, style, debateType,
           recentHistory: recentHistory ?? [],
           debateSummary: opts?.debateSummary,
@@ -418,7 +420,10 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
             try {
               const parsed = JSON.parse(errText);
               if (parsed?.error) {
-                errMsg = `${errMsg}: ${parsed.error}`;
+                errMsg = `${errMsg}: ${typeof parsed.error === 'string' ? parsed.error : JSON.stringify(parsed.error)}`;
+              }
+              if (parsed?.requestId) {
+                errMsg = `${errMsg} (${parsed.requestId})`;
               }
             } catch {
               if (errText) {
@@ -622,7 +627,8 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
 
           // B: 상대 주장 반박 의무화 — 내 턴이면 상대(lastText)의 핵심 주장 전달
           const mustRebutClaim = lastText ? opponentClaimRef.current : null;
-          const text = await streamRound(speaker, currentTopic, lastText, style, async (chunk) => {
+          const reqId = `c-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+          const text = await streamRound(speaker, currentTopic, lastText, style, reqId, async (chunk) => {
             if (abortRef.current) return;
             // pendingSeparator: 아직 출력 안 된 raw 텍스트 (이전 청크에서 잘린 '|' 포함) + 중복 재전송 보정
             const incoming = removeReplayFromChunk((pendingSeparator + chunk).replace(/\r/g, ''));
