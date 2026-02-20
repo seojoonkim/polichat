@@ -521,6 +521,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
       let currentBubble = '';
       let bubbleCount = 0;
       let sentencesInBubble = 0;
+      let charBuf = ''; // onToken 밖에 선언 — 여러 chunk에 걸쳐 누적돼야 sleep이 제대로 동작
 
       for (let attempt = 0; attempt < 2 && !roundSuccess; attempt++) {
         if (attempt > 0) {
@@ -531,6 +532,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           currentBubble = '';
           bubbleCount = 0;
           sentencesInBubble = 0;
+          charBuf = '';
           await sleep(500);
           if (abortRef.current) break;
         }
@@ -552,7 +554,6 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           const mustRebutClaim = lastText ? opponentClaimRef.current : null;
           const text = await streamRound(speaker, currentTopic, lastText, style, async (chunk) => {
             if (abortRef.current) return;
-            let charBuf = '';
             for (const char of chunk) {
               if (abortRef.current) return;
               streamedText += char;
