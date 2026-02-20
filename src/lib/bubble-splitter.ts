@@ -45,8 +45,17 @@ export function splitIntoBubbles(text: string): string[] {
 
 /** 스트리밍 중 문장 끝 감지 (DebateView.tsx용) */
 export function isSentenceEnd(text: string): boolean {
-  return (
-    BUBBLE_CONFIG.SENTENCE_END_REGEX.test(text.trimEnd()) &&
-    text.trim().length >= BUBBLE_CONFIG.MIN_BUBBLE_LENGTH
-  );
+  const trimmed = text.trimEnd();
+  if (!BUBBLE_CONFIG.SENTENCE_END_REGEX.test(trimmed)) return false;
+  if (trimmed.length < BUBBLE_CONFIG.MIN_BUBBLE_LENGTH) return false;
+
+  // 마침표가 소수점인 경우 문장 끝으로 처리하지 않음
+  // 예: "40.3%"에서 "40." → 앞 글자가 숫자이면 소수점
+  const lastChar = trimmed[trimmed.length - 1];
+  if (lastChar === '.') {
+    const prevChar = trimmed.length >= 2 ? trimmed[trimmed.length - 2] : '';
+    if (/\d/.test(prevChar)) return false;
+  }
+
+  return true;
 }
