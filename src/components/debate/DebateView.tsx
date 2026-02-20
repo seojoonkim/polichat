@@ -338,7 +338,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
         if (abortRef.current) break;
         displayed += char;
         setCurrentText(displayed);
-        const delay = ['.', '!', '?', ','].includes(char) ? 110 : 55;
+        const delay = ['.', '!', '?', ','].includes(char) ? 220 : 110;
         await sleep(delay);
       }
 
@@ -516,13 +516,22 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
       let roundSuccess = false;
       const messagesSnapshotLength = allMessages.length; // 이 라운드 시작 전 스냅샷
 
+      // 스트리밍 상태 변수: try 밖에 선언해서 catch에서도 접근 가능
+      let streamedText = '';
+      let currentBubble = '';
+      let bubbleCount = 0;
+      let sentencesInBubble = 0;
+
       for (let attempt = 0; attempt < 2 && !roundSuccess; attempt++) {
         if (attempt > 0) {
-          // 재시도 전: 이전 attempt에서 부분 출력된 말풍선 롤백 (중복 출력 방지)
-          allMessages.splice(messagesSnapshotLength);
-          setMessages([...allMessages]);
+          // 재시도 전: 이미 표시된 버블은 유지 — 로컬 변수만 초기화
+          // (allMessages.splice 제거 — "나오다 없어져" 버그 원인이었음)
           setCurrentText('');
-          await sleep(1500);
+          streamedText = '';
+          currentBubble = '';
+          bubbleCount = 0;
+          sentencesInBubble = 0;
+          await sleep(500);
           if (abortRef.current) break;
         }
 
@@ -534,11 +543,6 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           }
 
           const currentTopic = selectedTopic === 'free' ? freeTopicRef.current : initialTopic;
-
-          let streamedText = '';
-          let currentBubble = '';
-          let bubbleCount = 0;
-          let sentencesInBubble = 0;
 
           // 최근 20개 verbatim + 이전 발언은 요약 압축
           const olderMessages = allMessages.length > RECENT_WINDOW ? allMessages.slice(0, -RECENT_WINDOW) : [];
@@ -555,12 +559,11 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
               currentBubble += char;
               charBuf += char;
 
-              // 10자 단위 배치 렌더링 (매 글자 setState 과부하 방지)
-              // document.hidden 체크 제거 — 모바일에서 탭 비활성 오판 시 sleep(0) 버그 방지
-              if (charBuf.length >= 10) {
+              // 5자 단위 배치 렌더링 + 150ms sleep → 자연스러운 타이핑 속도 (30ms/char)
+              if (charBuf.length >= 5) {
                 setCurrentText(currentBubble);
                 charBuf = '';
-                await sleep(100);
+                await sleep(150);
               }
 
               // 문장 끝 감지 (bubble-splitter 유틸 사용)
@@ -615,7 +618,17 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           await sleep(900);
         } catch (e) {
           console.error(`[debate] Stream error (attempt ${attempt + 1}):`, e);
-          // attempt 0 실패 → attempt 1 재시도 (currentSpeaker 유지로 빈 화면 안 됨)
+          // 이미 커밋된 버블 있으면 부분 성공으로 처리 → 화면에서 사라지지 않음
+          if (allMessages.length > messagesSnapshotLength) {
+            lastText = streamedText || lastText;
+            setCurrentText('');
+            setCurrentSpeaker(null);
+            scrollToBottom();
+            opponentClaimRef.current = extractKeyClaimClient(lastText);
+            setAudienceReactionTrigger(prev => prev + 1);
+            roundSuccess = true;
+            await sleep(900);
+          }
         }
       }
 
