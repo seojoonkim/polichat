@@ -518,28 +518,7 @@ export default async function handler(req, res) {
     enhancedSystem += userMemoryToPrompt(userMemory, relevantMemories);
     enhancedSystem += ragContext;
 
-    // 멀티턴 메모리 강화: user_memory 데이터를 system prompt에 직접 주입
-    if (userMemory) {
-      const memoryLines = ['\n\n---\n## 🧠 시민 맥락 메모리\n'];
-      if (userMemory.name) memoryLines.push(`- 시민 이름: ${userMemory.name}`);
-      if (userMemory.total_messages > 0) memoryLines.push(`- 대화 횟수: ${userMemory.total_messages}회`);
-      const facts = userMemory.facts || {};
-      const interests = facts.interests || facts.관심사;
-      if (interests) memoryLines.push(`- 관심 분야: ${interests}`);
-      const prevTopics = facts.previous_topics || facts.이전주제;
-      if (prevTopics) memoryLines.push(`- 이전 대화 주제: ${prevTopics}`);
-      for (const [k, v] of Object.entries(facts)) {
-        if (!['interests', '관심사', 'previous_topics', '이전주제'].includes(k)) {
-          memoryLines.push(`- ${k}: ${v}`);
-        }
-      }
-      if (relevantMemories.length > 0) {
-        memoryLines.push('\n### 관련 과거 대화');
-        relevantMemories.forEach((m) => memoryLines.push(`- ${m.content}`));
-      }
-      memoryLines.push('\n이 정보를 활용해 "이전에 OO에 대해 이야기했었죠" 같은 맥락 연결을 자연스럽게 해주세요.');
-      enhancedSystem += memoryLines.join('\n');
-    }
+    // 멀티턴 메모리 강화: userMemoryToPrompt에서 이미 주입됨 — 중복 제거
 
     // 메시지 카운트 증가 (비동기, 응답 대기 안 함)
     if (userId && idolId && supabase) {

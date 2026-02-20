@@ -1450,48 +1450,7 @@ function getKnowledge(topicLabel, speaker) {
     };
   }
 
-  // ── hanhong 전용 지식베이스 ──
-  if (['handoonghoon', 'hongjunpyo'].includes(speaker)) {
-    const hh = POLICY_KB.hanhong;
-    const myKb = speaker === 'handoonghoon' ? hh.handoonghoon : hh.hongjunpyo;
-    const opponentKb = speaker === 'handoonghoon' ? hh.hongjunpyo : hh.handoonghoon;
-
-    const posKey = /쇄신|정통|당/.test(topicLabel) ? '쇄신'
-      : /윤석열|정부|평가|책임|계엄/.test(topicLabel) ? '윤석열'
-      : /대선|후보|전략/.test(topicLabel) ? '대선'
-      : /검찰|사법|개혁|FBI/.test(topicLabel) ? '검찰'
-      : /경제|성장|복지|감세|메가폴리스/.test(topicLabel) ? '경제'
-      : /외교|대북|핵|동맹|안보/.test(topicLabel) ? '외교'
-      : /개헌|제도|헌재|선거/.test(topicLabel) ? '개헌'
-      : /지방|분권|균형|메가/.test(topicLabel) ? '지방'
-      : null;
-
-    const myPosition = posKey ? myKb.핵심입장[posKey] : null;
-
-    const conflicts = hh.핵심쟁점.filter(c => {
-      if (!posKey) return false;
-      return c.주제 === posKey;
-    }).slice(0, 3);
-
-    const conflictsFormatted = conflicts.map(c => ({
-      주제: c.주제,
-      ppp: speaker === 'handoonghoon' ? c.handoonghoon : c.hongjunpyo,
-      dp: speaker === 'handoonghoon' ? c.hongjunpyo : c.handoonghoon,
-      수치: c.수치,
-    }));
-
-    const sebuKey = posKey;
-    const 세부논거Object = sebuKey && myKb.세부논거 ? { [sebuKey]: myKb.세부논거[sebuKey] } : null;
-
-    return {
-      myPosition,
-      seoulContext: null,
-      attackPoints: myKb.공격포인트.slice(0, 4),
-      conflicts: conflictsFormatted,
-      reversals: opponentKb.약점 || [],
-      세부논거: 세부논거Object,
-    };
-  }
+  // (duplicate hanhong handler removed — already handled above)
 
   const pppSpeaker = ['ohsehoon', 'jangdh'].includes(speaker);
   const isSeoulSpeaker = ['ohsehoon', 'jungwono'].includes(speaker);
@@ -1778,6 +1737,7 @@ function extractThemes(text) {
 
   const found = new Set();
   for (const { pattern, name } of themePatterns) {
+    pattern.lastIndex = 0; // Reset stateful /g regex before .test()
     if (pattern.test(text)) {
       found.add(name);
     }
@@ -2254,22 +2214,16 @@ export default async function handler(req, res) {
 - 이전 발언에서 이미 사용한 수치는 절대 재사용 금지.
 - 위반 시 토론 패배로 간주.`;
 
-  // ── 말풍선 분리 규칙: 3단 발언 구조 ────────────────────────────────────────
+  // ── 발언 구조 규칙 (클라이언트 버블 분리로 전환됨 — || 구분자 제거) ──────────
   systemPrompt += `\n\n🧩 발언 구조 규칙 (필수)
 
-발언을 3단 구조로 작성하고 각 단 사이에 "||"를 정확히 2번 넣으세요.
+발언을 3단 구조로 자연스럽게 작성하세요:
+1단: 핵심주장 (1~2문장)
+2단: 근거/사례 (1~2문장)
+3단: 결론 (1문장)
 
-📌 구조:
-[단1: 핵심주장 1~2문장]||[단2: 근거/사례 1~2문장]||[단3: 결론 1문장]
-
-🔴 "||" 위치 규칙 (매우 중요):
-- "||"는 반드시 완전한 문장이 끝난 직후에만 넣으세요.
-- 완전한 문장 끝 예시: "...기각입니다.||", "...필요합니다.||", "...됩니다.||"
-- ❌ 절대 금지 — 단어 중간 삽입: "...기각입니||다.", "...필요합니||다.", "...됩니||다."
-- ❌ 절대 금지 — "입니", "합니", "됩니", "습니" 같이 "다"가 빠진 형태 뒤에 "||" 삽입
-- ✅ "입니다", "합니다", "됩니다", "습니다" — 이 전체 표현이 완성된 후에 "||" 삽입
-
-한 단은 최대 70자 이내로 작성하세요.`;
+총 4문장 이내. 각 문장은 완결된 형태로 끝내세요.
+⚠️ "||" 구분자를 사용하지 마세요. 일반 문장으로만 작성하세요.`;
 
 
 
@@ -2427,14 +2381,15 @@ Step 3 — 프레임 재설정: 토론의 프레임 자체를 바꿔라. "이건
 
   } catch (fatal) {
     const fatalMsg = fatal && typeof fatal === 'object' && 'message' in fatal ? String(fatal.message) : 'Unknown error';
-    console.error('[debate] Unhandled error:', requestId, fatalMsg, fatal);
+    const safeRequestId = typeof requestId !== 'undefined' ? requestId : 'unknown';
+    console.error('[debate] Unhandled error:', safeRequestId, fatalMsg, fatal);
     try {
-      res.write(`data: ${JSON.stringify({ error: fatalMsg, requestId })}\n\n`);
+      res.write(`data: ${JSON.stringify({ error: fatalMsg, requestId: safeRequestId })}\n\n`);
       res.end();
     } catch (_sinkErr) {
       try {
         if (!res.writableEnded && typeof res.status === 'function') {
-          res.status(500).json({ error: fatalMsg, requestId });
+          res.status(500).json({ error: fatalMsg, requestId: safeRequestId });
         }
       } catch {
         // ignore

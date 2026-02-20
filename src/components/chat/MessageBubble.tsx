@@ -203,6 +203,7 @@ export default function MessageBubble({ message, politician, isNew = false, onBu
   const [completedBubbles, setCompletedBubbles] = useState<string[]>([]);
   const [currentTypingIndex, setCurrentTypingIndex] = useState(-1);
   const finalBubblePartsRef = useRef<string[]>([]);
+  const delayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // 스트리밍 완료 감지
   const prevIsNewRef = useRef(isNew);
@@ -221,6 +222,13 @@ export default function MessageBubble({ message, politician, isNew = false, onBu
     prevIsNewRef.current = isNew;
   }, [isNew, shouldAnimate, bubbleParts, onBubbleReveal]);
 
+  // unmount 시 딜레이 타이머 정리
+  useEffect(() => {
+    return () => {
+      if (delayTimerRef.current) clearTimeout(delayTimerRef.current);
+    };
+  }, []);
+
   // 버블 타이핑 완료 핸들러
   const handleBubbleComplete = (index: number) => {
     const parts = finalBubblePartsRef.current;
@@ -233,7 +241,7 @@ export default function MessageBubble({ message, politician, isNew = false, onBu
       // 다음 버블 있으면 딜레이 후 타이핑 (생각하는 느낌)
       setPhase(`delay-${index}`);
       const delay = 1500 + Math.random() * 1500; // 1.5~3초
-      setTimeout(() => {
+      delayTimerRef.current = setTimeout(() => {
         setCurrentTypingIndex(index + 1);
         setPhase(`typing-${index + 1}`);
         onBubbleReveal?.();

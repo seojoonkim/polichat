@@ -266,6 +266,9 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
   useEffect(() => {
     return () => {
       if (scrollRafRef.current) cancelAnimationFrame(scrollRafRef.current);
+      // unmount 시 진행 중인 fetch 및 토론 루프 중단
+      abortRef.current = true;
+      activeAbortCtrlRef.current?.abort();
     };
   }, []);
 

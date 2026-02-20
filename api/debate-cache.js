@@ -64,13 +64,24 @@ export default async function handler(req, res) {
         .limit(1)
         .single();
 
-      const nextVersion = existing ? existing.version + 1 : 1;
+      let nextVersion = existing ? existing.version + 1 : 1;
 
-      const { data, error } = await supabase
-        .from('debate_cache')
-        .insert({ topic, style, debate_type: debateType, version: nextVersion, messages, judgment: judgment || null })
-        .select()
-        .single();
+      // Retry on version conflict (race condition between concurrent writes)
+      let data, error;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        ({ data, error } = await supabase
+          .from('debate_cache')
+          .insert({ topic, style, debate_type: debateType, version: nextVersion, messages, judgment: judgment || null })
+          .select()
+          .single());
+        
+        if (!error) break;
+        if (error.code === '23505') { // unique constraint violation
+          nextVersion++;
+          continue;
+        }
+        break; // other errors, don't retry
+      }
 
       if (error) {
         console.error('[debate-cache] POST error:', error);

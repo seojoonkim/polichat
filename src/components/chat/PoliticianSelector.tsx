@@ -127,36 +127,48 @@ function useTypingLoop(name: string) {
   const [text, setText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const msgIndexRef = useRef(0);
+  const cancelledRef = useRef(false);
+  const timersRef = useRef<ReturnType<typeof setTimeout | typeof setInterval>[]>([]);
+
+  const addTimer = useCallback((id: ReturnType<typeof setTimeout | typeof setInterval>) => {
+    timersRef.current.push(id);
+    return id;
+  }, []);
 
   const runLoop = useCallback(() => {
+    if (cancelledRef.current) return;
     const msg = messages![msgIndexRef.current % messages!.length];
     if (!msg) return;
     let charIdx = 0;
     setIsTyping(true);
 
-    const typeInterval = setInterval(() => {
+    const typeInterval = addTimer(setInterval(() => {
+      if (cancelledRef.current) { clearInterval(typeInterval); return; }
       charIdx++;
       setText(`"${msg.slice(0, charIdx)}"`);
       if (charIdx >= msg.length) {
         clearInterval(typeInterval);
         setIsTyping(false);
-        // Wait 3s, then clear and move to next
-        setTimeout(() => {
+        addTimer(setTimeout(() => {
+          if (cancelledRef.current) return;
           setText('');
           msgIndexRef.current++;
-          // Small delay before next message starts
-          setTimeout(() => runLoop(), 300);
-        }, 3000);
+          addTimer(setTimeout(() => runLoop(), 300));
+        }, 3000));
       }
-    }, 120);
-
-    return () => clearInterval(typeInterval);
-  }, [messages]);
+    }, 120));
+  }, [messages, addTimer]);
 
   useEffect(() => {
-    // Initial delay before starting
+    cancelledRef.current = false;
+    timersRef.current = [];
     const timeout = setTimeout(() => runLoop(), 800 + Math.random() * 600);
-    return () => clearTimeout(timeout);
+    timersRef.current.push(timeout);
+    return () => {
+      cancelledRef.current = true;
+      timersRef.current.forEach(id => clearTimeout(id as ReturnType<typeof setTimeout>));
+      timersRef.current = [];
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
