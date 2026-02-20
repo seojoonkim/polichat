@@ -7,6 +7,20 @@ interface InterjectionProps {
   align: 'left' | 'right'; // 상대편 위치
 }
 
+const SPEAKER_SHORT_NAMES: Record<string, string> = {
+  ohsehoon:    '오세훈',
+  jungwono:    '정원오',
+  jungcr:      '정청래',
+  jangdh:      '장동혁',
+  leejunseok:  '이준석',
+  jeonhangil:  '전한길',
+  kimeoojun:   '김어준',
+  jinjungkwon: '진중권',
+  handoonghoon:'한동훈',
+  hongjunpyo:  '홍준표',
+  kiminseok:   '김민석',
+};
+
 const INTERJECTIONS: Record<string, string[]> = {
   ohsehoon:    ['그건 사실이 아닙니다!', '잠깐만요!', '근거를 대세요!', '착각하고 계시네요.'],
   jungwono:    ['아닙니다!', '현장을 모르시는 거예요!', '주민들한테 물어보세요!', '그게 다가 아닙니다!'],
@@ -63,24 +77,42 @@ export default function Interjection({ streamingText, opponentSpeaker, isStreami
   if (!text) return null;
 
   const isLeft = align === 'left';
+  const speakerLabel = SPEAKER_SHORT_NAMES[opponentSpeaker] ?? opponentSpeaker;
   return (
     <div style={{
       position: 'absolute',
-      top: -36,
+      top: -42,
       [isLeft ? 'left' : 'right']: 4,
-      background: 'rgba(30,30,40,0.95)',
-      color: '#f1f5f9',
-      border: '1px solid rgba(255,255,255,0.15)',
-      padding: '5px 12px',
-      borderRadius: 14,
-      fontSize: 12,
-      fontWeight: 700,
-      boxShadow: '0 3px 12px rgba(0,0,0,0.35)',
-      whiteSpace: 'nowrap',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: isLeft ? 'flex-start' : 'flex-end',
       animation: 'interjectionPop 2.2s ease-in-out forwards',
       zIndex: 20,
     }}>
+      {/* 화자 이름 */}
+      <span style={{
+        fontSize: 10,
+        fontWeight: 700,
+        color: 'rgba(200,210,240,0.7)',
+        marginBottom: 2,
+        paddingLeft: isLeft ? 6 : 0,
+        paddingRight: isLeft ? 0 : 6,
+      }}>
+        {speakerLabel}
+      </span>
+      <div style={{
+        background: 'rgba(30,30,40,0.95)',
+        color: '#f1f5f9',
+        border: '1px solid rgba(255,255,255,0.15)',
+        padding: '5px 12px',
+        borderRadius: 14,
+        fontSize: 12,
+        fontWeight: 700,
+        boxShadow: '0 3px 12px rgba(0,0,0,0.35)',
+        whiteSpace: 'nowrap',
+      }}>
       {text}
+      </div>
       <style>{`
         @keyframes interjectionPop {
           0%   { opacity: 0; transform: translateY(8px) scale(0.9); }
