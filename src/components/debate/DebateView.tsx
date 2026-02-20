@@ -391,7 +391,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
       const hardTimeout = setTimeout(() => {
         abortCtrl.abort();
         reject(new Error('Stream hard timeout'));
-      }, 90000);
+      }, 150000);
 
       const cleanup = () => {
         clearTimeout(firstTokenTimeout);
@@ -627,7 +627,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
               streamedText += char;
               currentBubble += char;
               setCurrentText(currentBubble);
-              await sleep(40);
+              await sleep(25);
 
               // 🆕 최대 글자 초과 자동 flush — 반드시 문장 완결 지점에서만
               if (
