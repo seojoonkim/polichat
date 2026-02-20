@@ -260,7 +260,7 @@ export default function PoliticianSelector({ politicians }: Props) {
                     {/* Profile circle with color ring */}
                     <div className="relative shrink-0">
                       <div
-                        className="w-[66px] h-[66px] rounded-full overflow-hidden"
+                        className="w-[69px] h-[69px] rounded-full overflow-hidden"
                         style={{
                           boxShadow: `0 0 0 2.5px white, 0 0 0 5px ${politician.themeColor}80`,
                         }}
