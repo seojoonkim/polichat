@@ -236,7 +236,7 @@ export default function PoliticianSelector({ politicians }: Props) {
               <circle cx="12" cy="10" r="0.8" fill="currentColor"/>
               <circle cx="15" cy="10" r="0.8" fill="currentColor"/>
             </svg>
-            1:1 AI 대화
+            AI 1:1 대화
           </p>
         </div>
 
