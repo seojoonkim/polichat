@@ -323,18 +323,6 @@ export default function PoliticianSelector({ politicians }: Props) {
             </div>
           ))}
         </div>
-
-        {/* Footer */}
-        <div
-          className="mt-8 pb-6 px-4 animate-fade-in-up"
-          style={{ animationDelay: '0.4s' }}
-        >
-          <div className="px-2 py-2 text-center">
-            <p className="text-[13px] leading-relaxed" style={{ color: '#2D0B6B' }}>
-              ⚠️ 본 서비스에서 제공되는 모든 대화와 토론 콘텐츠는 인공지능(AI) 기술을 통해 생성된 가상의 시뮬레이션 결과물입니다. 해당 콘텐츠는 각 정치인의 공개된 과거 발언 및 언론 보도 등을 기반으로 학습된 모델이 생성한 것이나, 이는 실제 인물의 현재 의지나 공식적인 견해를 대변하지 않으며 실제 입장과 상당한 차이가 있을 수 있습니다. 또한, 인공지능 기술의 특성상 생성 과정에서 사실과 다른 허구의 내용이나 왜곡 및 과장된 표현이 포함될 수 있으므로, 본 서비스의 내용을 공식적인 근거로 인용하거나 절대적인 사실로 신뢰하지 마시기 바랍니다. 서비스 이용 중 발생하는 오해나 사용자의 판단에 따른 결과에 대해 운영측은 어떠한 법적 책임도 지지 않으며, 정확한 정보 확인이 필요한 사안은 반드시 공식적인 경로를 통해 재확인하시길 권고드립니다.
-            </p>
-          </div>
-        </div>
       </div>
     </div>
     </div>
