@@ -1495,6 +1495,11 @@ export default async function handler(req, res) {
     systemPrompt += kbText;
   }
 
+  const compactHistory = (recentHistory || []).slice(-8).map((m) => ({
+    ...m,
+    text: (m.text || '').slice(0, 220),
+  }));
+
   // ── 반복 금지 목록 주입 (현재 speaker가 이미 사용한 논점 추출 + 테마 추출) ────────
   const myPastMessages = (compactHistory || []).filter(msg => msg.speaker === speaker);
   if (myPastMessages.length > 0) {
@@ -1573,10 +1578,11 @@ export default async function handler(req, res) {
     `한 문장이 짧거나 감정표현(예: "그렇습니다.")이더라도 의미상 완결되면 구분 가능.\n`+
     `불필요한 위치에는 "||"를 넣지 마세요.`;;
 
+
   // ── B: 상대방 핵심 주장 반박 의무화 (3단 구조) ────────────────────────────
   const rebutClaim = mustRebutClaim || extractKeyClaim(opponentLastMessage);
   if (rebutClaim) {
-    const rebutAct = getAct(compactHistory.length);
+    const rebutAct = getAct((recentHistory || []).length);
     if (rebutAct.intensity === 'low') {
       // 1막: 단순 반박
       systemPrompt += `\n\n🎯 필수 반박 (이걸 직접 공격하지 않으면 패배): "${rebutClaim}"`;
@@ -1590,10 +1596,6 @@ Step 3 — 프레임 재설정: 토론의 프레임 자체를 바꿔라. "이건
     }
   }
 
-  const compactHistory = (recentHistory || []).slice(-8).map((m) => ({
-    ...m,
-    text: (m.text || '').slice(0, 220),
-  }));
 
   // ── 대화 히스토리 → messages 배열로 전달 (LLM native 방식, 전체 기억) ───────
   const SPEAKER_NAMES = {
