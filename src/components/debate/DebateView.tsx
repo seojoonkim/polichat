@@ -521,7 +521,6 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
       let currentBubble = '';
       let bubbleCount = 0;
       let sentencesInBubble = 0;
-      let charBuf = ''; // onToken 밖에 선언 — 여러 chunk에 걸쳐 누적돼야 sleep이 제대로 동작
 
       for (let attempt = 0; attempt < 2 && !roundSuccess; attempt++) {
         if (attempt > 0) {
@@ -532,7 +531,6 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           currentBubble = '';
           bubbleCount = 0;
           sentencesInBubble = 0;
-          charBuf = '';
           await sleep(500);
           if (abortRef.current) break;
         }
@@ -563,14 +561,10 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
               }
               streamedText += char;
               currentBubble += char;
-              charBuf += char;
 
-              // 5자 단위 배치 렌더링 + 150ms sleep → 자연스러운 타이핑 속도 (30ms/char)
-              if (charBuf.length >= 5) {
-                setCurrentText(currentBubble);
-                charBuf = '';
-                await sleep(150);
-              }
+              // 매 글자마다 렌더링 + 40ms sleep → 한 글자씩 자연스럽게 타이핑
+              setCurrentText(currentBubble);
+              await sleep(40);
 
               // 문장 끝 감지 (bubble-splitter 유틸 사용)
               if (isSentenceEnd(currentBubble)) {
@@ -588,13 +582,10 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
                   currentBubble = '';
                   sentencesInBubble = 0;
                   bubbleCount++;
-                  charBuf = '';
-                  await sleep(900); // 300ms→900ms: 버블 간 자연스러운 호흡 추가
+                  await sleep(900); // 버블 간 자연스러운 호흡
                 }
               }
             }
-            // 잔여 버퍼 flush
-            if (charBuf.length > 0) setCurrentText(currentBubble);
           }, recentHistory, {
             usedArgCount: usedArgCountRef.current[speaker] ?? 0,
             mustRebutClaim,
