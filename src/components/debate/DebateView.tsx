@@ -579,13 +579,20 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           };
 
           const MIN_BUBBLE_LENGTH = 18; // 이보다 짧으면 분리 안 함 ("다." 단독 버블 방지)
+          // 다음 파트가 이 패턴으로 시작하면 연결어 → flush 취소 (문장 중간 분리 방지)
+          const KR_CONNECTOR = /^[는은이가을를와과도로에서으로의하여해서므로지만아어거기]/;
 
-          const flushBubble = async () => {
+          const flushBubble = async (nextPart?: string) => {
             const bubble = currentBubble.trim();
             if (!bubble) return;
 
             // 너무 짧은 버블 분리 방지 ("다." 등이 단독 버블로 나오는 현상)
             if (bubble.length < MIN_BUBBLE_LENGTH && bubbleCount < BUBBLE_CONFIG.MAX_BUBBLES - 1) {
+              return;
+            }
+
+            // 다음 파트가 조사/연결어로 시작하면 분리 취소 (관형절 끊김 방지)
+            if (nextPart && KR_CONNECTOR.test(nextPart.trimStart()) && bubbleCount < BUBBLE_CONFIG.MAX_BUBBLES - 1) {
               return;
             }
 
@@ -649,7 +656,8 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
             // 완성된 버블: parts[0..length-2] (|| 구분자가 확인됨)
             for (let i = 0; i < parts.length - 1; i++) {
               await appendTextChunk(parts[i] ?? '');
-              await flushBubble();
+              // 다음 파트를 전달 → 조사/연결어로 시작하면 flush 취소 (관형절 중간 끊김 방지)
+              await flushBubble(parts[i + 1]);
             }
 
             // 마지막 파트: 아직 || 확인 안 됨 → 즉시 타이핑으로 출력, flush 없음
