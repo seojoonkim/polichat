@@ -378,13 +378,13 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
       const abortCtrl = new AbortController();
       activeAbortCtrlRef.current = abortCtrl;
 
-      // 12초 내 첫 토큰 미수신 시 abort
+      // 25초 내 첫 토큰 미수신 시 abort (Phase 1+2로 프롬프트 길어져서 API 레이턴시 증가)
       const firstTokenTimeout = setTimeout(() => {
         if (!firstTokenReceived) {
           abortCtrl.abort();
           reject(new Error('First token timeout'));
         }
-      }, 12000);
+      }, 25000);
 
       // 전체 스트림 30초 hard limit
       const hardTimeout = setTimeout(() => {
@@ -556,10 +556,11 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
               charBuf += char;
 
               // 10자 단위 배치 렌더링 (매 글자 setState 과부하 방지)
+              // document.hidden 체크 제거 — 모바일에서 탭 비활성 오판 시 sleep(0) 버그 방지
               if (charBuf.length >= 10) {
                 setCurrentText(currentBubble);
                 charBuf = '';
-                await sleep(document.hidden ? 0 : 100);
+                await sleep(100);
               }
 
               // 문장 끝 감지 (bubble-splitter 유틸 사용)
@@ -571,14 +572,15 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
                   const bubble = currentBubble.trim();
                   const msg: DebateMessage = { speaker, text: bubble, timestamp: Date.now() };
                   allMessages.push(msg);
-                  // currentText를 지우지 않음 — 렌더에서 커밋된 텍스트와 일치할 때 라이브 버블 자동 숨김
                   setMessages((prev) => [...prev, msg]);
                   scrollToBottom();
+                  // 라이브 버블 명시적 초기화 (이전 버블 텍스트 잔상 방지)
+                  setCurrentText('');
                   currentBubble = '';
                   sentencesInBubble = 0;
                   bubbleCount++;
                   charBuf = '';
-                  await sleep(300);
+                  await sleep(900); // 300ms→900ms: 버블 간 자연스러운 호흡 추가
                 }
               }
             }
