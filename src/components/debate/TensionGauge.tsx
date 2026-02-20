@@ -32,26 +32,40 @@ export function calcTension(messages: { speaker: string; text: string }[], round
 
 export default function TensionGauge({ messages, round, maxRound }: TensionGaugeProps) {
   const tension = useMemo(() => calcTension(messages, round, maxRound), [messages, round, maxRound]);
-  const color = tension < 33 ? '#FCD34D' : tension < 66 ? '#F97316' : '#EF4444';
-  const flames = tension < 33 ? '🔥' : tension < 66 ? '🔥🔥' : '🔥🔥🔥';
-  const label  = tension < 33 ? '탐색' : tension < 66 ? '격돌' : '결전';
+  const color  = tension < 33 ? '#D97706' : tension < 66 ? '#EA580C' : '#DC2626';
+  const emoji  = tension < 33 ? '💬' : tension < 66 ? '⚡' : '🔥';
+  const label  = tension < 33 ? '탐색 중 · 초반' : tension < 66 ? '격돌 중 · 중반' : '최고조 · 후반';
 
   return (
     <div style={{ width: '100%', padding: '6px 16px 4px', marginBottom: 4 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-        <span style={{ fontSize: 13, fontWeight: 700, color: '#e2e8f0' }}>
-          {flames} {label}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+        {/* 단계 배지 */}
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: 5,
+          background: color + '15',
+          border: `1.5px solid ${color}45`,
+          borderRadius: 20,
+          padding: '3px 10px 3px 7px',
+        }}>
+          <span style={{ fontSize: 13 }}>{emoji}</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color, letterSpacing: '-0.2px' }}>
+            {label}
+          </span>
+        </div>
+        {/* 긴장도 수치 */}
+        <span style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 500 }}>
+          긴장도 {tension}%
         </span>
-        <span style={{ fontSize: 11, color: '#888' }}>{tension}%</span>
       </div>
-      <div style={{ width: '100%', height: 6, borderRadius: 3, background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
+      {/* 긴장도 바 */}
+      <div style={{ width: '100%', height: 5, borderRadius: 3, background: 'rgba(0,0,0,0.08)', overflow: 'hidden' }}>
         <div style={{
           width: `${tension}%`,
           height: '100%',
           borderRadius: 3,
           background: `linear-gradient(90deg, #FCD34D, ${color})`,
           transition: 'width 0.6s ease, background 0.6s ease',
-          boxShadow: tension > 66 ? `0 0 8px ${color}88` : 'none',
+          boxShadow: tension > 66 ? `0 0 8px ${color}66` : 'none',
         }} />
       </div>
     </div>
