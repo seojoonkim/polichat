@@ -112,8 +112,8 @@ export default function MessageBubble({ message, politician, isNew = false, onBu
   const isUser = message.role === 'user';
   const isSystem = message.role === 'system';
 
-  // 빈 메시지 렌더링 방지
-  if (!isUser && !isSystem && !message.content?.trim()) return null;
+  // 빈 메시지 렌더링 방지 (스트리밍 최초엔 isNew면 타이핑 인디케이터 표기)
+  if (!isUser && !isSystem && !message.content?.trim() && !isNew) return null;
 
   // 시스템 메시지: 가운데 정렬 배지
   if (isSystem) {
