@@ -217,7 +217,7 @@ export default function PoliticianSelector({ politicians }: Props) {
                 <line x1="5" y1="14" x2="9" y2="18"/>
                 <line x1="7" y1="21" x2="9" y2="19"/>
               </svg>
-              AI 토론 시뮬레이션
+              AI 5분 토론
             </p>
           </div>
           <DebateBanner debateType="seoul" />

@@ -176,7 +176,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
   const [coinFlipStage, setCoinFlipStage] = useState<'spinning' | 'revealed' | 'idle'>('idle');
   const [coinFlipWinner, setCoinFlipWinner] = useState<{ key: string; name: string } | null>(null);
   const [showExitModal, setShowExitModal] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(360); // 6분 = 360초
+  const [timeLeft, setTimeLeft] = useState(300); // 5분 = 300초
   const [audienceReactionTrigger, setAudienceReactionTrigger] = useState(0); // 관중 반응 트리거
 
   // 실행 취소용 ref
@@ -233,7 +233,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
 
   useEffect(() => {
     if (phase !== 'running') {
-      setTimeLeft(360);
+      setTimeLeft(300);
       return;
     }
 
@@ -261,29 +261,13 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
     }
   }, [timeLeft, phase]);
 
-  // 자유토론: 2분(120초) 뒤 랜덤 주제 전환 (서울/전국은 한 번만)
+  // 자유토론: 5분을 3등분 (100초마다) 랜덤 주제 전환 — 모든 debateType 공통
   useEffect(() => {
     if (selectedTopic !== 'free' || phase !== 'running') return;
-    if (debateType === 'leejeon' || debateType === 'kimjin') return; // leejeon/kimjin은 아래 별도 useEffect에서 처리
-    if (timeLeft !== 240) return; // 6분 중 2분 경과 시점 (360-120=240)
 
-    const realTopics = config.topics.filter(t => t.id !== 'free');
-    const next = realTopics[Math.floor(Math.random() * realTopics.length)];
-    if (!next) return;
-    
-    freeTopicRef.current = next.label;
-    topicChangedRef.current = true;
-    pendingTopicChangeRef.current = next.label; // 현재 라운드 끝난 후 처리
-  }, [timeLeft, selectedTopic, phase, config, debateType]);
-
-  // 자유토론 (leejeon/kimjin 전용): 2분마다 반복 랜덤 주제 전환
-  useEffect(() => {
-    if (selectedTopic !== 'free' || phase !== 'running' || (debateType !== 'leejeon' && debateType !== 'kimjin')) return;
-
-    const elapsed = 360 - timeLeft; // 경과 시간(초)
-    if (elapsed > 0 && elapsed % 120 === 0) {
+    const elapsed = 300 - timeLeft; // 경과 시간(초)
+    if (elapsed > 0 && elapsed % 100 === 0 && elapsed < 300) {
       const realTopics = config.topics.filter(t => t.id !== 'free');
-      // 현재 주제와 다른 주제 선택
       const candidates = realTopics.filter(t => t.label !== freeTopicRef.current);
       const pool = candidates.length > 0 ? candidates : realTopics;
       const next = pool[Math.floor(Math.random() * pool.length)];
@@ -293,7 +277,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
       topicChangedRef.current = true;
       pendingTopicChangeRef.current = next.label;
     }
-  }, [timeLeft, selectedTopic, phase, config, debateType]);
+  }, [timeLeft, selectedTopic, phase, config]);
 
   // ─── 캐시 조회 ─────────────────────────────────────────────────────────────
 
@@ -871,7 +855,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
     await sleep(1800);
 
     setPhase('running');
-    setTimeLeft(360);
+    setTimeLeft(300);
     setCoinFlipStage('idle');
     setCurrentSpeaker(firstKey); // 코인 직후 첫 화자 TypingIndicator 즉시 표시
 
@@ -894,7 +878,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
     setMessages([]);
     setJudgment(null);
     setRound(0);
-    setTimeLeft(360);
+    setTimeLeft(300);
     setPhase('setup');
   };
 
@@ -1200,7 +1184,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
             <div
               className="h-full transition-all duration-1000 relative overflow-visible"
               style={{
-                width: `${(timeLeft / 360) * 100}%`,
+                width: `${(timeLeft / 300) * 100}%`,
                 background: 'linear-gradient(270deg, #A78BFA, #7C3AED)',
               }}
             >
@@ -1495,7 +1479,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
               setCurrentText('');
               setJudgment(null);
               setRound(0);
-              setTimeLeft(360);
+              setTimeLeft(300);
             }}
             className="flex-1 py-3 rounded-xl text-sm font-bold text-gray-800 border transition-colors hover:bg-gray-100 flex items-center justify-center gap-2"
             style={{ borderColor: 'rgba(0,0,0,0.1)' }}
