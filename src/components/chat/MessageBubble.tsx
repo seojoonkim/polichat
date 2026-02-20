@@ -134,9 +134,16 @@ export default function MessageBubble({ message, politician, isNew = false, onBu
   }
 
   // Split assistant messages by "||" for multiple bubbles
-  const bubbleParts = !isUser && message.content
+  const splitParts = !isUser && message.content
     ? message.content.split('||').map((s) => s.trim()).filter(Boolean)
     : [];
+
+  // Fallback: if split 결과가 비어도(예: 구분자만 왔다 갔다 하는 경우) 원본 텍스트를 유지
+  const bubbleParts = splitParts.length > 0
+    ? splitParts
+    : (!isUser && message.content?.trim()
+      ? [message.content.trim()]
+      : []);
 
   // 10초 이내 생성된 메시지만 애니메이션 적용
   const [shouldAnimate] = useState(() => {
