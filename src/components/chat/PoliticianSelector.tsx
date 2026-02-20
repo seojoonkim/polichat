@@ -110,9 +110,9 @@ function useTypingLoop(name: string) {
 
 function TypingPreview({ name }: { name: string }) {
   const { text, isTyping } = useTypingLoop(name);
-  if (!text) return <p className="typing-preview idle text-xs text-slate-400 mb-2 truncate">&nbsp;</p>;
+  if (!text) return <p className="typing-preview idle text-xs text-slate-600 mb-2 truncate">&nbsp;</p>;
   return (
-    <p className={`typing-preview ${isTyping ? 'typing' : 'idle'} text-xs text-slate-400 mb-2 truncate overflow-hidden`}>
+    <p className={`typing-preview ${isTyping ? 'typing' : 'idle'} text-xs text-slate-600 mb-2 truncate overflow-hidden`}>
       {text}
     </p>
   );
@@ -305,7 +305,7 @@ export default function PoliticianSelector({ politicians }: Props) {
                           {politician.group}
                         </span>
                       </div>
-                      <p className="text-[13px] text-gray-500 line-clamp-1 mb-1.5 leading-snug">
+                      <p className="text-[13px] text-gray-700 line-clamp-1 mb-1.5 leading-snug">
                         {politician.tagline}
                       </p>
                       <TypingPreview name={politician.nameKo} />
