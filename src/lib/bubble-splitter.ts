@@ -7,37 +7,13 @@ export const BUBBLE_CONFIG = {
 
 /** 완성된 텍스트를 말풍선 배열로 분할 (use-chat.ts용) */
 export function splitIntoBubbles(text: string): string[] {
-  const cleaned = text.replace(/\*\*(.*?)\*\*/g, '$1');
+  const cleaned = text.replace(/\*\*(.*?)\*\*/g, '$1').trim();
 
+  // 1:1 대화에서는 기본적으로 사용자 체감 UX를 위해 명시적 구분자만 분리.
+  // (무분별한 자동 분할이 말풍선 깜박임/누락을 유발할 수 있음)
   if (cleaned.includes('||')) {
-    return cleaned.split('||').map((s) => s.trim()).filter((s) => s.length > 0);
-  }
-
-  const allNumbers = cleaned.match(/\d+\.\s/g);
-  if (allNumbers && allNumbers.length >= 2) {
-    const parts = cleaned.split(/(?=\d+\.\s)/).map((s) => s.trim()).filter(Boolean);
-    if (parts.length) return parts;
-  }
-
-  if (cleaned.length > 150) {
-    const sentences = cleaned.split(/(?<=[다요죠네요\.!?])\s+/).filter((s) => s.trim());
-    if (sentences.length >= 2) {
-      const bubbles: string[] = [];
-      let current = '';
-      let count = 0;
-      for (const sentence of sentences) {
-        current += (current ? ' ' : '') + sentence;
-        count++;
-        if (count >= 2 && current.length >= 50) {
-          bubbles.push(current.trim());
-          current = '';
-          count = 0;
-        }
-      }
-      if (current.trim()) bubbles.push(current.trim());
-      const validBubbles = bubbles.filter((b) => b.trim().length > 0);
-      if (validBubbles.length > 1) return validBubbles;
-    }
+    const parts = cleaned.split('||').map((s) => s.trim()).filter((s) => s.length > 0);
+    return parts.length > 0 ? parts : [cleaned];
   }
 
   return [cleaned];
