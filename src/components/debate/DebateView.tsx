@@ -533,7 +533,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
       let currentBubble = '';
       let bubbleCount = 0;
 
-      for (let attempt = 0; attempt < 2 && !roundSuccess; attempt++) {
+      for (let attempt = 0; attempt < 3 && !roundSuccess; attempt++) {
         if (attempt > 0) {
           // 재시도 전: 이미 표시된 버블은 유지 — 로컬 변수만 초기화
           // (allMessages.splice 제거 — "나오다 없어져" 버그 원인이었음)
@@ -690,14 +690,16 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
             roundSuccess = true;
             await sleep(900);
           } else {
-            // 완전 실패여도 공백 구간을 만들지 않도록 폴백 말풍선 추가
-            const fallbackText = `${speaker} 측 응답 생성 중 일시 오류가 발생했어요. 다시 한 번 뒤로 돌아갑니다.`;
+            // 완전 실패 여유: 공백 구간을 만들지 않도록 fallback 말풍선 추가하고 다음 턴으로 진행
+            const fallbackText = `${speaker} 측 응답 생성 중 일시 오류가 발생했어요 (오류 ${attempt + 1}회). 다음 화자 진행합니다.`;
             const fallbackMsg: DebateMessage = { speaker, text: fallbackText, timestamp: Date.now() };
             allMessages.push(fallbackMsg);
             setMessages((prev) => [...prev, fallbackMsg]);
+            lastText = opponentClaimRef.current || lastText;
             setCurrentText('');
             setCurrentSpeaker(null);
             scrollToBottom();
+            setAudienceReactionTrigger((prev) => prev + 1);
             roundSuccess = true;
             await sleep(900);
           }
