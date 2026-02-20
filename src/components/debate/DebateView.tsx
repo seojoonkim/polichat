@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { PROMPT_VERSION } from '@/constants/debate-config';
 import { isSentenceEnd, BUBBLE_CONFIG } from '@/lib/bubble-splitter';
+import { getRandomAction } from '@/lib/debate-actions';
 import TensionGauge, { calcTension } from './TensionGauge';
 import AudienceReaction from './AudienceReaction';
 import Interjection from './Interjection';
@@ -150,6 +151,24 @@ type Phase = 'setup' | 'coinflip' | 'running' | 'judging' | 'result' | 'finished
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+// 문장 끝 마침표 보장
+const ensurePunctuation = (text: string): string => {
+  const t = text.trim();
+  if (!t) return t;
+  // 행동 묘사로 끝나는 경우 (괄호 안) → 그대로
+  if (/\)$/.test(t)) return t;
+  // 이미 구두점으로 끝남
+  if (/[.!?]$/.test(t)) return t;
+  // 한국어 종결어미로 끝남 → 마침표 추가
+  if (/[다요죠네까]$/.test(t)) return t + '.';
+  return t + '.';
+};
+
+// 행동 묘사 제거 후 문장 끝 감지 (행동묘사 뒤 본문 이어질 때 대응)
+const stripActionForSentenceEnd = (text: string): string => {
+  return text.replace(/^\([^)]+\)\s*/, '');
+};
+
 // 상대 발언에서 가장 반박하기 좋은 문장 1개 추출 (B)
 function extractKeyClaimClient(text: string): string | null {
   if (!text) return null;
@@ -214,6 +233,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
   const usedArgCountRef = useRef<Record<string, number>>({}); // A: 스피커별 소비 논거 카운터
   const opponentClaimRef = useRef<string | null>(null);       // B: 다음 턴 반박 의무 주장
   const lastAnglesRef = useRef<Record<string, string[]>>({});  // C: 스피커별 최근 사용 각도 (2개)
+  const usedActionsRef = useRef<Set<string>>(new Set());       // 행동 묘사 중복 방지용
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
     messagesEndRef.current?.scrollIntoView({ behavior });
@@ -596,8 +616,9 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           };
 
           const flushCurrentBubble = async () => {
-            const bubble = currentBubble.trim();
-            if (!bubble) return;
+            const raw = currentBubble.trim();
+            if (!raw) return;
+            const bubble = ensurePunctuation(raw);
             const msg: DebateMessage = { speaker, text: bubble, timestamp: Date.now() };
             allMessages.push(msg);
             setMessages((prev) => [...prev, msg]);
@@ -622,11 +643,13 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
               await sleep(35);
 
               // 실시간 문장 끝 감지 → 버블 flush
-              // 단, 괄호로 시작하는 발언은 닫힘 ) 이후에만 flush
+              // 행동 묘사 제거 후 본문 기준으로 판단
+              const textForEnd = stripActionForSentenceEnd(currentBubble);
               if (
                 bubbleCount < BUBBLE_CONFIG.MAX_BUBBLES - 1 &&
-                isSentenceEnd(currentBubble) &&
-                !currentBubble.trimStart().startsWith('(')
+                textForEnd.length >= BUBBLE_CONFIG.MIN_BUBBLE_LENGTH &&
+                isSentenceEnd(textForEnd) &&
+                !textForEnd.trimStart().startsWith('(')
               ) {
                 await flushCurrentBubble();
               }
@@ -656,7 +679,8 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           // 스트리밍 완료 → 남은 텍스트 마지막 버블로 flush
           setCurrentSpeaker(null);
           if (currentBubble.trim()) {
-            const lastMsg: DebateMessage = { speaker, text: currentBubble.trim(), timestamp: Date.now() };
+            const lastBubbleText = ensurePunctuation(currentBubble.trim());
+            const lastMsg: DebateMessage = { speaker, text: lastBubbleText, timestamp: Date.now() };
             allMessages.push(lastMsg);
             setMessages((prev) => [...prev, lastMsg]);
             setCurrentText('');
@@ -1361,12 +1385,30 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
                 borderRadius: 12,
                 padding: '10px 16px',
                 margin: '6px 8px',
-                textAlign: 'center',
-                fontSize: 13,
-                color: '#cbd5e1',
-                fontStyle: 'italic',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 10,
               }}>
-                {msg.text}
+                <img
+                  src="/moderator-sonseokhe.jpg"
+                  alt="사회자"
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                    flexShrink: 0,
+                    border: '1px solid rgba(200,210,240,0.3)',
+                  }}
+                />
+                <span style={{
+                  fontSize: 14,
+                  color: '#cbd5e1',
+                  fontStyle: 'italic',
+                  lineHeight: 1.5,
+                }}>
+                  {msg.text}
+                </span>
               </div>
             );
           }
