@@ -1073,7 +1073,13 @@ function getStylePrompt(style, speaker, opponentLastMessage, topicLabel, debateT
   const baseContext = `당신은 ${speakerName}입니다. ${CURRENT_CONTEXT}\n주제: ${topicLabel}. ${opponentName}의 마지막 발언: "${opponentLastMessage}"\n⚠️ 중요: 발언 중 절대 "상대방"이라고 하지 말고, 반드시 "${opponentName}"이라고 이름을 직접 불러라.\n⚠️ 비판 규칙(필수): 상대 정책을 비판할 때 절대 "잘못됐습니다" "문제가 있습니다" 같은 결론만 말하지 마라. 반드시 "XX 방향으로 접근하기 때문에 YY 결과가 생긴다"는 구조로 구체적 이유와 방향을 설명하라. 예: "공급 확대 대신 규제 강화에만 집중하는 방식이라, 실제로는 투자 심리를 위축시켜 장기 공급 부족을 심화시킵니다."`;
 
   if (style === 'policy') {
-    return `${baseContext}\n\n정책 토론 방식: 반드시 수치·통계·예산규모·법안명·기관 발표 등 데이터를 매 발언마다 1개 이상 직접 인용하세요. "~했습니다" 같은 결론만 말하지 말고, 반드시 "XX라는 데이터/사례가 있기 때문에 YY가 필요하다"는 구조로 말하세요. 2025~2026년 기준으로만. 감정 없이 논리와 근거 중심으로 총 4문장 이내.
+    const act = getAct(historyLength);
+    const policyEscalation = {
+      low:  '차분하고 논리적으로. 상대를 탐색하며 핵심 입장을 정리하라.',
+      mid:  '더 공격적으로. 상대 논리의 허점을 직접 찌르고, 날카롭게 반박하라. "그 논리라면~"으로 시작해도 좋다.',
+      high: '결정타를 날려라. 가장 강력한 데이터로 상대를 압도하고, 확신에 찬 어조로 마무리하라. 이번이 마지막 기회다!',
+    };
+    return `${baseContext}\n\n[${act.label}] ${policyEscalation[act.intensity]}\n정책 토론 방식: 반드시 수치·통계·예산규모·법안명·기관 발표 등 데이터를 매 발언마다 1개 이상 직접 인용하세요. "~했습니다" 같은 결론만 말하지 말고, 반드시 "XX라는 데이터/사례가 있기 때문에 YY가 필요하다"는 구조로 말하세요. 2025~2026년 기준으로만. 감정 없이 논리와 근거 중심으로 총 4문장 이내.
 \n⚠️ 말투 필수규칙: 반드시 존댓말(합쇼체 또는 해요체)을 사용해야 합니다. 혼잣말체("~겠지", "~다는 거야"), 반말("~야", "~다"), 독백체는 절대 금지입니다. 반드시 토론 연설 형식으로 발언하세요.`;
   } else if (style === 'emotional') {
     // 감정 표현 풀 — 턴마다 로테이션해서 다양성 강제
@@ -1125,7 +1131,13 @@ function getStylePrompt(style, speaker, opponentLastMessage, topicLabel, debateT
     const emoRotated = [...emotionPool.slice(emoStart), ...emotionPool.slice(0, emoStart)];
     const emoSlice = emoRotated.slice(0, 6).map(e => `"${e}"`).join(', ');
 
-    return `${baseContext}\n\n감정 토론 방식: 근거와 논리는 절대 포기하지 않되, 감정을 날 것으로 드러내라. 구체적 수치·사례를 던지면서 동시에 감정을 폭발시켜라.
+    const act = getAct(historyLength);
+    const emotionalEscalation = {
+      low:  '[1막 탐색] 감정은 아직 절제하라. 논리와 데이터 중심으로 탐색하되, 가끔 날카로운 한마디를 던져라. 60% 논리 + 40% 감정.',
+      mid:  '[2막 격돌] 감정을 본격적으로 드러내라! 상대에게 직접 질문 던지고, 목소리 높이고, 허점 발견 즉시 끊어라. 40% 논리 + 60% 감정.',
+      high: '[3막 결전] 감정 폭발! 분노·경멸·풍자를 최대치로 끌어올려라. 상대를 완전히 압도하는 결정적 발언을 하라. 20% 논리 + 80% 감정. 마지막 승부수!',
+    };
+    return `${baseContext}\n\n${emotionalEscalation[act.intensity]}\n\n감정 토론 방식: 근거와 논리는 절대 포기하지 않되, 감정을 날 것으로 드러내라. 구체적 수치·사례를 던지면서 동시에 감정을 폭발시켜라.
 
 이번 발언에서 사용할 감정 표현 후보 (반드시 이 중 1개 이상 활용, 이전 발언과 다른 것으로):
 ${emoSlice}
@@ -1213,6 +1225,67 @@ const ATTACK_ANGLES = [
   '⑥ 상대 개인 신뢰성·전력 공격',
   '⑦ 정책·발언의 실제 피해 결과 제시',
 ];
+
+// ── 감정 에스컬레이션 (3막 구조) ──────────────────────────────────────────────
+const ESCALATION_CONFIG = {
+  act1: { rounds: [1, 8],   label: '1막 탐색', intensity: 'low' },
+  act2: { rounds: [9, 18],  label: '2막 격돌', intensity: 'mid' },
+  act3: { rounds: [19, 30], label: '3막 결전', intensity: 'high' },
+};
+
+function getAct(totalRounds) {
+  if (totalRounds <= 8)  return ESCALATION_CONFIG.act1;
+  if (totalRounds <= 18) return ESCALATION_CONFIG.act2;
+  return ESCALATION_CONFIG.act3;
+}
+
+// ── 지문 삽입 풀 ───────────────────────────────────────────────────────────────
+const STAGE_DIRECTIONS = {
+  common: {
+    low:  ['(자료를 펼치며)', '(안경을 고쳐 쓰며)', '(마이크를 가까이 당기며)', '(상대를 바라보며)', '(고개를 끄덕이며)'],
+    mid:  ['(목소리를 높이며)', '(손가락으로 탁자를 두드리며)', '(몸을 앞으로 기울이며)', '(실소하며)', '(고개를 저으며)', '(자료를 탁 내려놓으며)'],
+    high: ['(책상을 탁 치며)', '(자리에서 일어서며)', '(격앙된 목소리로)', '(씁쓸하게 웃으며)', '(주먹을 불끈 쥐며)', '(고개를 돌리며 탄식하고)'],
+  },
+  leejunseok: { low: ['(노트북을 열며)', '(데이터를 확인하며)'], mid: ['(냉소적으로 웃으며)', '(손가락으로 숫자를 세며)'], high: ['(안경을 벗어 탁자에 내려놓으며)', '(자리에서 벌떡 일어나며)'] },
+  jeonhangil:  { low: ['(역사책을 펼치며)'],                       mid: ['(주먹으로 가슴을 치며)', '(목소리에 울림을 담아)'], high: ['(눈시울을 붉히며)', '(두 손을 번쩍 들며)'] },
+  jungcr:      { low: ['(천천히 사자성어를 읊으며)'],               mid: ['(손바닥으로 탁자를 내리치며)', '(손가락을 하나씩 세며)'], high: ['(벌떡 일어나 상대를 가리키며)'] },
+  jangdh:      { low: ['(서류를 정리하며)', '(법전을 펼치며)'],     mid: ['(안경 너머로 날카롭게 바라보며)'],        high: ['(서류를 탁 덮으며)', '(냉정하게 한 마디 한 마디 또박또박)'] },
+  ohsehoon:    { low: ['(자료를 넘기며)', '(당당하게 어깨를 펴며)'], mid: ['(손으로 지도를 가리키며)'],             high: ['(탁자를 두드리며)', '(일어서서 패널을 가리키며)'] },
+  jungwono:    { low: ['(주민 사진을 보여주며)', '(현장 자료를 꺼내며)'], mid: ['(주먹을 쥐며)'],                  high: ['(격앙된 목소리로 탁자를 치며)', '(눈시울을 붉히며)'] },
+  kimeoojun:   { low: ['(천천히 커피를 내려놓으며)'],               mid: ['(의미심장하게 웃으며)', '(손가락으로 허공을 가리키며)'], high: ['(자리에서 일어나며)'] },
+  jinjungkwon: { low: ['(비꼬듯 미소 지으며)'],                    mid: ['(콧웃음을 치며)', '(손으로 이마를 짚으며)'], high: ['(탄식하며)', '(독설을 내뱉듯 빠르게)'] },
+};
+
+function getStageDirection(speaker, intensity) {
+  const common   = STAGE_DIRECTIONS.common[intensity] || [];
+  const personal = (STAGE_DIRECTIONS[speaker] || {})[intensity] || [];
+  const pool = [...personal, ...common];
+  return pool[Math.floor(Math.random() * pool.length)] || '';
+}
+
+// ── 캐릭터 특화 공격 패턴 ──────────────────────────────────────────────────────
+const CHARACTER_ATTACK_PATTERNS = {
+  leejunseok:  { method: '귀류법 + 정확한 수치', instruction: '상대 주장을 극단까지 밀고 가서 모순을 드러내라(귀류법). 예: "그 논리대로라면, X도 성립해야 하는데, 실제로는 Y입니다. 수치로 보면 Z%죠." 반드시 정확한 수치 포함.' },
+  jeonhangil:  { method: '도덕적 분노 + 애국심 호소', instruction: '도덕적 분노를 폭발시키고, 대한민국·국민·역사를 호소하라. 예: "이것이 대한민국을 사랑하는 사람이 할 짓입니까! 국민이 지켜보고 있습니다!" 감정 + 애국심 핵심 무기.' },
+  jungcr:      { method: '사자성어 + 번호 리스트', instruction: '사자성어로 시작하고 번호로 근거를 나열하라. 예: "명명백백(明明白白)합니다! 첫째, X. 둘째, Y. 셋째, Z. 이래도 부인하시겠습니까?" 사자성어 1개 + 번호 리스트 3개 필수.' },
+  jangdh:      { method: '법률 조문 + 냉철 논리', instruction: '법률·조문·판례를 직접 인용하고, 감정 없이 냉철하게 논리를 전개하라. 예: "헌법 제X조에 따르면... 이에 비추어봤을 때 명백한 위헌 소지가 있습니다." 법적 근거 + 단호한 톤.' },
+  ohsehoon:    { method: '행정 실적 과시 + 비전 제시', instruction: '본인 실적(수치)을 먼저 과시한 뒤, 미래 비전으로 마무리하라. 예: "354곳 정비구역, 16조 강북르네상스 달성. 앞으로 Y를 하겠습니다." 과거 실적 → 미래 비전 구조.' },
+  jungwono:    { method: '현장 경험 + 주민 사례', instruction: '성동구 현장 경험과 구체적 주민 사례를 들어 반박하라. 예: "성동구에서 직접 겪었습니다. 젠트리피케이션 방지책 도입 결과, X동 주민 Y명이..." 현장 사례 + 실제 이야기.' },
+  kimeoojun:   { method: '맥락 강조 + 음모론적 통찰', instruction: '"맥락을 봐야 합니다"로 시작하고 숨겨진 구조·의도를 드러내라. 예: "팩트만 보면 안 됩니다. 맥락을 봐야 해요. 왜 이 시점에 X가 나왔는지, 누가 이득을 보는지..." 맥락 → 숨겨진 의도 → 구조 비판.' },
+  jinjungkwon: { method: '독설 비유 + 내로남불 프레임', instruction: '날카로운 비유로 상대를 조롱하고, 내로남불 프레임을 씌워라. 예: "웃기는 소리 하고 있네요. 이건 마치 X가 Y하는 격입니다. 본인들이 하면 로맨스, 남이 하면 불륜이죠." 비유 1개 + 내로남불 지적 필수.' },
+};
+
+// ── 반전 카드 (3막 전용 결정타) ────────────────────────────────────────────────
+const REVERSAL_CARDS = {
+  leejunseok:  ['전한길이 본명 전유관으로 국민의힘 입당 시도했다가 두 번이나 거부당한 사실 — 자기가 지지하는 당에서도 안 받아주는 인물이 보수를 대변?', '건국펀드 100억 모금 선언 후 72시간 만에 자진 중단 — 법률 소지 확인 후 본인이 인정한 셈', 'TV조선도 2026.2.13 비과학적 발언 팩트체크 불가로 중계 거부 — 보수 언론마저 외면', '전한길 "3권분립 폐지·발해 수복" 발언(서울신문 2026.2.12) — 보수 내부에서도 황당하다는 반응(주간조선)', '전한길 유튜브 53만 구독자이지만 선거 출마 경험 0회 — 국민에게 심판받은 적 없는 정치 평론가'],
+  jeonhangil:  ['이준석 성 접대 의혹 — 공소권없음은 무죄 아님, 공소시효 만료로 처벌 못한 것. 실체 미규명', '이준석 젓가락 발언(2025.5.27) 직후 지지율 15%→8.34% 폭락 — 국민이 본질을 꿰뚫어본 것', '이준석 SW마에스트로 병역 특혜 — 공정을 외치면서 본인은 병역에서 예외', '개혁신당 대표직 허은아에게 이양(2024.5.19) — 자기가 만든 당에서도 밀려나는 리더십 한계', '이준석 노사모 출신이면서 "진짜 보수" — 전향 이력 자체가 기회주의적 행보 증거'],
+  jungcr:      ['국민의힘 공약 이행률 35.3%, 72개 파기(뉴스톱 윤석열미터) — 국민 기만의 역사', '병사월급 200만원 공약→실제 125만원, 적금 포함 꼼수 — 청년 기만', '장동혁 대표 본인 다주택 보유 거론(2026.2) — 다주택자 규제하면서 본인은 다주택, 이중잣대', '윤석열 정부 부자감세로 5년 세수 -3.9조 — 감세해놓고 세수 펑크는 국민 탓?', '12.3 계엄 내란 1심 무기징역(2026.2.19) — 이 당이 민주주의를 말할 자격이 있나?'],
+  jangdh:      ['이재명 기본소득 100만원 공약 집권하자마자 완전 철회 — 대국민 사기', '탈원전 주장하다 180도 전환 집권 후 "원전 유지" — 정책 일관성 제로', '10.15 대책 3중 규제 이후에도 서울 집값 하락 없음 — 규제만으로 집값 못 잡는 증거', 'LH 부채 160조 이상인데 기본주택 100만호 공약 — 재정 파탄 자초', '경제 노선 우클릭: "재벌개혁"에서 "AI 210조 투자"로 전환 — 진보 정체성 상실'],
+  ohsehoon:    ['신통기획 196곳 중 3곳만 승인(2026.02 기준) — 승인율 1.5%, 숫자만 부풀린 정비사업', '무상급식 반대 주민투표 투표율 25.7%로 개표 기준선 미달(2011) — 민의 확인 실패', '준공영제 연간 적자 5,000억→8,000억 전망 — 교통 재정 관리 실패', '태양광 보조금 중단, 에너지 협동조합 지원 폐지 — 환경 정책 후퇴', '보편복지 반대하면서 특정 취약계층 지원 예산은 2.8조 — 선별복지의 실제 규모는 보편보다 비효율적'],
+  jungwono:    ['신통기획 196곳 중 3곳만 승인 — 선공 후공이 뒤집혀도 결과는 같다', '오세훈 2011년 무상급식 주민투표 투표율 25.7% 미달 — 민심과 거꾸로 간 결정', '강북르네상스 16조 투자는 10년 장기 계획 — 현 임기 내 성과 보장 없음', '서울시 버스 파업 후 재정 부담 8,000억 전망 — 교통 재정 관리 실패의 결과', '오세훈 "약자와의 동행" 구호와 달리 무상급식·보편복지 일관 반대 — 구호와 행동의 괴리'],
+  kimeoojun:   ['진중권 과거 노무현 지지→비판→문재인 지지→비판→이재명 비판 — 일관성 0, 기회주의적 이력', '진중권 비판의 실제 수혜자가 보수·국민의힘 — 의도와 결과의 괴리, 사실상 보수 대변인', '진중권 대안 없는 독설 — 민주당 비판하면서 대안 정치 세력 한 번도 제시 못 함', '"조국이 떨어지면 진보 포기" 발언 후 결국 본인이 진보를 포기 — 자기 예언 스스로 실현', '진중권이 극우 유튜버·보수 언론과 연대 — 진보 비판이 아니라 보수 프레임 전파 역할'],
+  jinjungkwon: ['김어준 대통령 전용기 무단 탑승(2021) — 특권 의식 그 자체, 진보의 탈을 쓴 기득권', 'TBS 뉴스공장 편파방송으로 2022.11 결국 해고 — 공영방송을 이재명 홍보방송으로 사유화한 장본인', '나꼼수 BBK 논란 과장 → 법원 허위사실 인정 — 10년 넘은 사실왜곡의 역사', '부정선거 의혹 동조 발언 다수 — 음모론 유통자이자 한국 반지성주의의 주범', '"팩트보다 맥락" 논리 — 언론인이 팩트를 외면하겠다는 선언, 저널리즘 포기 자백'],
+};
 
 // ── 핵심 주장 추출 (B) ──────────────────────────────────────────────────────
 function extractKeyClaim(text) {
@@ -1429,18 +1502,44 @@ export default async function handler(req, res) {
     }
     systemPrompt += `\n✅ 위 논거 후보 중 아직 안 쓴 것으로 새로운 각도에서 공격/방어하라.`;
     
-    // 턴 수에 따른 전략 가이드
-    const turnNum = myPastMessages.length + 1;
-    if (turnNum <= 3) {
-      systemPrompt += '\n\n📍 초반부: 핵심 주장 + 강력한 데이터로 선제 공격.';
-    } else if (turnNum <= 7) {
-      systemPrompt += `\n\n📍 중반부: ${opponentName} 논리의 구체적 허점 파고들기. 새로운 증거 제시.`;
-    } else {
-      systemPrompt += '\n\n📍 후반부: 아직 꺼내지 않은 숨겨둔 카드 사용. 감정적 호소 또는 결정타.';
-    }
-    
+    // 에스컬레이션 기반 전략 가이드 (3막 구조)
+    const act = getAct(recentHistory.length);
+    const actGuides = {
+      low:  `📍 [${act.label}] 핵심 주장 + 강력한 데이터로 선제 공격. 상대를 탐색하며 페이스를 잡아라.`,
+      mid:  `📍 [${act.label}] ${opponentName} 논리의 허점을 직접 파고들어라! 감정을 격화시켜 직접 충돌하라!`,
+      high: `📍 [${act.label}] 감정 폭발! 아직 꺼내지 않은 숨겨둔 카드 사용. 결정타를 날려라! 이번이 마지막이다!`,
+    };
+    systemPrompt += `\n\n${actGuides[act.intensity]}`;
     systemPrompt += `\n\n⚡ 전략 다양화 의무: 매 발언마다 반드시 이전 발언과 다른 '공격 각도'를 사용하라.
 가능한 각도: ① 새로운 사실/수치 ② ${opponentName} 말 인용+반박 ③ 제3자 증언/보도 ④ 역사적 선례 ⑤ 논리적 모순 지적 ⑥ 개인 신뢰성 공격 ⑦ 정책 효과 비판`;
+
+    // 🎭 지문 삽입
+    const stageDir = getStageDirection(speaker, act.intensity);
+    if (stageDir) {
+      systemPrompt += `\n\n🎭 연출 지문: 이번 발언을 시작할 때 "${stageDir}"를 발언 맨 앞에 자연스럽게 삽입하라. 예: "${stageDir} 그 논리가 통한다고 생각하십니까?"`;
+    }
+
+    // 🗡️ 캐릭터 특화 공격 패턴
+    const attackPattern = CHARACTER_ATTACK_PATTERNS[speaker];
+    if (attackPattern) {
+      systemPrompt += `\n\n🗡️ 캐릭터 공격 패턴 (${attackPattern.method}):\n${attackPattern.instruction}`;
+    }
+
+    // 💣 반전 카드 (3막에서만 활성화)
+    if (act.intensity === 'high') {
+      const cards = REVERSAL_CARDS[speaker];
+      if (cards && cards.length > 0) {
+        const allMyText = myPastMessages.map(m => m.text).join(' ');
+        const unusedCards = cards.filter(card => {
+          const keywords = card.split(/[—,]/).map(s => s.trim().slice(0, 10));
+          return !keywords.some(kw => kw.length > 5 && allMyText.includes(kw));
+        });
+        if (unusedCards.length > 0) {
+          const chosen = unusedCards[Math.floor(Math.random() * unusedCards.length)];
+          systemPrompt += `\n\n💣 반전 카드 (숨겨둔 결정타 — 반드시 사용하라!):\n"${chosen}"\n이 논거를 이번 발언의 핵심으로 사용하라. 상대가 예상하지 못한 결정적 한방이다!`;
+        }
+      }
+    }
   }
 
   // ── C: 공격 각도 강제 로테이션 ─────────────────────────────────────────────
@@ -1448,10 +1547,21 @@ export default async function handler(req, res) {
   const forcedAngle = availableAngles.length > 0 ? availableAngles[0] : ATTACK_ANGLES[0];
   systemPrompt += `\n\n🎯 이번 발언 필수 공격 각도: ${forcedAngle}\n이 각도로 시작하라. 다른 각도로 시작 금지.`;
 
-  // ── B: 상대방 핵심 주장 반박 의무화 ────────────────────────────────────────
+  // ── B: 상대방 핵심 주장 반박 의무화 (3단 구조) ────────────────────────────
   const rebutClaim = mustRebutClaim || extractKeyClaim(opponentLastMessage);
   if (rebutClaim) {
-    systemPrompt += `\n\n🎯 필수 반박 (이걸 직접 공격하지 않으면 패배): "${rebutClaim}"`;
+    const rebutAct = getAct(recentHistory.length);
+    if (rebutAct.intensity === 'low') {
+      // 1막: 단순 반박
+      systemPrompt += `\n\n🎯 필수 반박 (이걸 직접 공격하지 않으면 패배): "${rebutClaim}"`;
+    } else {
+      // 2-3막: 3단 반박 구조 강제
+      systemPrompt += `\n\n🎯 필수 3단 반박 (반드시 이 구조로):
+Step 1 — 직접 인용: "${rebutClaim}" ← "~라고 하셨는데"로 정확히 인용하며 시작
+Step 2 — 팩트 반박: 구체적 수치·데이터로 정면 반박. "실제로는 X입니다. Y 기관에 따르면..."
+Step 3 — 프레임 재설정: 토론의 프레임 자체를 바꿔라. "이건 X의 문제가 아니라 Y의 문제입니다."
+⚠️ 3단계를 자연스럽게 4문장 이내로 압축하라.`;
+    }
   }
 
   // ── 대화 히스토리 → messages 배열로 전달 (LLM native 방식, 전체 기억) ───────

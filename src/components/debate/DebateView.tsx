@@ -2,6 +2,9 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { PROMPT_VERSION } from '@/constants/debate-config';
 import { BUBBLE_CONFIG, isSentenceEnd } from '@/lib/bubble-splitter';
+import TensionGauge, { calcTension } from './TensionGauge';
+import AudienceReaction from './AudienceReaction';
+import Interjection from './Interjection';
 
 // ─── 타입 ────────────────────────────────────────────────────────────────────
 
@@ -174,6 +177,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
   const [coinFlipWinner, setCoinFlipWinner] = useState<{ key: string; name: string } | null>(null);
   const [showExitModal, setShowExitModal] = useState(false);
   const [timeLeft, setTimeLeft] = useState(360); // 6분 = 360초
+  const [audienceReactionTrigger, setAudienceReactionTrigger] = useState(0); // 관중 반응 트리거
 
   // 실행 취소용 ref
   const abortRef = useRef(false);
@@ -602,6 +606,8 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           lastText = text;
           // B: 방금 발언(text)에서 다음 턴 상대방이 반박할 핵심 주장 추출
           opponentClaimRef.current = extractKeyClaimClient(text);
+          // 관중 반응 트리거 (새 메시지 완료마다)
+          setAudienceReactionTrigger(prev => prev + 1);
           roundSuccess = true;
 
           await sleep(900);
@@ -619,6 +625,37 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
       }
 
       if (abortRef.current) break;
+
+      // 사회자 AI 개입 (6라운드마다)
+      if (roundSuccess && !abortRef.current && (i + 1) % 6 === 0 && i > 0) {
+        try {
+          const modRes = await fetch('/api/debate-moderator', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              messages: allMessages.slice(-6),
+              currentTopic: selectedTopic === 'free' ? freeTopicRef.current : initialTopic,
+              debateType,
+            }),
+          });
+          if (modRes.ok) {
+            const modData = await modRes.json();
+            if (modData.text) {
+              const modMsg: DebateMessage = {
+                speaker: '__moderator__',
+                text: `🎙️ ${modData.text}`,
+                timestamp: Date.now(),
+              };
+              allMessages.push(modMsg);
+              setMessages(prev => [...prev, modMsg]);
+              scrollToBottom();
+              await sleep(2000);
+            }
+          }
+        } catch (_e) {
+          // 사회자 실패는 조용히 스킵
+        }
+      }
 
       // 라운드 끝난 후 펜딩 주제 전환 처리
       if (pendingTopicChangeRef.current && roundSuccess) {
@@ -1054,6 +1091,10 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
             }
             .timer-wobble { animation: timerWobble 0.45s ease-in-out infinite; }
           `}</style>
+          {/* 긴장도 게이지 */}
+          {phase === 'running' && (
+            <TensionGauge messages={messages} round={_round} maxRound={30} />
+          )}
           <div className="relative bg-gray-200 flex justify-end overflow-visible" style={{ height: '3px' }}>
             <div
               className="h-full transition-all duration-1000 relative overflow-visible"
@@ -1259,23 +1300,66 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
 
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
         {/* 완료된 발언들 */}
-        {messages.map((msg, i) => (
-          <MessageBubble key={i} msg={msg} config={config} />
-        ))}
+        {messages.map((msg, i) => {
+          const isLast = i === messages.length - 1;
+          // 사회자 메시지 특수 처리
+          if (msg.speaker === '__moderator__') {
+            return (
+              <div key={i} style={{
+                background: 'linear-gradient(135deg, rgba(30,30,60,0.9), rgba(22,33,62,0.95))',
+                border: '1px solid rgba(200,210,240,0.15)',
+                borderRadius: 12,
+                padding: '10px 16px',
+                margin: '6px 8px',
+                textAlign: 'center',
+                fontSize: 13,
+                color: '#cbd5e1',
+                fontStyle: 'italic',
+              }}>
+                {msg.text}
+              </div>
+            );
+          }
+          return (
+            <div key={i} style={{ position: 'relative' }}>
+              <MessageBubble msg={msg} config={config} />
+              {/* 관중 반응 (마지막 완료 메시지에만) */}
+              {isLast && phase === 'running' && (
+                <AudienceReaction
+                  messageText={msg.text}
+                  tension={calcTension(messages, _round, 30)}
+                  trigger={audienceReactionTrigger}
+                />
+              )}
+            </div>
+          );
+        })}
 
         {/* 현재 발화자 — 대기 중(로딩) 또는 타이핑 중 */}
         {phase === 'running' && currentSpeaker && (() => {
           // 말풍선 분리 전환 중: currentText가 방금 커밋된 메시지와 동일하면 라이브 버블 숨김 (깜빡임 방지)
           const lastMsg = messages[messages.length - 1];
           const isJustCommitted = currentText.trim().length > 0 && lastMsg?.text === currentText.trim();
+          // 상대편 위치 계산 (끼어들기용)
+          const opponentSpeaker = currentSpeaker === config.speakerA ? config.speakerB : config.speakerA;
+          const isCurrentA = currentSpeaker === config.speakerA;
 
           if (currentText && !isJustCommitted) {
             return (
-              <MessageBubble
-                msg={{ speaker: currentSpeaker, text: currentText, timestamp: Date.now() }}
-                isActive
-                config={config}
-              />
+              <div style={{ position: 'relative' }}>
+                <MessageBubble
+                  msg={{ speaker: currentSpeaker, text: currentText, timestamp: Date.now() }}
+                  isActive
+                  config={config}
+                />
+                {/* 상대방 끼어들기 */}
+                <Interjection
+                  streamingText={currentText}
+                  opponentSpeaker={opponentSpeaker}
+                  isStreaming={true}
+                  align={isCurrentA ? 'left' : 'right'}
+                />
+              </div>
             );
           }
           // 새 화자 첫 등장 시에만 TypingIndicator 표시 (같은 화자 전환 중엔 숨김)
