@@ -1417,41 +1417,9 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
         {/* 완료된 발언들 */}
         {messages.map((msg, i) => {
           const isLast = i === messages.length - 1;
-          // 사회자 메시지 특수 처리
+          // 사회자 메시지 특수 처리 — 타이핑 효과
           if (msg.speaker === '__moderator__') {
-            return (
-              <div key={i} style={{
-                background: 'linear-gradient(135deg, rgba(30,30,60,0.9), rgba(22,33,62,0.95))',
-                border: '1px solid rgba(200,210,240,0.15)',
-                borderRadius: 12,
-                padding: '10px 16px',
-                margin: '6px 8px',
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: 10,
-              }}>
-                <img
-                  src="/moderator-sonseokhe.jpg"
-                  alt="사회자"
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: '50%',
-                    objectFit: 'cover',
-                    flexShrink: 0,
-                    border: '1px solid rgba(200,210,240,0.3)',
-                  }}
-                />
-                <span style={{
-                  fontSize: 14,
-                  color: '#cbd5e1',
-                  fontStyle: 'italic',
-                  lineHeight: 1.5,
-                }}>
-                  {msg.text}
-                </span>
-              </div>
-            );
+            return <ModeratorMessage key={i} text={msg.text} />;
           }
           return (
             <div key={i} style={{ position: 'relative' }}>
@@ -1858,6 +1826,71 @@ function JudgmentCard({
         </div>
         {judgment.reason}
       </div>
+    </div>
+  );
+}
+
+// ─── 사회자 타이핑 컴포넌트 ────────────────────────────────────────────────────
+
+function ModeratorMessage({ text }: { text: string }) {
+  const [displayed, setDisplayed] = useState('');
+  const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    setDisplayed('');
+    setDone(false);
+    let i = 0;
+    const tick = () => {
+      if (i >= text.length) { setDone(true); return; }
+      setDisplayed(text.slice(0, i + 1));
+      i++;
+      setTimeout(tick, 28);
+    };
+    const start = setTimeout(tick, 120); // 약간 딜레이 후 시작
+    return () => clearTimeout(start);
+  }, [text]);
+
+  return (
+    <div style={{
+      background: 'linear-gradient(135deg, rgba(30,30,60,0.9), rgba(22,33,62,0.95))',
+      border: '1px solid rgba(200,210,240,0.15)',
+      borderRadius: 14,
+      padding: '12px 16px',
+      margin: '8px 4px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 14,
+    }}>
+      <img
+        src="/moderator-sonseokhe.jpg"
+        alt="사회자 손석희"
+        style={{
+          width: 56,
+          height: 56,
+          borderRadius: '50%',
+          objectFit: 'cover',
+          flexShrink: 0,
+          border: '2px solid rgba(200,210,240,0.4)',
+          boxShadow: '0 0 12px rgba(150,180,255,0.25)',
+        }}
+      />
+      <span style={{ fontSize: 14, color: '#cbd5e1', fontStyle: 'italic', lineHeight: 1.6 }}>
+        {displayed}
+        {!done && (
+          <span
+            style={{
+              display: 'inline-block',
+              width: 2,
+              height: 14,
+              background: '#94a3b8',
+              marginLeft: 2,
+              verticalAlign: 'middle',
+              animation: 'cursorblink 0.7s steps(1) infinite',
+            }}
+          />
+        )}
+      </span>
+      <style>{`@keyframes cursorblink { 0%,100%{opacity:1} 50%{opacity:0} }`}</style>
     </div>
   );
 }
