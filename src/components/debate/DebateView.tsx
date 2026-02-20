@@ -1,5 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router';
+import { PROMPT_VERSION } from '@/constants/debate-config';
+import { BUBBLE_CONFIG, isSentenceEnd } from '@/lib/bubble-splitter';
 
 // ─── 타입 ────────────────────────────────────────────────────────────────────
 
@@ -162,6 +164,8 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
 
   // 실행 취소용 ref
   const abortRef = useRef(false);
+  const activeAbortCtrlRef = useRef<AbortController | null>(null);
+  const scrollRafRef = useRef<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const freeTopicRef = useRef<string>('');
   const topicChangedRef = useRef(false);
@@ -194,10 +198,19 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
 
   // 타이핑 중 글자 추가 시 → 즉시 스크롤 (말풍선 높이 변화 따라가기)
   useEffect(() => {
-    if (currentText) {
-      scrollToBottom('instant');
+    if (currentText && !scrollRafRef.current) {
+      scrollRafRef.current = requestAnimationFrame(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'instant' });
+        scrollRafRef.current = null;
+      });
     }
-  }, [currentText, scrollToBottom]);
+  }, [currentText]);
+
+  useEffect(() => {
+    return () => {
+      if (scrollRafRef.current) cancelAnimationFrame(scrollRafRef.current);
+    };
+  }, []);
 
   // ─── 타이머 ──────────────────────────────────────────────────────────────
 
@@ -270,7 +283,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
   const fetchCache = async (topic: string, style: string): Promise<{ messages: DebateMessage[]; judgment: Judgment | null } | null> => {
     try {
       const res = await fetch(
-        `/api/debate-cache?topic=${encodeURIComponent(topic)}&style=${encodeURIComponent(style)}&debateType=${debateType}`
+        `/api/debate-cache?topic=${encodeURIComponent(topic)}&style=${encodeURIComponent(style)}&debateType=${debateType}&pv=${PROMPT_VERSION}`
       );
       const data = await res.json();
       if (data.cached?.messages?.length > 0) {
@@ -346,6 +359,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
 
       // ── 타임아웃 설정 ──────────────────────────────────────────────────────
       const abortCtrl = new AbortController();
+      activeAbortCtrlRef.current = abortCtrl;
 
       // 12초 내 첫 토큰 미수신 시 abort
       const firstTokenTimeout = setTimeout(() => {
@@ -364,6 +378,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
       const cleanup = () => {
         clearTimeout(firstTokenTimeout);
         clearTimeout(hardTimeout);
+        activeAbortCtrlRef.current = null;
       };
 
       fetch('/api/debate', {
@@ -430,6 +445,8 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
                   fullText += json.text;
                   if (abortRef.current) {
                     cleanup();
+                    void reader.cancel();
+                    resolve(fullText); // 데드락 방지: abort 시에도 Promise 정상 종료
                     return;
                   }
                   await onToken?.(json.text);
@@ -504,28 +521,32 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
           let currentBubble = '';
           let bubbleCount = 0;
           let sentencesInBubble = 0;
-          const MAX_BUBBLES = 3;
-          const MAX_SENTENCES_PER_BUBBLE = 2;
 
-          const recentHistory = [...allMessages]; // 전체 히스토리 전달 (처음부터 기억)
+          const recentHistory = allMessages.slice(-10); // 최근 10개만 전달 (컨텍스트 폭증 방지)
           // B: 상대 주장 반박 의무화 — 내 턴이면 상대(lastText)의 핵심 주장 전달
           const mustRebutClaim = lastText ? opponentClaimRef.current : null;
           const text = await streamRound(speaker, currentTopic, lastText, style, async (chunk) => {
             if (abortRef.current) return;
+            let charBuf = '';
             for (const char of chunk) {
               if (abortRef.current) return;
               streamedText += char;
               currentBubble += char;
-              setCurrentText(currentBubble);
-              await sleep(document.hidden ? 0 : 55);
+              charBuf += char;
 
-              // 문장 끝 감지
-              const isSentenceEnd = /[.!?]$/.test(currentBubble.trimEnd());
-              if (isSentenceEnd && currentBubble.trim().length > 10) {
+              // 10자 단위 배치 렌더링 (매 글자 setState 과부하 방지)
+              if (charBuf.length >= 10) {
+                setCurrentText(currentBubble);
+                charBuf = '';
+                await sleep(document.hidden ? 0 : 100);
+              }
+
+              // 문장 끝 감지 (bubble-splitter 유틸 사용)
+              if (isSentenceEnd(currentBubble)) {
                 sentencesInBubble++;
 
                 // 말풍선당 최대 2문장 & 최대 2개까지 분리 (3번째는 나머지로 처리)
-                if (sentencesInBubble >= MAX_SENTENCES_PER_BUBBLE && bubbleCount < MAX_BUBBLES - 1) {
+                if (sentencesInBubble >= BUBBLE_CONFIG.MAX_SENTENCES_PER_BUBBLE && bubbleCount < BUBBLE_CONFIG.MAX_BUBBLES - 1) {
                   const bubble = currentBubble.trim();
                   const msg: DebateMessage = { speaker, text: bubble, timestamp: Date.now() };
                   allMessages.push(msg);
@@ -535,10 +556,13 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
                   currentBubble = '';
                   sentencesInBubble = 0;
                   bubbleCount++;
+                  charBuf = '';
                   await sleep(300);
                 }
               }
             }
+            // 잔여 버퍼 flush
+            if (charBuf.length > 0) setCurrentText(currentBubble);
           }, recentHistory, {
             usedArgCount: usedArgCountRef.current[speaker] ?? 0,
             mustRebutClaim,
@@ -612,8 +636,10 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
       fetch('/api/debate-cache', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic: initialTopic, style, messages: allMessages, judgment: null }),
+        body: JSON.stringify({ topic: initialTopic, style, messages: allMessages, judgment: null, promptVersion: PROMPT_VERSION }),
       }).catch(() => {});
+      // 30라운드 정상 완료 시 finished 단계로 전환
+      setPhase('finished');
     }
   };
 
@@ -679,6 +705,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
 
   const endDebate = () => {
     abortRef.current = true;
+    activeAbortCtrlRef.current?.abort(); // fetch 즉시 취소 (데드락 방지)
     setCurrentSpeaker(null);
     setCurrentText('');
     setMessages([]);

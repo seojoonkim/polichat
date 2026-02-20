@@ -4,65 +4,9 @@ import { streamChat } from '@/lib/anthropic-client';
 import { getRelevantContext } from '@/lib/keyword-rag';
 import { calculateEngagement, shouldReact } from '@/lib/engagement';
 import { generateSuggestedQuestions } from '@/lib/suggest-questions';
+import { splitIntoBubbles } from '@/lib/bubble-splitter';
 import type { KnowledgeCategory } from '@/types/politician';
 import type { Message } from '@/types/chat';
-
-/**
- * AI 응답을 파싱해서 말풍선 배열로 변환
- * 1. ** 마크다운 제거
- * 2. || 구분자로 분리 (시스템 프롬프트에서 지시)
- * 3. 번호 리스트 (1. 2. 3. ...) → 각 번호별 말풍선으로 분리
- * 4. 긴 응답 → 문장 단위로 2~3문장씩 자동 분리
- */
-function parseAIResponse(text: string): string[] {
-  // ** 마크다운 제거
-  const cleaned = text.replace(/\*\*(.*?)\*\*/g, '$1');
-
-  // || 구분자로 분리 (최우선)
-  if (cleaned.includes('||')) {
-    return cleaned.split('||').map(s => s.trim()).filter(s => s.length > 0);
-  }
-
-  // 번호 리스트 패턴 감지: "1. " "2. " 등이 2개 이상 있을 때
-  const allNumbers = cleaned.match(/\d+\.\s/g);
-
-  if (allNumbers && allNumbers.length >= 2) {
-    // 번호 앞에서 분리 (lookahead)
-    const parts = cleaned.split(/(?=\d+\.\s)/).map(s => s.trim()).filter(s => s);
-
-    const bubbles: string[] = [];
-    for (const part of parts) {
-      if (part) bubbles.push(part);
-    }
-    return bubbles;
-  }
-
-  // 긴 응답 자동 분리 (150자 이상이면 문장 단위로 2~3문장씩)
-  if (cleaned.length > 150) {
-    // 한국어 문장 끝 패턴 (습니다. 해요. 있어요. 거예요. 등) + 영문 .!?
-    const sentences = cleaned.split(/(?<=[다요죠네요\.!?])\s+/).filter(s => s.trim());
-    if (sentences.length >= 2) {
-      const bubbles: string[] = [];
-      let current = '';
-      let count = 0;
-      for (const sentence of sentences) {
-        current += (current ? ' ' : '') + sentence;
-        count++;
-        if (count >= 2 && current.length >= 50) {
-          bubbles.push(current.trim());
-          current = '';
-          count = 0;
-        }
-      }
-      if (current.trim()) bubbles.push(current.trim());
-      const validBubbles = bubbles.filter(b => b.trim().length > 0);
-      if (validBubbles.length > 1) return validBubbles;
-    }
-  }
-
-  // 리스트 없으면 그냥 ** 제거한 텍스트 반환
-  return [cleaned];
-}
 
 export function useChat(systemPrompt: string, knowledge?: Record<KnowledgeCategory, string> | null) {
   const messages = useChatStore((s) => s.messages);
@@ -157,8 +101,16 @@ export function useChat(systemPrompt: string, knowledge?: Record<KnowledgeCatego
       // Need systemPrompt for AI call
       if (!systemPrompt) return;
 
-      // Add empty assistant message as placeholder
-      addMessage('assistant', '');
+      // Add empty assistant message as placeholder (with tracked ID for safe error cleanup)
+      const placeholderId = `placeholder-${crypto.randomUUID()}`;
+      useChatStore.setState((state) => ({
+        messages: [...state.messages, {
+          id: placeholderId,
+          role: 'assistant' as const,
+          content: '',
+          timestamp: Date.now(),
+        }],
+      }));
       setStreaming(true);
 
       // 0.5~1.2초 랜덤 딜레이 (읽는 척 - 타이핑 인디케이터가 보이는 상태)
@@ -212,7 +164,7 @@ export function useChat(systemPrompt: string, knowledge?: Record<KnowledgeCatego
           const lastMsg = latestMsgs.filter(m => m.role === 'assistant').pop();
 
           if (lastMsg) {
-            const bubbles = parseAIResponse(lastMsg.content);
+            const bubbles = splitIntoBubbles(lastMsg.content);
 
             if (bubbles.length > 1) {
               // 여러 말풍선으로 분리
@@ -320,9 +272,9 @@ export function useChat(systemPrompt: string, knowledge?: Record<KnowledgeCatego
         },
         onError: (err) => {
           setStreaming(false);
-          // Remove the empty assistant placeholder
+          // placeholder ID로 정확한 메시지만 삭제 (slice 대신 filter)
           useChatStore.setState((state) => ({
-            messages: state.messages.slice(0, -1),
+            messages: state.messages.filter((m) => m.id !== placeholderId),
           }));
           // Still persist the user message
           setTimeout(() => persistMessages(), 50);
