@@ -58,54 +58,61 @@ function stripMediaName(title) {
     .replace(/\s*"[^"]*"$/g, '').trim();
 }
 
-async function reformatToDebateTopic(rawTitle) {
+async function fetchTopIssue(todayKST) {
+  // 오늘 이슈 이미 있으면 재사용 (하루 1개 고정)
+  const cached = await getRecentIssues(1);
+  const todayCached = cached.find(r => r.date === todayKST);
+  if (todayCached?.title) return todayCached.title;
+
+  // 여러 피드 동시 수집 (어제 자정 이후)
+  const FEEDS = [
+    'https://news.google.com/rss/search?q=%ED%95%9C%EA%B5%AD+%EC%A0%95%EC%B9%98&hl=ko&gl=KR&ceid=KR:ko',
+    'https://www.ytn.co.kr/_ln/0101_rss.xml',
+    'https://rss.donga.com/politics.xml',
+    'https://www.hani.co.kr/rss/politics/',
+  ];
+  const kstNow = Date.now() + 9 * 60 * 60 * 1000;
+  const kstMidnight = new Date(new Date(kstNow).toISOString().slice(0, 10) + 'T00:00:00+09:00').getTime();
+  const cutoff = kstMidnight - 24 * 60 * 60 * 1000;
+
+  const results = await Promise.allSettled(FEEDS.map(async url => {
+    const r = await fetch(url, { signal: AbortSignal.timeout(7000) });
+    if (!r.ok) return [];
+    const xml = await r.text();
+    return [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)].map(m => {
+      const raw = m[1].match(/<title><!\[CDATA\[([^\]]+)\]\]><\/title>/)?.[1]
+        || m[1].match(/<title>([^<]+)<\/title>/)?.[1] || '';
+      const title = stripMediaName(raw.replace(/<[^>]+>/g, '').trim());
+      const pubRaw = m[1].match(/<pubDate>([^<]+)<\/pubDate>/)?.[1] || '';
+      return { title, publishedAt: pubRaw ? new Date(pubRaw).toISOString() : new Date().toISOString() };
+    }).filter(i => i.title.length >= 10 && !i.title.includes('광고')
+      && new Date(i.publishedAt).getTime() >= cutoff);
+  }));
+
+  const items = results.filter(r => r.status === 'fulfilled').flatMap(r => r.value).slice(0, 40);
+  if (items.length === 0) return null;
+
+  // LLM으로 화제 이슈 선택 + 논점화
   const key = process.env.OPENROUTER_API_KEY;
-  if (!key) return rawTitle;
+  if (!key) return items[0]?.title || null;
+  const headlines = items.map((it, i) => `${i + 1}. ${it.title}`).join('\n');
   try {
     const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'openai/gpt-4o',
-        messages: [{ role: 'user', content: `다음 뉴스 헤드라인을 한국 정치 토론 논제로 재작성하세요.\n조건: 언론사명·기자명·따옴표 제거, 정치적 대립구도 명확, 20-35자, 제목만 출력\n\n헤드라인: "${rawTitle}"` }],
-        max_tokens: 80, temperature: 0.3,
+        messages: [{ role: 'user', content: `아래 한국 정치 뉴스 헤드라인 중 오늘 가장 화제가 되고 여야 대립 구도가 명확한 이슈 1개를 선택해 토론 논제로 재작성하세요.\n조건: 언론사명 제거, 대립구도 명확, 20~35자\nJSON만 출력: {"topic": "..."}\n\n${headlines}` }],
+        max_tokens: 100, temperature: 0.3,
+        response_format: { type: 'json_object' },
       }),
-      signal: AbortSignal.timeout(15000),
+      signal: AbortSignal.timeout(20000),
     });
     const d = await r.json();
-    const result = d.choices?.[0]?.message?.content?.trim();
-    return result?.length >= 5 ? result : rawTitle;
-  } catch { return rawTitle; }
-}
-
-async function fetchTopIssue(todayKST) {
-  // 오늘 이슈 이미 있으면 재사용 (자꾸 바뀌는 문제 방지)
-  const { getRecentIssues } = await import('./issue-history.js');
-  const cached = await getRecentIssues(1);
-  const todayCached = cached.find(r => r.date === todayKST);
-  if (todayCached?.title) return todayCached.title;
-
-  const feeds = [
-    { url: 'https://www.ytn.co.kr/_ln/0101_rss.xml' },
-    { url: 'https://rss.donga.com/politics.xml' },
-  ];
-  for (const feed of feeds) {
-    try {
-      const res = await fetch(feed.url, { signal: AbortSignal.timeout(6000) });
-      if (!res.ok) continue;
-      const xml = await res.text();
-      const items = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)].slice(0, 5);
-      for (const m of items) {
-        const raw = m[1].match(/<title><!\[CDATA\[([^\]]+)\]\]><\/title>/)?.[1]
-          || m[1].match(/<title>([^<]+)<\/title>/)?.[1] || '';
-        const title = stripMediaName(raw.replace(/<[^>]+>/g, '').trim());
-        if (title.length >= 10 && !title.includes('광고')) {
-          return await reformatToDebateTopic(title);
-        }
-      }
-    } catch {}
-  }
-  return null;
+    const content = d.choices?.[0]?.message?.content?.trim();
+    const parsed = content ? JSON.parse(content) : null;
+    return parsed?.topic?.length >= 5 ? parsed.topic : items[0].title;
+  } catch { return items[0].title; }
 }
 
 async function generateKB(issue, debateType) {
