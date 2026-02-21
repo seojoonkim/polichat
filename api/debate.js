@@ -3004,6 +3004,12 @@ export default async function handler(req, res) {
     systemPrompt += `\n\n${dynamicSection}`;
   }
 
+  // ── 오늘의 이슈 모드: safeTopic이 실제 뉴스 이슈 형태면 강제 주입 ──────────
+  const isIssueTopic = safeTopic.length > 20 && (safeTopic.includes('—') || safeTopic.includes('vs') || safeTopic.includes('인가') || safeTopic.includes('인지'));
+  if (isIssueTopic) {
+    systemPrompt += `\n\n🔴 [오늘의 이슈 토론 — 최우선 지시]\n지금 토론 주제는 정확히 다음이다: "${safeTopic}"\n이 주제에서 절대 벗어나지 말 것. KB의 다른 주제(언론, 선거 등) 내용을 끌어오지 말 것.\n이 이슈에 대해 네 캐릭터의 정치적 입장에서 구체적 논거(날짜, 사례, 국제 비교)를 들어 발언하라.`;
+  }
+
   // ── 개선 A: 전체 히스토리에서 이미 사용된 논거/수치 추출 ──────────────────
   const usedEvidenceAll = extractUsedEvidence(safeRecentHistory);
   if (usedEvidenceAll.size > 0) {

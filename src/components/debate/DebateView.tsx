@@ -270,27 +270,43 @@ export default function DebateView({ debateType = 'seoul', dynamicKB, issueTitle
 
 const FACT_CHECK_SOURCES = ['AP통신', '연합뉴스', '조선일보', '한겨레', 'YTN', 'KBS', 'MBC', 'SBS', '헤럴드경제', '뉴스1'];
 
-function detectFacts(text: string): { label: string; detail: string } | null {
+function detectFacts(text: string): { label: string; subtitle: string; detail: string } | null {
   const sourceHit = FACT_CHECK_SOURCES.find((s) => text.includes(s));
 
-  // 퍼센트 포함 문맥 추출 (앞뒤 포함, 최대 35자)
+  // 퍼센트 포함 문맥 추출 (넓은 범위)
   const percentMatch = text.match(/[^。、,.!?]*\d+(?:\.\d+)?%[^。、,.!?]*/);
+  // 연도+월 포함 문맥 추출
+  const yearMonthMatch = text.match(/\d{4}년\s*\d{1,2}월[^。、,.!?]{0,40}/);
   // 연도 포함 문맥 추출
-  const yearMatch = text.match(/\d{4}년[^。、,.!?]{0,25}/);
+  const yearMatch = text.match(/\d{4}년[^。、,.!?]{0,40}/);
+  // 순위/등수 추출
+  const rankMatch = text.match(/\d+위[^。、,.!?]{0,30}/);
+
+  // 날짜 추출 (YYYY년 MM월 또는 YYYY년)
+  const dateStr = yearMonthMatch ? yearMonthMatch[0].match(/\d{4}년\s*\d{1,2}월/)?.[0] || ''
+    : yearMatch ? yearMatch[0].match(/\d{4}년/)?.[0] || ''
+    : '';
+
+  // 핵심 수치/내용 (최대 60자)
+  const stat = percentMatch
+    ? percentMatch[0].trim().slice(0, 60)
+    : rankMatch
+    ? rankMatch[0].trim().slice(0, 60)
+    : yearMatch
+    ? yearMatch[0].trim().slice(0, 60)
+    : '';
 
   if (sourceHit) {
-    const stat = percentMatch
-      ? percentMatch[0].trim().slice(0, 35)
-      : yearMatch
-      ? yearMatch[0].trim().slice(0, 35)
-      : '';
-    return { label: sourceHit, detail: stat };
+    return { label: sourceHit, subtitle: dateStr, detail: stat };
   }
   if (percentMatch) {
-    return { label: '통계', detail: percentMatch[0].trim().slice(0, 35) };
+    return { label: '통계 데이터', subtitle: dateStr, detail: stat };
   }
-  if (yearMatch) {
-    return { label: '날짜', detail: yearMatch[0].trim().slice(0, 35) };
+  if (rankMatch) {
+    return { label: '순위 데이터', subtitle: dateStr, detail: stat };
+  }
+  if (yearMatch && yearMatch[0].length > 8) {
+    return { label: '인용 데이터', subtitle: dateStr, detail: stat };
   }
   return null;
 }
@@ -1588,19 +1604,26 @@ function detectFacts(text: string): { label: string; detail: string } | null {
           return (
             <div
               key={i}
-              className={`flex flex-col ${isSpeakerA ? 'items-start' : 'items-end'}`}
+              className={`flex flex-col ${isSpeakerA ? 'items-end' : 'items-start'}`}
               style={{ position: 'relative' }}
             >
               <MessageBubble msg={msg} config={config} />
               {factLabel && !msg.isTopicChange && (
                 <div
-                  className={`mt-1 inline-flex flex-col max-w-[260px] rounded-xl border border-blue-100 bg-blue-50 px-3 py-1.5 ${isSpeakerA ? 'ml-11' : 'mr-11'}`}
+                  className={`mt-1 inline-flex flex-col max-w-[280px] rounded-xl border border-blue-100 bg-blue-50 px-3 py-1.5 ${isSpeakerA ? 'mr-11' : 'ml-11'}`}
                 >
-                  <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wide">
-                    📎 {factLabel.label}
-                  </span>
+                  <div className="flex items-center gap-1 flex-wrap">
+                    <span className="text-[10px] font-black text-blue-500 tracking-wide">
+                      📎 {factLabel.label}
+                    </span>
+                    {factLabel.subtitle && (
+                      <span className="text-[10px] text-blue-400 font-semibold">
+                        · {factLabel.subtitle}
+                      </span>
+                    )}
+                  </div>
                   {factLabel.detail && (
-                    <span className="text-[11px] text-blue-700 leading-snug mt-0.5">
+                    <span className="text-[11px] text-blue-800 leading-snug mt-0.5 font-medium">
                       {factLabel.detail}
                     </span>
                   )}
