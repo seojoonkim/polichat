@@ -323,7 +323,7 @@ export default function PoliticianSelector({ politicians }: Props) {
               .then(data => {
                 if (data.dynamicKB) {
                   try {
-                    localStorage.setItem(lsKey, JSON.stringify({ data, ts: Date.now() }));
+                    localStorage.setItem(lsKey, JSON.stringify({ data: data.dynamicKB, ts: Date.now() }));
                   } catch {}
                 }
               })

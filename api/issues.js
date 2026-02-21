@@ -142,7 +142,7 @@ export default async function handler(req, res) {
     }
 
     // 4) Supabase에 오늘 날짜로 저장 (force=1이면 기존 항목 덮어쓰기)
-    await saveIssueForDate(todayKST, debateTopic, force && secret === expectedSecret);
+    await saveIssueForDate(todayKST, debateTopic, null, force && secret === expectedSecret);
 
     return res.json({ issues: [{ title: debateTopic, source: 'rss', publishedAt: new Date().toISOString() }] });
   } catch (e) {

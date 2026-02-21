@@ -47,9 +47,9 @@ export default function DebatePage() {
         clearTimeout(quickTimer);
         if (data.dynamicKB) {
           try {
-            localStorage.setItem(lsKey, JSON.stringify({ data, ts: Date.now() }));
+            localStorage.setItem(lsKey, JSON.stringify({ data: data.dynamicKB, ts: Date.now() }));
           } catch {}
-          setDynamicKB(data);
+          setDynamicKB(data.dynamicKB);
         }
         setResearchState('done');
       })
@@ -68,9 +68,9 @@ export default function DebatePage() {
     if (result?.dynamicKB) {
       const lsKey = `${LS_PREFIX}${debateType}_${issueParam.slice(0, 50)}`;
       try {
-        localStorage.setItem(lsKey, JSON.stringify({ data: result, ts: Date.now() }));
+        localStorage.setItem(lsKey, JSON.stringify({ data: result.dynamicKB, ts: Date.now() }));
       } catch {}
-      setDynamicKB(result);
+      setDynamicKB(result.dynamicKB);
     }
     setResearchState('done');
   };
