@@ -1,7 +1,6 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { Message } from '@/types/chat';
 import type { PoliticianMeta } from '@/types/politician';
-import { getPoliticianPhrases } from '@/lib/politician-phrases';
 
 interface Props {
   message: Message;
@@ -67,24 +66,7 @@ function TypingDots({ color }: { color: string }) {
 }
 
 // 로테이팅 트레이드마크 발언
-function RotatingPhrase({ politicianId, color }: { politicianId: string; color: string }) {
-  const phrases = useMemo(() => getPoliticianPhrases(politicianId), [politicianId]);
-  const [index, setIndex] = useState(0);
-  const [fade, setFade] = useState(true);
-
-  useEffect(() => {
-    if (!phrases || phrases.length === 0) return;
-    const interval = setInterval(() => {
-      setFade(false);
-      setTimeout(() => {
-        setIndex(i => (i + 1) % phrases.length);
-        setFade(true);
-      }, 300);
-    }, 2500);
-    return () => clearInterval(interval);
-  }, [phrases]);
-
-  // 타이핑 인디케이터만 표시 (문구 제거)
+function RotatingPhrase({ color }: { politicianId: string; color: string }) {
   return <TypingDots color={color} />;
 }
 

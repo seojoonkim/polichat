@@ -1606,8 +1606,8 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
               style={{ position: 'relative' }}
             >
               <MessageBubble msg={msg} config={config} />
+              {/* 논문 인용 스타일 카드: 출처명 + 날짜만 표시 */}
               {factLabel && !msg.isTopicChange && (
-                {/* 논문 인용 스타일 카드: 출처명 + 날짜만 표시 */}
                 <div
                   className={`mt-1 inline-flex items-center gap-2 rounded-lg border-l-2 border-blue-400 bg-blue-50/70 pl-2 pr-3 py-1 ${isSpeakerA ? 'mr-11' : 'ml-11'}`}
                 >
