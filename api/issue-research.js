@@ -1,3 +1,5 @@
+import { createClient } from '@supabase/supabase-js';
+
 const MODULE_CACHE = new Map(); // key: `${type}::${issue}`
 const CACHE_TTL = 2 * 60 * 60 * 1000; // 2 hours
 
@@ -11,6 +13,53 @@ function extractTitleFromCData(raw) {
     .replace(/<!\[CDATA\[(.*?)\]\]>/gs, '$1')
     .replace(/<[^>]+>/g, '')
     .trim();
+}
+
+function getSupabase() {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_ANON_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key);
+}
+
+async function getFromSupabase(supabase, debateType, issue) {
+  if (!supabase) return null;
+  try {
+    const styleKey = debateType + '||' + issue.slice(0, 80);
+    const cutoff = new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString();
+    const { data, error } = await supabase
+      .from('debate_cache')
+      .select('messages, created_at')
+      .eq('topic', '__issue_kb__')
+      .eq('style', styleKey)
+      .eq('debate_type', debateType)
+      .gte('created_at', cutoff)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+    if (error || !data) return null;
+    const msg = data.messages && data.messages[0];
+    if (!msg) return null;
+    return JSON.parse(msg.content);
+  } catch (e) {
+    return null;
+  }
+}
+
+async function saveToSupabase(supabase, debateType, issue, dynamicKB) {
+  if (!supabase) return;
+  try {
+    const styleKey = debateType + '||' + issue.slice(0, 80);
+    await supabase.from('debate_cache').insert({
+      topic: '__issue_kb__',
+      style: styleKey,
+      debate_type: debateType,
+      messages: [{ role: 'kb', content: JSON.stringify(dynamicKB) }],
+      version: 1,
+    });
+  } catch (e) {
+    console.error('[issue-research] Supabase save error:', e.message);
+  }
 }
 
 export default async function handler(req, res) {
@@ -28,6 +77,28 @@ export default async function handler(req, res) {
   const cached = MODULE_CACHE.get(cacheKey);
   if (cached && Date.now() - cached.ts < CACHE_TTL) {
     return res.status(200).json({ ...cached.data, cached: true });
+  }
+
+  const supabase = getSupabase();
+  const l2kb = await getFromSupabase(supabase, type, issue);
+  if (l2kb) {
+    const speakerMap = {
+      seoul: { A: '오세훈', B: '정원오' },
+      national: { A: '정청래', B: '장동혁' },
+      leejeon: { A: '이준석', B: '전한길' },
+      kimjin: { A: '김어준', B: '진중권' },
+      hanhong: { A: '한동훈', B: '홍준표' },
+    };
+    const result = {
+      dynamicKB: l2kb,
+      issue,
+      type,
+      speakers: speakerMap[type] || { A: 'A', B: 'B' },
+      headlines: [],
+      cached: 'l2',
+    };
+    MODULE_CACHE.set(cacheKey, { data: result, ts: Date.now() });
+    return res.status(200).json(result);
   }
 
   // 1. Fetch Google News RSS for this topic
@@ -145,8 +216,8 @@ ${headlineContext}
   }
 
   const result = { dynamicKB, headlines, issue, type, speakers };
+  await saveToSupabase(supabase, type, issue, dynamicKB);
   MODULE_CACHE.set(cacheKey, { data: result, ts: Date.now() });
 
   return res.status(200).json(result);
 }
-

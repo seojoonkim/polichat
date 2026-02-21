@@ -231,6 +231,29 @@ export default function PoliticianSelector({ politicians }: Props) {
         const first = (data?.issues || [])[0];
         if (!controller.signal.aborted && first?.title) {
           setHeroIssue({ title: first.title });
+
+          // 백그라운드에서 모든 매치업 타입 프리패치 (silent)
+          const prefetchTypes = ['seoul', 'national', 'leejeon', 'kimjin', 'hanhong'];
+          prefetchTypes.forEach(t => {
+            const lsKey = 'pc_issue_kb_' + t + '_' + first.title.slice(0, 50);
+            try {
+              const cached = localStorage.getItem(lsKey);
+              if (cached) {
+                const parsed = JSON.parse(cached);
+                if (Date.now() - parsed.ts < 2 * 60 * 60 * 1000) return;
+              }
+            } catch {}
+            fetch('/api/issue-research?issue=' + encodeURIComponent(first.title) + '&type=' + t)
+              .then(r => r.json())
+              .then(data => {
+                if (data.dynamicKB) {
+                  try {
+                    localStorage.setItem(lsKey, JSON.stringify({ data, ts: Date.now() }));
+                  } catch {}
+                }
+              })
+              .catch(() => {});
+          });
         }
       } catch {
         setIssueError(true);

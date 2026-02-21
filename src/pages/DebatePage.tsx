@@ -15,25 +15,52 @@ export default function DebatePage() {
   const [dynamicKB, setDynamicKB] = useState<any>(null);
 
   useEffect(() => {
-    setResearchState('idle');
-    setDynamicKB(null);
-
     if (!issueParam) return;
 
     const lsKey = `${LS_PREFIX}${debateType}_${issueParam.slice(0, 50)}`;
+
+    // localStorage 즉시 체크
     try {
       const cached = localStorage.getItem(lsKey);
       if (cached) {
-        const { data, ts } = JSON.parse(cached);
-        if (Date.now() - ts < LS_TTL) {
-          setDynamicKB(data);
+        const parsed = JSON.parse(cached);
+        if (Date.now() - parsed.ts < LS_TTL) {
+          setDynamicKB(parsed.data);
           setResearchState('done');
           return;
         }
       }
     } catch {}
 
-    setResearchState('loading');
+    // 800ms 이내 응답 → 로더 없이 진행 (Supabase 캐시 히트)
+    const quickTimer = setTimeout(() => {
+      setResearchState('loading');
+    }, 800);
+
+    const controller = new AbortController();
+    fetch('/api/issue-research?issue=' + encodeURIComponent(issueParam) + '&type=' + debateType, {
+      signal: controller.signal,
+    })
+      .then(r => r.json())
+      .then(data => {
+        clearTimeout(quickTimer);
+        if (data.dynamicKB) {
+          try {
+            localStorage.setItem(lsKey, JSON.stringify({ data, ts: Date.now() }));
+          } catch {}
+          setDynamicKB(data);
+        }
+        setResearchState('done');
+      })
+      .catch(() => {
+        clearTimeout(quickTimer);
+        setResearchState('done');
+      });
+
+    return () => {
+      clearTimeout(quickTimer);
+      controller.abort();
+    };
   }, [issueParam, debateType]);
 
   const handleResearchComplete = (result: ResearchResult) => {

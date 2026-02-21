@@ -6,8 +6,15 @@
     { "handle": "filesystem" },
     { "src": "/api/issues", "dest": "/api/issues.js" },
     { "src": "/api/issue-research", "dest": "/api/issue-research.js" },
+    { "src": "/api/issue-warmup", "dest": "/api/issue-warmup.js" },
     { "src": "/api/(.*)", "dest": "/api/$1" },
     { "src": "/(.*)", "dest": "/index.html" }
+  ],
+  "crons": [
+    {
+      "path": "/api/issue-warmup",
+      "schedule": "0 */2 * * *"
+    }
   ],
   "functions": {
     "api/chat.js": {

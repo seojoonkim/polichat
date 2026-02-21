@@ -88,15 +88,12 @@ export default function IssuesPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {issues.slice(0, 5).map((issue) => (
+            {issues.slice(0, 1).map((issue) => (
               <div
                 key={`${issue.url}-${issue.publishedAt}`}
                 className="rounded-2xl bg-white border border-gray-200 p-4 flex flex-col gap-3"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <span className="inline-flex px-2.5 py-1 text-xs rounded-full bg-gray-100 text-gray-700 shrink-0">
-                    {issue.source}
-                  </span>
+                <div className="flex items-end justify-end gap-3">
                   <span className="text-xs text-gray-400 whitespace-nowrap">{getTimeAgo(issue.publishedAt)}</span>
                 </div>
                 <p className="text-base font-semibold text-gray-900 leading-snug">{issue.title}</p>

@@ -89,7 +89,7 @@ async function getLatestIssues() {
     ]);
     const items = [...ytnItems, ...dongAItems]
       .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
-      .slice(0, 5);
+      .slice(0, 1);
 
     if (items.length > 0) {
       issuesCache = items;
