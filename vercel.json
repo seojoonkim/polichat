@@ -7,6 +7,7 @@
     { "src": "/api/issues", "dest": "/api/issues.js" },
     { "src": "/api/issue-research", "dest": "/api/issue-research.js" },
     { "src": "/api/issue-warmup", "dest": "/api/issue-warmup.js" },
+    { "src": "/api/issue-history", "dest": "/api/issue-history.js" },
     { "src": "/api/(.*)", "dest": "/api/$1" },
     { "src": "/(.*)", "dest": "/index.html" }
   ],

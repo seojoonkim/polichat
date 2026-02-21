@@ -1,3 +1,5 @@
+import { saveIssueForDate, toKSTDate } from './issue-history.js';
+
 const CACHE_TTL_MS = 30 * 60 * 1000;
 const FALLBACK_ITEMS = [
   {
@@ -105,5 +107,16 @@ async function getLatestIssues() {
 
 export default async function handler(_req, res) {
   const items = await getLatestIssues();
+
+  // 실사용자 조회 시에도 이슈 히스토리에 저장
+  try {
+    if (items.length > 0 && items[0].title) {
+      const todayKST = toKSTDate(new Date());
+      await saveIssueForDate(todayKST, items[0].title);
+    }
+  } catch (e) {
+    console.error('[issues] saveIssueForDate error:', e);
+  }
+
   res.json({ issues: items });
 }

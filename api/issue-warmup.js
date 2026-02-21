@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { saveIssueForDate, toKSTDate } from './issue-history.js';
 
 const DEBATE_TYPES = ['seoul', 'national', 'leejeon', 'kimjin', 'hanhong'];
 
@@ -135,6 +136,9 @@ export default async function handler(req, res) {
   if (!issueTitle) {
     return res.status(200).json({ warmed: 0, message: 'no issues found' });
   }
+
+  const todayKST = toKSTDate();
+  await saveIssueForDate(todayKST, issueTitle);
 
   const supabase = getSupabase();
 

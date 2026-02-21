@@ -408,7 +408,7 @@ function formatIssueDate(dateStr: string): string {
                   fontWeight: 800,
                   fontSize: '16px',
                   letterSpacing: '-0.03em',
-                  color: '#1A0845',
+                  color: '#E2E8F0',
                 }}
               >
                 AI 정치인과 직접 대화하세요
@@ -418,7 +418,7 @@ function formatIssueDate(dateStr: string): string {
                   <span className="live-dot absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75" />
                   <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
                 </span>
-                <span className="text-[10px] font-bold text-slate-600 tracking-wider">LIVE</span>
+                <span className="text-[10px] font-bold text-slate-300 tracking-wider">LIVE</span>
               </div>
             </div>
             <p className="hidden text-[13px] text-gray-500 leading-relaxed max-w-[280px] mx-auto">
@@ -458,20 +458,20 @@ function formatIssueDate(dateStr: string): string {
         {activeTab !== 'issue' && heroVisible && heroIssue?.title && (
           <button
             onClick={() => switchTab('issue')}
-            className="w-full flex items-center gap-2.5 px-4 py-2.5 bg-violet-50 border-b border-violet-100 text-left"
+            className="w-full flex items-center gap-2.5 px-4 py-2.5 bg-violet-950/50 border-b border-violet-800/40 text-left"
           >
             <span className="text-sm shrink-0">🔥</span>
-            <span className="text-xs font-semibold text-violet-900 truncate flex-1">
+            <span className="text-xs font-semibold text-violet-200 truncate flex-1">
               {heroIssue.title.length > 38 ? heroIssue.title.slice(0, 38) + '…' : heroIssue.title}
             </span>
-            <span className="shrink-0 text-[10px] font-bold text-violet-600 bg-violet-100 px-2 py-0.5 rounded-full whitespace-nowrap">이슈 토론 →</span>
+            <span className="shrink-0 text-[10px] font-bold text-violet-300 bg-violet-800/60 px-2 py-0.5 rounded-full whitespace-nowrap">이슈 토론 →</span>
           </button>
         )}
 
         {activeTab === 'battle' && (
           <div id="debate-battle" className="animate-fade-in-up space-y-2" style={{ animationDelay: '0.12s' }}>
             <div className="mb-2">
-              <p className="text-[12px] font-bold text-gray-500 uppercase tracking-widest mb-3 px-1">
+              <p className="text-[12px] font-bold text-gray-400 uppercase tracking-widest mb-3 px-1">
                 AI 5분 토론
               </p>
             </div>
@@ -512,7 +512,7 @@ function formatIssueDate(dateStr: string): string {
         {activeTab === 'chat' && (
           <>
             <div id="politician-chat" className="mb-3 animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
-              <p className="text-[13px] font-bold text-gray-700 tracking-wide uppercase flex items-center gap-1.5" style={{ letterSpacing: '0.06em' }}>
+              <p className="text-[13px] font-bold text-gray-300 tracking-wide uppercase flex items-center gap-1.5" style={{ letterSpacing: '0.06em' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                   <circle cx="9" cy="10" r="0.8" fill="currentColor"/>
@@ -632,7 +632,7 @@ function formatIssueDate(dateStr: string): string {
 
               if (displayList.length === 0) {
                 return (
-                  <p className="text-center text-gray-400 text-sm py-16">이슈를 불러오는 중...</p>
+                  <p className="text-center text-gray-500 text-sm py-16">이슈 히스토리 쌓이는 중... (매 2시간 업데이트)</p>
                 );
               }
 
@@ -646,7 +646,7 @@ function formatIssueDate(dateStr: string): string {
                         ${isToday ? 'bg-violet-100 text-violet-700' : 'text-gray-400'}`}>
                         {isToday ? '오늘' : formatIssueDate(dayIssue.date)}
                       </span>
-                      <div className="flex-1 h-px bg-gray-100" />
+                      <div className="flex-1 h-px bg-gray-800" />
                     </div>
 
                     {/* Issue headline card */}
@@ -663,7 +663,7 @@ function formatIssueDate(dateStr: string): string {
                         <button
                           key={item.value}
                           onClick={() => navigate(`/debate?type=${item.value}&issue=${encodeURIComponent(dayIssue.title)}`)}
-                          className="w-full flex items-center justify-between px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 hover:border-violet-300 hover:bg-violet-50 active:scale-[0.98] transition-all duration-150"
+                          className="w-full flex items-center justify-between px-4 py-3 rounded-xl border border-gray-700/60 bg-gray-900/60 text-sm font-semibold text-gray-200 hover:border-violet-500/60 hover:bg-violet-950/40 active:scale-[0.98] transition-all duration-150"
                         >
                           <span>{item.label}</span>
                           <span className="text-violet-500 text-xs font-bold">토론 시작 →</span>
