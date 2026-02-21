@@ -253,7 +253,10 @@ export default function PoliticianSelector({ politicians }: Props) {
   const [heroVisible, setHeroVisible] = useState(true);
   const [issueError, setIssueError] = useState(false);
   const [issueHistory, setIssueHistory] = useState<IssueHistoryItem[]>([]);
-  const [expandedDates, setExpandedDates] = useState<Set<string>>(() => new Set([todayKST]));
+  const [expandedDates, setExpandedDates] = useState<Set<string>>(() => {
+    const today = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    return new Set([today]);
+  });
   const toggleDate = (date: string) => setExpandedDates(prev => {
     const next = new Set(prev);
     if (next.has(date)) next.delete(date); else next.add(date);
