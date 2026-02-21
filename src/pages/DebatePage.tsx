@@ -10,6 +10,7 @@ export default function DebatePage() {
   const [searchParams] = useSearchParams();
   const debateType = (searchParams.get('type') as DebateType) || 'seoul';
   const issueParam = searchParams.get('issue') || '';
+  const autoStart = searchParams.get('autostart') === '1';
 
   const [researchState, setResearchState] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
   const [dynamicKB, setDynamicKB] = useState<any>(null);
@@ -96,6 +97,7 @@ export default function DebatePage() {
           debateType={debateType}
           dynamicKB={dynamicKB}
           issueTitle={issueParam ? decodeURIComponent(issueParam) : undefined}
+          autoStart={autoStart}
         />
       </div>
     </div>

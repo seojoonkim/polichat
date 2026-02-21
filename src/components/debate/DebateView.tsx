@@ -136,6 +136,7 @@ interface DebateViewProps {
   debateType?: DebateType;
   dynamicKB?: any;
   issueTitle?: string;
+  autoStart?: boolean;
 }
 
 interface Judgment {
@@ -216,7 +217,7 @@ function buildDebateSummary(
 
 // ─── 메인 컴포넌트 ─────────────────────────────────────────────────────────────
 
-export default function DebateView({ debateType = 'seoul', dynamicKB, issueTitle }: DebateViewProps) {
+export default function DebateView({ debateType = 'seoul', dynamicKB, issueTitle, autoStart }: DebateViewProps) {
   const navigate = useNavigate();
   const config = DEBATE_CONFIGS[debateType];
 
@@ -1016,6 +1017,16 @@ function detectFacts(text: string): { label: string; detail: string } | null {
     setTimeLeft(300);
     setPhase('setup');
   };
+
+  // autoStart: 이슈 탭에서 바로 정책토론 시작
+  const autoStartedRef = useRef(false);
+  useEffect(() => {
+    if (!autoStart || autoStartedRef.current || phase !== 'setup') return;
+    autoStartedRef.current = true;
+    const t = setTimeout(() => { startDebate(); }, 500);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoStart, phase]);
 
   const handleShareResult = async () => {
     const topLines = topHighlights.slice(0, 2).map((item, idx) => {

@@ -255,12 +255,12 @@ export default function PoliticianSelector({ politicians }: Props) {
   const [issueHistory, setIssueHistory] = useState<IssueHistoryItem[]>([]);
   const todayKST = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
   const issueTypes = [
-    { value: 'seoul', label: '오세훈 VS 정원오' },
-    { value: 'national', label: '정청래 VS 장동혁' },
-    { value: 'leejeon', label: '이준석 VS 전한길' },
-    { value: 'kimjin', label: '김어준 VS 진중권' },
-    { value: 'hanhong', label: '한동훈 VS 홍준표' },
-  ] as const;
+    { value: 'seoul',    nameA: '오세훈', nameB: '정원오',  imgA: '/politicians/ohsehoon/profile.jpg',    imgB: '/politicians/jungwono/profile.jpg' },
+    { value: 'national', nameA: '정청래', nameB: '장동혁',  imgA: '/politicians/jungcr/profile.jpg',      imgB: '/politicians/jangdh/profile.jpg' },
+    { value: 'leejeon',  nameA: '이준석', nameB: '전한길',  imgA: '/politicians/leejunseok/profile.jpg',  imgB: '/politicians/jeonhangil/profile.jpg' },
+    { value: 'kimjin',   nameA: '김어준', nameB: '진중권',  imgA: '/politicians/kimeoojun/profile.jpg',   imgB: '/politicians/jinjungkwon/profile.jpg' },
+    { value: 'hanhong',  nameA: '한동훈', nameB: '홍준표',  imgA: '/politicians/handoonghoon/profile.jpg',imgB: '/politicians/hongjunpyo/profile.jpg' },
+  ];
 
   // 페이지 로드 즉시 모든 카드 stagger reveal (스크롤 불필요)
   useEffect(() => {
@@ -639,11 +639,19 @@ export default function PoliticianSelector({ politicians }: Props) {
                       {issueTypes.map((item) => (
                         <button
                           key={item.value}
-                          onClick={() => navigate(`/debate?type=${item.value}&issue=${encodeURIComponent(dayIssue.title)}`)}
-                          className="w-full flex items-center justify-between px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 hover:border-violet-300 hover:bg-violet-50 active:scale-[0.98] transition-all duration-150"
+                          onClick={() => navigate(`/debate?type=${item.value}&issue=${encodeURIComponent(dayIssue.title)}&autostart=1`)}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border border-gray-200 bg-white hover:border-violet-300 hover:bg-violet-50 active:scale-[0.98] transition-all duration-150"
                         >
-                          <span>{item.label}</span>
-                          <span className="text-violet-500 text-xs font-bold">토론 시작 →</span>
+                          {/* 프로필 이미지 쌍 */}
+                          <div className="flex items-center shrink-0">
+                            <img src={item.imgA} alt={item.nameA} className="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm" onError={(e) => { e.currentTarget.style.display='none'; }} />
+                            <img src={item.imgB} alt={item.nameB} className="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm -ml-2" onError={(e) => { e.currentTarget.style.display='none'; }} />
+                          </div>
+                          {/* 이름 */}
+                          <span className="flex-1 text-sm font-semibold text-gray-700 text-left">
+                            {item.nameA} <span className="text-gray-400 font-normal text-xs mx-0.5">VS</span> {item.nameB}
+                          </span>
+                          <span className="shrink-0 text-violet-500 text-xs font-bold">토론 시작 →</span>
                         </button>
                       ))}
                     </div>
