@@ -134,6 +134,8 @@ interface DebateMessage {
 
 interface DebateViewProps {
   debateType?: DebateType;
+  dynamicKB?: any;
+  issueTitle?: string;
 }
 
 interface Judgment {
@@ -214,7 +216,7 @@ function buildDebateSummary(
 
 // ─── 메인 컴포넌트 ─────────────────────────────────────────────────────────────
 
-export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
+export default function DebateView({ debateType = 'seoul', dynamicKB, issueTitle }: DebateViewProps) {
   const navigate = useNavigate();
   const config = DEBATE_CONFIGS[debateType];
 
@@ -495,6 +497,8 @@ function detectFacts(text: string): string | null {
         body: JSON.stringify({
           requestId,
           topic, speaker, opponentLastMessage, style, debateType,
+          speakerA: config.speakerA,
+          dynamicKB,
           timeLeft: opts?.timeLeft ?? timeLeftRef.current,
           recentHistory: recentHistory ?? [],
           debateSummary: opts?.debateSummary,
@@ -1037,6 +1041,11 @@ function detectFacts(text: string): string | null {
   if (phase === 'setup') {
     return (
       <div className="app-bg flex flex-col overflow-y-auto" style={{ height: '100svh', maxWidth: '700px', margin: '0 auto', width: '100%', WebkitOverflowScrolling: 'touch' }}>
+        {issueTitle && (
+          <div className="px-4 py-2 text-xs text-orange-300 bg-orange-950/40 border-b border-orange-900/30">
+            📰 오늘의 이슈: {issueTitle}
+          </div>
+        )}
         {/* 헤더 */}
         <div
           className="flex items-center gap-3 px-4 pb-4"
@@ -1257,6 +1266,11 @@ function detectFacts(text: string): string | null {
       className={`app-bg fixed top-0 left-0 right-0 flex flex-col overflow-hidden ${actBgClass}`}
       style={{ height: '100svh', maxWidth: '700px', margin: '0 auto', bottom: 0 }}
     >
+      {issueTitle && (
+        <div className="px-4 py-2 text-xs text-orange-300 bg-orange-950/40 border-b border-orange-900/30">
+          📰 오늘의 이슈: {issueTitle}
+        </div>
+      )}
       {/* 헤더 */}
       <div
         className="shrink-0 flex items-center justify-between px-4 pb-3 border-b"

@@ -2743,6 +2743,8 @@ export default async function handler(req, res) {
     mustRebutClaim = null,
     lastAngles = [],
     timeLeft = null,
+    dynamicKB = null,
+    speakerA,
   } = payload;
   const safeTimeLeft = (Number.isFinite(Number(timeLeft)) && Number(timeLeft) >= 0) ? Number(timeLeft) : null;
 
@@ -2916,6 +2918,19 @@ export default async function handler(req, res) {
 
   // ── 정책 지식베이스 주입 ───────────────────────────────────────────────
   const kb = getKnowledge(safeTopic, safeSpeaker);
+  const safeSpeakerA = typeof speakerA === 'string' ? speakerA : '';
+  const speakerKey = safeSpeaker === safeSpeakerA ? 'A' : 'B';
+  const dynamicSection =
+    dynamicKB && typeof dynamicKB === 'object'
+      ? [
+          `[오늘의 이슈] ${dynamicKB.issueSummary || ''}`,
+          `핵심 팩트: ${(dynamicKB.keyFacts || []).join(' | ')}`,
+          `주요 주장: ${(speakerKey === 'A' ? (dynamicKB.speakerAPoints || []) : (dynamicKB.speakerBPoints || [])).join(' | ')}`,
+          `공격 포인트: ${((dynamicKB.attackPoints?.[speakerKey] || [])).join(' | ')}`,
+        ]
+          .filter(Boolean)
+          .join('\n')
+      : '';
   const kbHeader = isControversyTopic && ['leejunseok', 'jeonhangil'].includes(safeSpeaker)
     ? '\n\n⚔️ 개인 논란 논거 풀 (아래 내용으로만 공방하라, 정책 X):'
     : '\n\n📚 정책 지식베이스 (이 데이터를 논거로 적극 활용하세요):';
@@ -2980,7 +2995,12 @@ export default async function handler(req, res) {
         kbText += `\n\n💡 이번 발언 논거 후보 (8개, 이미 쓴 것 제외하고 새로운 것 선택):\n` + argPool.map((a,i)=>`${i+1}. ${a}`).join('\n');
       }
     }
+    if (dynamicSection) {
+      kbText = `${dynamicSection}\n\n${kbText}`;
+    }
     systemPrompt += kbText;
+  } else if (dynamicSection) {
+    systemPrompt += `\n\n${dynamicSection}`;
   }
 
   // ── 개선 A: 전체 히스토리에서 이미 사용된 논거/수치 추출 ──────────────────
