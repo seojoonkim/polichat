@@ -737,7 +737,7 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
           };
 
           const flushCurrentBubble = async () => {
-            const raw = currentBubble.trim();
+            const raw = currentBubble.replace(/\s*\(출처:[^)]*\)?/g, '').trim();
             if (!raw) return;
             const bubble = ensurePunctuation(raw);
             const msg: DebateMessage = { speaker, text: bubble, timestamp: Date.now() };
@@ -1800,8 +1800,8 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
 
 function renderBubbleText(text: string): React.ReactNode {
   if (!text || text === '\u00A0') return text;
-  // 출처 패턴 제거 — 하단 출처 카드로 표시됨
-  const cleaned = text.replace(/\s*\(출처:[^)]*\)/g, '').trim() || '\u00A0';
+  // 출처 패턴 제거 — 하단 출처 카드로 표시됨 (완성·미완성 모두 제거)
+  const cleaned = text.replace(/\s*\(출처:[^)]*\)?/g, '').trim() || '\u00A0';
   // 스트리밍 중: 아직 닫히지 않은 괄호로 시작하는 경우 (예: "(마이크를 가까이 당기며")
   // `)` 없으면 전체를 이탤릭으로 처리 → 완성 시 번쩍임 방지
   if (/^\([^)]*$/.test(cleaned)) {
