@@ -172,11 +172,23 @@ export default async function handler(req, res) {
   }
 
   const days = parseInt(req.query.days || '4', 10); // 오늘 포함 4일치
+  const force = req.query.force === '1'; // 기존 이슈 무시하고 강제 재생성
   const supabase = getSupabase();
+
+  // force 모드: 오늘 이슈 히스토리 삭제
+  if (force && supabase) {
+    try {
+      const today = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+      const yesterday = new Date(Date.now() + 9 * 60 * 60 * 1000 - 86400000).toISOString().slice(0, 10);
+      await supabase.from('debate_cache').delete()
+        .eq('topic', '__issue_history__')
+        .in('style', [today, yesterday]);
+    } catch {}
+  }
 
   // 이미 저장된 날짜 확인
   const existing = await getRecentIssues(days + 1);
-  const existingDates = new Set(existing.map(r => r.date));
+  const existingDates = force ? new Set() : new Set(existing.map(r => r.date));
 
   // RSS에서 날짜별 이슈 가져오기
   const dateIssueMap = await buildDateIssueMap(days);

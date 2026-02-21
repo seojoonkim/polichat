@@ -52,10 +52,42 @@ async function saveToSupabase(supabase, debateType, issue, dynamicKB) {
   }
 }
 
-async function fetchTopIssue() {
+function stripMediaName(title) {
+  return title
+    .replace(/\s*[-–—]\s*(조선일보|동아일보|중앙일보|한겨레|경향신문|뉴스1|연합뉴스|YTN|MBC|KBS|SBS|JTBC|TV조선|채널A|매일경제|한국경제|아시아경제|세계일보|국민일보|문화일보|데일리안|오마이뉴스|v\.daum\.net)[^\n]*/gi, '')
+    .replace(/\s*"[^"]*"$/g, '').trim();
+}
+
+async function reformatToDebateTopic(rawTitle) {
+  const key = process.env.OPENROUTER_API_KEY;
+  if (!key) return rawTitle;
+  try {
+    const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'openai/gpt-4o',
+        messages: [{ role: 'user', content: `다음 뉴스 헤드라인을 한국 정치 토론 논제로 재작성하세요.\n조건: 언론사명·기자명·따옴표 제거, 정치적 대립구도 명확, 20-35자, 제목만 출력\n\n헤드라인: "${rawTitle}"` }],
+        max_tokens: 80, temperature: 0.3,
+      }),
+      signal: AbortSignal.timeout(15000),
+    });
+    const d = await r.json();
+    const result = d.choices?.[0]?.message?.content?.trim();
+    return result?.length >= 5 ? result : rawTitle;
+  } catch { return rawTitle; }
+}
+
+async function fetchTopIssue(todayKST) {
+  // 오늘 이슈 이미 있으면 재사용 (자꾸 바뀌는 문제 방지)
+  const { getRecentIssues } = await import('./issue-history.js');
+  const cached = await getRecentIssues(1);
+  const todayCached = cached.find(r => r.date === todayKST);
+  if (todayCached?.title) return todayCached.title;
+
   const feeds = [
-    { url: 'https://www.ytn.co.kr/_ln/0101_rss.xml', source: 'YTN' },
-    { url: 'https://rss.donga.com/politics.xml', source: '동아일보' },
+    { url: 'https://www.ytn.co.kr/_ln/0101_rss.xml' },
+    { url: 'https://rss.donga.com/politics.xml' },
   ];
   for (const feed of feeds) {
     try {
@@ -66,8 +98,10 @@ async function fetchTopIssue() {
       for (const m of items) {
         const raw = m[1].match(/<title><!\[CDATA\[([^\]]+)\]\]><\/title>/)?.[1]
           || m[1].match(/<title>([^<]+)<\/title>/)?.[1] || '';
-        const title = raw.replace(/<[^>]+>/g, '').trim();
-        if (title.length >= 10 && !title.includes('광고')) return title;
+        const title = stripMediaName(raw.replace(/<[^>]+>/g, '').trim());
+        if (title.length >= 10 && !title.includes('광고')) {
+          return await reformatToDebateTopic(title);
+        }
       }
     } catch {}
   }
@@ -131,13 +165,14 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'unauthorized' });
   }
 
-  // 1. 오늘 이슈 1개 가져오기
-  const issueTitle = await fetchTopIssue();
+  const todayKST = toKSTDate();
+
+  // 1. 오늘 이슈 1개 가져오기 (캐시 우선)
+  const issueTitle = await fetchTopIssue(todayKST);
   if (!issueTitle) {
     return res.status(200).json({ warmed: 0, message: 'no issues found' });
   }
 
-  const todayKST = toKSTDate();
   await saveIssueForDate(todayKST, issueTitle);
 
   const supabase = getSupabase();
