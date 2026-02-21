@@ -400,12 +400,12 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
     }
   }, [timeLeft, phase]);
 
-  // 자유토론: 5분을 3등분 (100초마다) 랜덤 주제 전환 — 모든 debateType 공통
+  // 자유토론: 2분(120초)마다 랜덤 주제 전환 — 모든 debateType 공통
   useEffect(() => {
     if (selectedTopic !== 'free' || phase !== 'running') return;
 
     const elapsed = 300 - timeLeft; // 경과 시간(초)
-    if (elapsed > 0 && elapsed % 100 === 0 && elapsed < 300) {
+    if (elapsed > 0 && elapsed % 120 === 0 && elapsed < 300) {
       const realTopics = config.topics.filter(t => t.id !== 'free');
       const candidates = realTopics.filter(t => t.label !== freeTopicRef.current);
       const pool = candidates.length > 0 ? candidates : realTopics;

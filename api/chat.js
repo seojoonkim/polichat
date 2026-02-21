@@ -530,14 +530,11 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // === OpenRouter API 사용 (Kimi K2.5) ===
-  const openrouterKey = process.env.OPENROUTER_API_KEY;
-  if (!openrouterKey) {
-    return res.status(500).json({ error: 'OPENROUTER_API_KEY not configured' });
+  // === Anthropic API 사용 ===
+  const anthropicApiKey = (process.env.ANTHROPIC_API_KEY || '').trim();
+  if (!anthropicApiKey) {
+    return res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured' });
   }
-  
-  // Eval용 Anthropic API key (Claude Haiku 평가용)
-  const anthropicApiKey = process.env.ANTHROPIC_API_KEY;
 
   const { system, messages, model, max_tokens, idolId, userId } = req.body;
 
@@ -601,54 +598,37 @@ export default async function handler(req, res) {
       incrementMessageCount(userId, idolId, supabase).catch(() => {});
     }
 
-    // === OpenRouter API (OpenAI 호환 포맷) ===
-    // 기존 Anthropic API 백업:
-    // const body = {
-    //   model: model || 'claude-opus-4-6',
-    //   max_tokens: max_tokens || 1024,
-    //   messages,
-    //   stream: true,
-    // };
-    // if (enhancedSystem) body.system = enhancedSystem;
-    // fetch('https://api.anthropic.com/v1/messages', { headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' } })
-
-    // OpenAI 호환 메시지 포맷으로 변환
-    const openaiMessages = [];
-    if (enhancedSystem) {
-      openaiMessages.push({ role: 'system', content: enhancedSystem });
-    }
-    openaiMessages.push(...messages);
-
-    const modelUsed = 'openai/gpt-4o-mini';
-    const body = {
+    // === Anthropic Claude API (스트리밍) ===
+    const modelUsed = 'claude-haiku-4-5-20251001';
+    const anthropicBody = {
       model: modelUsed,
       max_tokens: max_tokens || 1024,
-      messages: openaiMessages,
+      messages,
       stream: true,
     };
+    if (enhancedSystem) anthropicBody.system = enhancedSystem;
 
-    const openrouterRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${openrouterKey}`,
-        'HTTP-Referer': 'https://mimchat.vercel.app',
-        'X-Title': 'MimChat',
+        'x-api-key': anthropicApiKey,
+        'anthropic-version': '2023-06-01',
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(anthropicBody),
     });
 
-    if (!openrouterRes.ok) {
-      const errText = await openrouterRes.text();
-      res.write(`data: ${JSON.stringify({ type: 'error', error: `API ${openrouterRes.status}: ${errText}` })}\n\n`);
+    if (!anthropicRes.ok) {
+      const errText = await anthropicRes.text();
+      res.write(`data: ${JSON.stringify({ type: 'error', error: `API ${anthropicRes.status}: ${errText.slice(0, 300)}` })}\n\n`);
       res.end();
       return;
     }
 
-    const reader = openrouterRes.body.getReader();
+    const reader = anthropicRes.body.getReader();
     const decoder = new TextDecoder();
     let buffer = '';
-    
+
     // eval용 응답 버퍼와 stop_reason 추적
     let responseBuffer = '';
     let stopReason = null;
@@ -664,30 +644,23 @@ export default async function handler(req, res) {
       for (const line of lines) {
         if (!line.startsWith('data: ')) continue;
         const data = line.slice(6).trim();
-        if (!data || data === '[DONE]') {
-          continue;
-        }
+        if (!data) continue;
 
         try {
           const event = JSON.parse(data);
-          // OpenAI 호환 스트리밍 포맷
-          const delta = event.choices?.[0]?.delta;
-          const finishReason = event.choices?.[0]?.finish_reason;
-          
-          if (delta?.content) {
-            const text = delta.content;
-            responseBuffer += text; // eval용 버퍼에 축적
+          // Anthropic 스트리밍 포맷
+          if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
+            const text = event.delta.text;
+            responseBuffer += text;
             res.write(`data: ${JSON.stringify({ type: 'text', text })}\n\n`);
           }
-          
-          if (finishReason) {
-            stopReason = finishReason;
-            if (finishReason === 'length') {
-              console.warn(`[chat] Response truncated (max_tokens) - idol: ${idolId}, user: ${userId}`);
+          if (event.type === 'message_delta') {
+            stopReason = event.delta?.stop_reason || null;
+            if (stopReason === 'max_tokens') {
+              console.warn(`[chat] Response truncated (max_tokens) - idol: ${idolId}`);
             }
           }
-          
-          if (event.error) {
+          if (event.type === 'error') {
             res.write(`data: ${JSON.stringify({ type: 'error', error: event.error?.message || 'Unknown error' })}\n\n`);
           }
         } catch {
