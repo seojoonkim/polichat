@@ -428,7 +428,7 @@ function formatIssueDate(dateStr: string): string {
         </div>
 
         {/* ── 탭 바 ─────────────────────────────────────────── */}
-        <div className="sticky top-0 z-30 bg-[#F6F6FA]/95 backdrop-blur-sm border-b border-violet-100/80 shadow-sm">
+        <div className="sticky top-0 z-30 bg-transparent border-b border-gray-200/50">
           <div className="flex">
             {TABS.map((tab) => {
               const isActive = activeTab === tab.id;
@@ -436,14 +436,14 @@ function formatIssueDate(dateStr: string): string {
                 <button
                   key={tab.id}
                   onClick={() => switchTab(tab.id)}
-                  className={`flex-1 flex flex-col items-center gap-1 pt-3 pb-2.5 relative transition-colors duration-200`}
+                  className={`flex-1 flex flex-col items-center gap-1.5 pt-3.5 pb-3 relative transition-colors duration-200`}
                 >
                   {tab.icon(isActive)}
-                  <span className={`text-[11px] font-semibold tracking-tight ${isActive ? 'text-violet-700' : 'text-gray-400'}`}>
+                  <span className={`text-[12px] font-bold tracking-tight ${isActive ? 'text-violet-700' : 'text-gray-600'}`}>
                     {tab.label}
                   </span>
                   {isActive && (
-                    <span className="absolute bottom-0 left-4 right-4 h-[2px] bg-violet-600 rounded-full" />
+                    <span className="absolute bottom-0 left-3 right-3 h-[3px] bg-violet-600 rounded-full" />
                   )}
                   {tab.id === 'issue' && heroIssue && !isActive && (
                     <span className="absolute top-2 right-[calc(50%-14px)] w-2 h-2 bg-red-500 rounded-full border border-white" />
