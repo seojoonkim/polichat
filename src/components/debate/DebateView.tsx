@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { PROMPT_VERSION } from '@/constants/debate-config';
 import { isSentenceEnd, BUBBLE_CONFIG } from '@/lib/bubble-splitter';
 import { getRandomAction } from '@/lib/debate-actions';
+import PolichatLogoSpinner from '@/components/common/PolichatLogoSpinner';
 import TensionGauge, { calcTension } from './TensionGauge';
 import AudienceReaction from './AudienceReaction';
 import Interjection from './Interjection';
@@ -1066,7 +1067,7 @@ function detectFacts(text: string): { label: string; detail: string } | null {
     if (autoStart) {
       return (
         <div className="app-bg flex items-center justify-center" style={{ height: '100svh' }}>
-          <p className="text-gray-400 text-sm animate-pulse">토론 준비 중...</p>
+          <PolichatLogoSpinner message="토론 준비 중..." dark />
         </div>
       );
     }

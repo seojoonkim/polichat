@@ -157,9 +157,70 @@ export default function IssueResearchLoader({ issue, onComplete, onError }: Prop
           0% { transform: translateX(110%); }
           100% { transform: translateX(-110%); }
         }
+        @keyframes logoSpin {
+          from { transform: rotate(0deg); }
+          to   { transform: rotate(360deg); }
+        }
+        @keyframes logoBob {
+          0%, 100% { transform: translateY(0px) scale(1); }
+          50%       { transform: translateY(-10px) scale(1.08); }
+        }
+        @keyframes orbitRing {
+          from { transform: rotate(0deg); }
+          to   { transform: rotate(360deg); }
+        }
+        @keyframes logoGlowPulse {
+          0%, 100% { filter: drop-shadow(0 0 0px rgba(167,139,250,0)); }
+          50%       { filter: drop-shadow(0 0 18px rgba(167,139,250,0.8)); }
+        }
       `}</style>
 
       <div className="relative z-10 w-full max-w-lg px-6">
+
+        {/* 폴리챗 로고 애니메이션 */}
+        <div className="flex flex-col items-center mb-8">
+          <div className="relative flex items-center justify-center" style={{ width: 120, height: 120 }}>
+            {/* 회전 링 */}
+            <div
+              className="absolute rounded-full border-2 border-dashed border-violet-500/40"
+              style={{ width: 110, height: 110, animation: 'orbitRing 4s linear infinite' }}
+            />
+            <div
+              className="absolute rounded-full border border-orange-400/30"
+              style={{ width: 90, height: 90, animation: 'orbitRing 2.5s linear infinite reverse' }}
+            />
+            {/* 로고 */}
+            <img
+              src="/logo.svg"
+              alt="폴리챗"
+              style={{
+                width: 72,
+                height: 72,
+                animation: 'logoBob 2s ease-in-out infinite, logoGlowPulse 2s ease-in-out infinite',
+              }}
+            />
+            {/* 궤도 점 3개 */}
+            {[0, 120, 240].map((_deg, i) => (
+              <span
+                key={i}
+                className="absolute rounded-full"
+                style={{
+                  width: i === 0 ? 8 : i === 1 ? 6 : 5,
+                  height: i === 0 ? 8 : i === 1 ? 6 : 5,
+                  background: i === 0 ? '#7c3aed' : i === 1 ? '#f97316' : '#a78bfa',
+                  top: '50%',
+                  left: '50%',
+                  marginTop: i === 0 ? -4 : i === 1 ? -3 : -2.5,
+                  marginLeft: i === 0 ? -4 : i === 1 ? -3 : -2.5,
+                  animation: `orbitRing ${1.6 + i * 0.3}s linear infinite`,
+                  transformOrigin: `${i === 0 ? -47 : i === 1 ? -42 : -36}px 50%`,
+                }}
+              />
+            ))}
+          </div>
+          <p className="text-violet-400 text-xs tracking-widest uppercase mt-2 font-semibold">POLICHAT</p>
+        </div>
+
         <p className="text-xs uppercase tracking-[0.22em] text-orange-400 mb-3">오늘의 이슈</p>
         <h2 className="text-white text-lg md:text-2xl font-black leading-snug mb-8">{issue}</h2>
 

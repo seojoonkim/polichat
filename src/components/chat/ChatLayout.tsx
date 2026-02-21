@@ -8,6 +8,7 @@ import MessageList from './MessageList';
 import ChatInput from './ChatInput';
 import QuickMenu from './QuickMenu';
 import SuggestedQuestions from './SuggestedQuestions';
+import PolichatLogoSpinner from '@/components/common/PolichatLogoSpinner';
 
 interface Props {
   politician: PoliticianMeta;
@@ -230,10 +231,7 @@ export default function ChatLayout({ politician }: Props) {
         <MessageList messages={messages} politician={politician} isStreaming={isStreaming} />
       ) : (
         <div className="flex-1 flex items-center justify-center">
-          <div className="flex flex-col items-center gap-3">
-            <div className="loading-spinner" />
-            <div className="text-gray-300 text-sm">로딩중...</div>
-          </div>
+          <PolichatLogoSpinner message="대화 기록 불러오는 중..." dark />
         </div>
       )}
       
