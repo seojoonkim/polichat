@@ -955,7 +955,10 @@ function detectFacts(text: string): { label: string; detail: string } | null {
 
   const startDebate = async () => {
     let topicLabel: string;
-    if (selectedTopic === 'free') {
+    // 오늘의 이슈 모드: issueTitle을 토론 주제로 사용
+    if (issueTitle) {
+      topicLabel = issueTitle;
+    } else if (selectedTopic === 'free') {
       const realTopics = config.topics.filter(t => t.id !== 'free');
       const first = realTopics[Math.floor(Math.random() * realTopics.length)];
       if (!first) {
@@ -1125,6 +1128,19 @@ function detectFacts(text: string): { label: string; detail: string } | null {
           </div>
         </div>
 
+        {/* 이슈 모드: 주제 선택 대신 이슈 제목 표시 */}
+        {issueTitle ? (
+          <div className="px-4 mb-4">
+            <p className="pc-section-label flex items-center gap-1.5 mb-2">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v2"/><path d="M4 22a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/></svg>
+              오늘의 이슈
+            </p>
+            <div className="rounded-xl px-4 py-3 border" style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.12), rgba(99,102,241,0.08))', borderColor: 'rgba(124,58,237,0.4)' }}>
+              <div className="text-gray-800 font-bold text-sm leading-snug">📰 {issueTitle}</div>
+            </div>
+          </div>
+        ) : (
+        <>
         <div className="px-4 mb-2">
           <p className="pc-section-label flex items-center gap-1.5">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg>
@@ -1165,6 +1181,7 @@ function detectFacts(text: string): { label: string; detail: string } | null {
             </button>
           ))}
         </div>
+        </> )}
 
         {/* 토론 방식 선택 — leejeon은 감정토론 고정 */}
         {debateType === 'leejeon' ? (
@@ -1258,7 +1275,7 @@ function detectFacts(text: string): { label: string; detail: string } | null {
         <div className="p-4">
           <button
             onClick={startDebate}
-            disabled={!selectedTopic || !selectedStyle}
+            disabled={issueTitle ? !selectedStyle : (!selectedTopic || !selectedStyle)}
             className="w-full py-4 rounded-2xl font-bold text-white text-[16px] tracking-tight transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             style={{
               background: 'linear-gradient(135deg, #6366F1, #8B5CF6)',
@@ -1289,9 +1306,11 @@ function detectFacts(text: string): { label: string; detail: string } | null {
 
   // ─── UI: 토론 진행 + 결과 화면 ────────────────────────────────────────────
 
-  const topicLabel = selectedTopic === 'free'
-    ? (freeTopicRef.current || '자유토론')
-    : (config.topics.find(t => t.id === selectedTopic)?.label || selectedTopic || '');
+  const topicLabel = issueTitle
+    ? issueTitle
+    : selectedTopic === 'free'
+      ? (freeTopicRef.current || '자유토론')
+      : (config.topics.find(t => t.id === selectedTopic)?.label || selectedTopic || '');
   const oshScore = judgment?.scores.ohsehoon?.total ?? 0;
   const jwoScore = judgment?.scores.jungwono?.total ?? 0;
   const totalScore = oshScore + jwoScore || 100;
