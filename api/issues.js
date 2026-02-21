@@ -57,7 +57,7 @@ async function collectAllItems() {
 
 // ── LLM: 화제성 기준 1개 선택 + 논점 제목 생성 (Anthropic Claude) ───────────
 async function selectTopDebateTopic(items) {
-  const key = process.env.ANTHROPIC_API_KEY;
+  const key = process.env.ANTHROPIC_API_KEY?.trim();
   if (!key || items.length === 0) return items[0]?.title || null;
 
   const headlines = items
@@ -73,7 +73,7 @@ async function selectTopDebateTopic(items) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'claude-3-5-haiku-20241022',
+        model: 'claude-haiku-4-5-20251001',
         max_tokens: 150,
         messages: [{
           role: 'user',

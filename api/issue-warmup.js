@@ -92,7 +92,7 @@ async function collectFreshItems() {
 // ── RSS items → Claude로 최적 논점 선택 ────────────────────────────────────
 async function selectFromItems(items) {
   if (items.length === 0) return null;
-  const key = process.env.ANTHROPIC_API_KEY;
+  const key = process.env.ANTHROPIC_API_KEY?.trim();
   if (!key) return stripMediaName(items[0]?.title || '');
   const headlines = items.map((it, i) => `${i + 1}. ${it.title}`).join('\n');
   try {
@@ -100,7 +100,7 @@ async function selectFromItems(items) {
       method: 'POST',
       headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-3-5-haiku-20241022',
+        model: 'claude-haiku-4-5-20251001',
         max_tokens: 150,
         messages: [{ role: 'user', content: `아래 한국 정치 뉴스 헤드라인 중 오늘 가장 화제가 되고 여야 대립 구도가 명확한 이슈 1개를 선택해 토론 논제로 재작성하세요.\n조건: 언론사명 제거, 접두 태그([...]) 제거, 대립구도 명확, 20~35자\nJSON만 출력: {"topic": "..."}\n\n${headlines}` }],
       }),
@@ -126,7 +126,7 @@ async function fetchTopIssue(todayKST) {
 // ── 매치업별 KB 생성 (Claude) ───────────────────────────────────────────────
 async function generateKB(issue, debateType) {
   const speakers = SPEAKER_MAP[debateType] || { A: 'A', B: 'B' };
-  const key = process.env.ANTHROPIC_API_KEY;
+  const key = process.env.ANTHROPIC_API_KEY?.trim();
   if (!key) return null;
 
   const prompt = `당신은 한국 정치 토론 전문가입니다. 다음 이슈에 대해 두 정치인의 토론 논거를 JSON으로 생성해주세요.
@@ -151,7 +151,7 @@ async function generateKB(issue, debateType) {
       method: 'POST',
       headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-3-5-haiku-20241022',
+        model: 'claude-haiku-4-5-20251001',
         max_tokens: 1500,
         messages: [{ role: 'user', content: prompt }],
       }),
