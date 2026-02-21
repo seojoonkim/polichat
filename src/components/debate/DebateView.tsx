@@ -675,6 +675,9 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
 
     const allMessages: DebateMessage[] = [];
     let lastText = '';
+    // 사회자 타이머 트리거 플래그 (중복 등장 방지)
+    let mod1Triggered = false; // 1/3 경과 (남은 시간 ≤ 200초)
+    let mod2Triggered = false; // 2/3 경과 (남은 시간 ≤ 100초)
 
     for (let i = 0; i < 30; i++) {
       if (abortRef.current) break;
@@ -909,8 +912,15 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
 
       if (abortRef.current) break;
 
-      // 사회자 AI 개입 (1/3·1/2 시점 — 10번째·15번째 라운드)
-      if (roundSuccess && !abortRef.current && (i === 9 || i === 14)) {
+      // 사회자 AI 개입 — 타이머 1/3 경과(남은 200초), 2/3 경과(남은 100초) 직후 발언 끝나는 시점
+      const tLeft = timeLeftRef.current;
+      const modTrigger = roundSuccess && !abortRef.current && (
+        (tLeft <= 200 && !mod1Triggered) ||
+        (tLeft <= 100 && !mod2Triggered)
+      );
+      if (tLeft <= 100) mod2Triggered = true;
+      else if (tLeft <= 200) mod1Triggered = true;
+      if (modTrigger) {
         try {
           const modRes = await fetch('/api/debate-moderator', {
             method: 'POST',
