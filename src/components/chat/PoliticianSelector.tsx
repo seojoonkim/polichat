@@ -460,7 +460,7 @@ export default function PoliticianSelector({ politicians }: Props) {
         {activeTab !== 'issue' && heroVisible && heroIssue?.title && (
           <button
             onClick={() => switchTab('issue')}
-            className="mx-3 my-2 w-[calc(100%-1.5rem)] flex items-start gap-2.5 px-4 py-3 rounded-xl text-left transition-all hover:scale-[1.01] active:scale-[0.99]"
+            className="mx-3 mt-4 mb-2 w-[calc(100%-1.5rem)] flex items-start gap-2.5 px-4 py-3 rounded-xl text-left transition-all hover:scale-[1.01] active:scale-[0.99]"
             style={{
               background: 'linear-gradient(135deg, #ede9fe 0%, #f3e8ff 100%)',
               border: '1px solid #c4b5fd',
