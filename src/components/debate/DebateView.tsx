@@ -16,6 +16,7 @@ export type DebateType = 'seoul' | 'national' | 'leejeon' | 'kimjin' | 'hanhong'
 
 export const DEBATE_CONFIGS = {
   seoul: {
+    title: '"서울의 미래를 건다"',
     speakerA: 'ohsehoon' as const,
     speakerB: 'jungwono' as const,
     speakerAName: '오세훈 시장',
@@ -41,6 +42,7 @@ export const DEBATE_CONFIGS = {
     ],
   },
   national: {
+    title: '"국회 격돌"',
     speakerA: 'jungcr' as const,
     speakerB: 'jangdh' as const,
     speakerAName: '정청래 대표',
@@ -63,6 +65,7 @@ export const DEBATE_CONFIGS = {
     ],
   },
   leejeon: {
+    title: '"보수 내전 🔥"',
     speakerA: 'leejunseok' as const,
     speakerB: 'jeonhangil' as const,
     speakerAName: '이준석 대표',
@@ -79,6 +82,7 @@ export const DEBATE_CONFIGS = {
     ],
   },
   kimjin: {
+    title: '"진보의 적은 누구인가"',
     speakerA: 'kimeoojun' as const,
     speakerB: 'jinjungkwon' as const,
     speakerAName: '김어준',
@@ -99,6 +103,7 @@ export const DEBATE_CONFIGS = {
     styles: ['policy', 'emotional', 'consensus'] as const,
   },
   hanhong: {
+    title: '"한-홍 내전"',
     speakerA: 'handoonghoon' as const,
     speakerB: 'hongjunpyo' as const,
     speakerAName: '한동훈',
@@ -1452,6 +1457,12 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
           className="absolute inset-0 z-50 flex flex-col items-center justify-center"
           style={{ background: 'rgba(10,10,20,0.92)', backdropFilter: 'blur(6px)' }}
         >
+          {/* 토론 제목 */}
+          <p className="text-white font-bold text-2xl mb-1 tracking-tight text-center px-6"
+             style={{ textShadow: '0 2px 16px rgba(0,0,0,0.5)' }}>
+            {config.title}
+          </p>
+          <p className="text-white/60 text-sm mb-8">{config.speakerAName} vs {config.speakerBName}</p>
           <p className="text-white/50 text-xs mb-8 tracking-[0.2em] uppercase">선공 결정 중</p>
 
           <div className="flex items-center gap-10 mb-8">
