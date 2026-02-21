@@ -196,7 +196,7 @@ export default function PoliticianSelector({ politicians }: Props) {
   const cardsRef = useRef<(HTMLDivElement | null)[]>([]);
   const navigate = useNavigate();
   const [heroIssue, setHeroIssue] = useState<IssueHeadline | null>(null);
-  const [issueBattleType, setIssueBattleType] = useState<'seoul' | 'national' | 'leejeon' | 'kimjin' | 'hanhong'>('leejeon');
+  const [issueBattleType, setIssueBattleType] = useState<'seoul' | 'national' | 'leejeon' | 'kimjin' | 'hanhong' | ''>('');
   const [heroVisible, setHeroVisible] = useState(true);
   const [issueError, setIssueError] = useState(false);
   const issueTypes = [
@@ -250,7 +250,7 @@ export default function PoliticianSelector({ politicians }: Props) {
 
   const handleIssueSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!heroIssue?.title) return;
+    if (!heroIssue?.title || !issueBattleType) return;
     navigate(`/debate?type=${issueBattleType}&issue=${encodeURIComponent(heroIssue.title)}`);
   };
 
@@ -354,6 +354,7 @@ export default function PoliticianSelector({ politicians }: Props) {
                     onChange={(e) => setIssueBattleType(e.target.value as typeof issueBattleType)}
                     className="w-full sm:w-auto px-3 py-2 rounded-xl bg-slate-800/60 border border-white/20 text-sm text-white"
                   >
+                    <option value="" disabled>매치업 선택...</option>
                     {issueTypes.map((item) => (
                       <option key={item.value} value={item.value}>
                         {item.label}
@@ -362,7 +363,8 @@ export default function PoliticianSelector({ politicians }: Props) {
                   </select>
                   <button
                     type="submit"
-                    className="w-full sm:w-auto px-3 py-2 rounded-xl text-sm font-bold bg-white text-slate-900"
+                    disabled={!issueBattleType}
+                    className="w-full sm:w-auto px-3 py-2 rounded-xl text-sm font-bold bg-white text-slate-900 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     이 이슈로 토론 보기
                   </button>
