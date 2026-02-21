@@ -18,6 +18,7 @@ type TabId = 'battle' | 'chat' | 'issue';
 interface IssueHistoryItem {
   date: string;
   title: string;
+  matchups?: string[];
 }
 
 type TabItem = {
@@ -603,11 +604,12 @@ export default function PoliticianSelector({ politicians }: Props) {
         {activeTab === 'issue' && (
           <div className="px-4 py-4 space-y-4">
             {(() => {
-              const displayList = issueHistory.length > 0
+              const displayList = [...(issueHistory.length > 0
                 ? issueHistory
                 : heroIssue?.title
-                  ? [{ date: todayKST, title: heroIssue.title }]
-                  : [];
+                  ? [{ date: todayKST, title: heroIssue.title, matchups: [] as string[] }]
+                  : [])
+              ].sort((a, b) => b.date.localeCompare(a.date));
 
               if (displayList.length === 0) {
                 return <div className="py-8 flex justify-center"><div className="w-6 h-6 border-2 border-violet-300 border-t-violet-600 rounded-full animate-spin"/></div>;
@@ -647,7 +649,10 @@ export default function PoliticianSelector({ politicians }: Props) {
                     {/* 아코디언 — 카드에 물린 토론자 목록 */}
                     {isExpanded && (
                       <div className="bg-[#F6F6FA] mx-2 mb-2 rounded-xl overflow-hidden divide-y divide-gray-100">
-                        {issueTypes.map((item) => (
+                        {(dayIssue.matchups && dayIssue.matchups.length > 0
+                          ? issueTypes.filter(t => dayIssue.matchups!.includes(t.value))
+                          : issueTypes
+                        ).map((item) => (
                           <button
                             key={item.value}
                             onClick={() => navigate(`/debate?type=${item.value}&issue=${encodeURIComponent(dayIssue.title)}&autostart=1`)}

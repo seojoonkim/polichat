@@ -21,7 +21,7 @@ function cleanTitle(title) {
 }
 
 // ── 날짜별 이슈 저장 (한 날짜에 하나만 유지) ──────────────────────────────
-export async function saveIssueForDate(date, issueTitle, force = false) {
+export async function saveIssueForDate(date, issueTitle, judgment = null, force = false) {
   const supabase = getSupabase();
   if (!supabase || !issueTitle) return;
   try {
@@ -38,18 +38,22 @@ export async function saveIssueForDate(date, issueTitle, force = false) {
     if (existing) {
       if (!force) return; // 덮어쓰지 않음 (하루 1개 고정)
       // force=true: 최신 행 업데이트
+      const updateObj = { messages: [{ role: 'issue', content: issueTitle }] };
+      if (judgment) updateObj.judgment = judgment;
       await supabase.from('debate_cache')
-        .update({ messages: [{ role: 'issue', content: issueTitle }] })
+        .update(updateObj)
         .eq('id', existing.id);
       return;
     }
     // 신규 저장 (debate_type 컬럼 없음 — style로 날짜 구분)
-    await supabase.from('debate_cache').insert({
+    const insertObj = {
       topic: '__issue_history__',
       style: date,
       messages: [{ role: 'issue', content: issueTitle }],
       version: 1,
-    });
+    };
+    if (judgment) insertObj.judgment = judgment;
+    await supabase.from('debate_cache').insert(insertObj);
   } catch (e) {
     console.error('[issue-history] save error:', e.message);
   }
@@ -64,7 +68,7 @@ export async function getRecentIssues(days) {
     cutoff.setDate(cutoff.getDate() - (days || 4));
     const { data } = await supabase
       .from('debate_cache')
-      .select('style, messages, created_at')
+      .select('style, messages, judgment, created_at')
       .eq('topic', '__issue_history__')
       .gte('created_at', cutoff.toISOString())
       .order('created_at', { ascending: false });
@@ -79,7 +83,13 @@ export async function getRecentIssues(days) {
 
     return deduped.map(row => {
       const raw = row.messages?.[0]?.content || '';
-      return { date: row.style, title: cleanTitle(raw) };
+      const matchups = (() => {
+        try {
+          const parsed = JSON.parse(row.judgment || '{}');
+          return Array.isArray(parsed.matchups) ? parsed.matchups : [];
+        } catch { return []; }
+      })();
+      return { date: row.style, title: cleanTitle(raw), matchups };
     }).filter(r => r.title);
   } catch (e) {
     console.error('[issue-history] getRecentIssues error:', e.message);

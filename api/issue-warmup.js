@@ -90,7 +90,7 @@ async function collectFreshItems() {
 async function selectFromItems(items) {
   if (items.length === 0) return null;
   const key = process.env.ANTHROPIC_API_KEY?.trim();
-  if (!key) return stripMediaName(items[0]?.title || '');
+  if (!key) return { topic: stripMediaName(items[0]?.title || ''), matchups: [] };
   const headlines = items.map((it, i) => `${i + 1}. ${it.title}`).join('\n');
   try {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
@@ -98,17 +98,26 @@ async function selectFromItems(items) {
       headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 150,
-        messages: [{ role: 'user', content: `아래 한국 정치 뉴스 헤드라인 중 오늘 가장 화제가 되고 여야 대립 구도가 명확한 이슈 1개를 선택해 토론 논제로 재작성하세요.\n조건: 언론사명 제거, 접두 태그([...]) 제거, 대립구도 명확, 20~35자\nJSON만 출력: {"topic": "..."}\n\n${headlines}` }],
+        max_tokens: 250,
+        messages: [{ role: 'user', content: `아래 한국 정치 뉴스 헤드라인 중 오늘 가장 화제가 되고 여야 대립 구도가 명확한 이슈 1개를 선택해 토론 논제로 재작성하세요.\n조건: 언론사명 제거, 접두 태그([...]) 제거, 대립구도 명확, 20~35자\n\n또한 이 이슈에 가장 어울리는 토론 매치업을 1~3개 선택하라.\n가능한 매치업: seoul(오세훈vs정원오 - 서울시장 경쟁), national(정청래vs장동혁 - 여야 원내 대립), leejeon(이준석vs전한길 - 신구보수 이념 갈등), kimjin(김어준vs진중권 - 진보 내부 갈등), hanhong(한동훈vs홍준표 - 국힘 내부 갈등)\n이슈의 성격에 맞는 매치업만 선택하라. 억지로 3개 채울 필요 없음.\n\nJSON만 출력: {"topic": "...", "matchups": ["national", "leejeon"]}\n\n${headlines}` }],
       }),
       signal: AbortSignal.timeout(20000),
     });
     const d = await r.json();
     const content = d.content?.[0]?.text?.trim();
+    const jsonMatch = content?.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      try {
+        const parsed = JSON.parse(jsonMatch[0]);
+        const topic = parsed.topic;
+        const matchups = Array.isArray(parsed.matchups) ? parsed.matchups : [];
+        if (topic?.length >= 5) return { topic, matchups };
+      } catch {}
+    }
     const match = content?.match(/"topic"\s*:\s*"([^"]+)"/);
     const topic = match?.[1];
-    return topic?.length >= 5 ? topic : stripMediaName(items[0].title);
-  } catch { return stripMediaName(items[0].title); }
+    return topic?.length >= 5 ? { topic, matchups: [] } : { topic: stripMediaName(items[0].title), matchups: [] };
+  } catch { return { topic: stripMediaName(items[0].title), matchups: [] }; }
 }
 
 // ── Supabase 캐시 있으면 반환, 없으면 RSS+Claude ──────────────────────────
@@ -117,7 +126,8 @@ async function fetchTopIssue(todayKST) {
   const todayCached = cached.find(r => r.date === todayKST);
   if (todayCached?.title) return todayCached.title;
   const items = await collectFreshItems();
-  return selectFromItems(items);
+  const result = await selectFromItems(items);
+  return result?.topic || null;
 }
 
 // ── 매치업별 KB 생성 (Claude) ───────────────────────────────────────────────
@@ -180,9 +190,11 @@ export default async function handler(req, res) {
 
   // 1. 오늘 이슈 확보 (force면 RSS+Claude 새로 수집, 아니면 캐시 우선)
   let issueTitle;
+  let matchups = [];
   if (force) {
     const items = await collectFreshItems();
-    issueTitle = items.length > 0 ? await selectFromItems(items) : null;
+    const result = items.length > 0 ? await selectFromItems(items) : null;
+    if (result) { issueTitle = result.topic; matchups = result.matchups || []; }
   } else {
     issueTitle = await fetchTopIssue(todayKST);
   }
@@ -192,7 +204,8 @@ export default async function handler(req, res) {
   }
 
   // 2. Supabase issue_history 저장 (force면 덮어쓰기)
-  await saveIssueForDate(todayKST, issueTitle, force);
+  const judgment = matchups.length > 0 ? JSON.stringify({ matchups }) : null;
+  await saveIssueForDate(todayKST, issueTitle, judgment, force);
 
   const supabase = getSupabase();
 
