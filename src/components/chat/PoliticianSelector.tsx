@@ -55,7 +55,7 @@ const TABS: TabItem[] = [
   },
   {
     id: 'issue',
-    label: '오늘의 이슈',
+    label: '오늘의 이슈로 AI 토론',
     icon: (active: boolean) => (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
         stroke={active ? '#7c3aed' : '#71717a'} strokeWidth="2"
@@ -460,7 +460,7 @@ export default function PoliticianSelector({ politicians }: Props) {
         {activeTab !== 'issue' && heroVisible && heroIssue?.title && (
           <button
             onClick={() => switchTab('issue')}
-            className="mx-4 mt-5 mb-1 w-[calc(100%-2rem)] flex items-center gap-2.5 px-4 py-3 rounded-2xl text-left transition-all hover:scale-[1.01] active:scale-[0.99]"
+            className="w-full mt-4 mb-1 flex items-center gap-2.5 px-4 py-3 rounded-2xl text-left transition-all hover:scale-[1.01] active:scale-[0.99]"
             style={{
               background: 'linear-gradient(135deg, #7c3aed 0%, #9333ea 100%)',
               border: '1px solid #6d28d9',
