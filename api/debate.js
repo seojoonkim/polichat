@@ -2917,26 +2917,34 @@ export default async function handler(req, res) {
 
 
   // ── 정책 지식베이스 주입 ───────────────────────────────────────────────
-  // 오늘의 이슈 모드 감지: 긴 이슈 형태 제목이면 KB 완전 스킵 (KB가 주제 오염 유발)
-  const isIssueTopic = !dynamicKB && safeTopic.length > 20 &&
-    (safeTopic.includes('—') || safeTopic.includes('vs') || safeTopic.includes('인가') || safeTopic.includes('인지'));
-  if (isIssueTopic) {
-    systemPrompt += `\n\n🔴 [오늘의 이슈 토론 — 반드시 준수]\n현재 토론 주제: "${safeTopic}"\n이 주제 하나에만 집중해서 발언하라. 물가, 경제, 부동산, 언론 등 관련 없는 KB 데이터를 꺼내지 말 것.\n이 이슈에 대해 캐릭터의 정치적 입장에서 구체적 사실(판례, 헌법 조항, 국제 비교 사례, 날짜)을 들어 발언하라.`;
-  }
-  const kb = isIssueTopic ? { myPosition: null, conflicts: [], attackPoints: [], reversals: [], 세부논거: null, seoulContext: null } : getKnowledge(safeTopic, safeSpeaker);
+  // 오늘의 이슈 모드 감지:
+  // (1) dynamicKB 있으면 → 항상 이슈 모드 (KB 오염 방지)
+  // (2) dynamicKB 없어도 제목 형태가 이슈형이면 → 이슈 모드
   const safeSpeakerA = typeof speakerA === 'string' ? speakerA : '';
   const speakerKey = safeSpeaker === safeSpeakerA ? 'A' : 'B';
-  const dynamicSection =
-    dynamicKB && typeof dynamicKB === 'object'
-      ? [
-          `[오늘의 이슈] ${dynamicKB.issueSummary || ''}`,
-          `핵심 팩트: ${(dynamicKB.keyFacts || []).join(' | ')}`,
-          `주요 주장: ${(speakerKey === 'A' ? (dynamicKB.speakerAPoints || []) : (dynamicKB.speakerBPoints || [])).join(' | ')}`,
-          `공격 포인트: ${((dynamicKB.attackPoints?.[speakerKey] || [])).join(' | ')}`,
-        ]
-          .filter(Boolean)
-          .join('\n')
-      : '';
+  const hasDynamicKB = dynamicKB && typeof dynamicKB === 'object';
+  const isIssueTopic = hasDynamicKB || (safeTopic.length > 20 &&
+    (safeTopic.includes('—') || safeTopic.includes('vs') || safeTopic.includes('인가') || safeTopic.includes('인지')));
+  const dynamicSection = hasDynamicKB
+    ? [
+        `[오늘의 이슈 핵심 정보] ${dynamicKB.issueSummary || ''}`,
+        dynamicKB.keyFacts?.length ? `핵심 팩트: ${dynamicKB.keyFacts.join(' | ')}` : '',
+        (speakerKey === 'A' ? dynamicKB.speakerAPoints : dynamicKB.speakerBPoints)?.length
+          ? `내 주요 주장: ${(speakerKey === 'A' ? dynamicKB.speakerAPoints : dynamicKB.speakerBPoints).join(' | ')}` : '',
+        dynamicKB.attackPoints?.[speakerKey]?.length
+          ? `공격 포인트: ${dynamicKB.attackPoints[speakerKey].join(' | ')}` : '',
+      ]
+        .filter(Boolean)
+        .join('\n')
+    : '';
+  if (isIssueTopic) {
+    let issuePrompt = `\n\n🔴 [오늘의 이슈 토론 — 반드시 준수]\n현재 토론 주제: "${safeTopic}"\n이 주제 하나에만 집중해서 발언하라. 물가, 경제, 부동산, 언론 등 이 주제와 무관한 일반 KB 데이터를 꺼내지 말 것.\n이 이슈에 대해 캐릭터의 정치적 입장에서 구체적 사실(판례, 헌법 조항, 국제 비교 사례, 날짜)을 들어 발언하라.`;
+    if (dynamicSection) {
+      issuePrompt += `\n\n📰 이슈 관련 준비 데이터 (이 내용 중심으로 논거 구성):\n${dynamicSection}`;
+    }
+    systemPrompt += issuePrompt;
+  }
+  const kb = isIssueTopic ? { myPosition: null, conflicts: [], attackPoints: [], reversals: [], 세부논거: null, seoulContext: null } : getKnowledge(safeTopic, safeSpeaker);
   const kbHeader = isControversyTopic && ['leejunseok', 'jeonhangil'].includes(safeSpeaker)
     ? '\n\n⚔️ 개인 논란 논거 풀 (아래 내용으로만 공방하라, 정책 X):'
     : '\n\n📚 정책 지식베이스 (이 데이터를 논거로 적극 활용하세요):';
@@ -3002,12 +3010,7 @@ export default async function handler(req, res) {
         kbText += `\n\n💡 이번 발언 논거 후보 (8개, 이미 쓴 것 제외하고 새로운 것 선택):\n` + argPool.map((a,i)=>`${i+1}. ${a}`).join('\n');
       }
     }
-    if (dynamicSection) {
-      kbText = `${dynamicSection}\n\n${kbText}`;
-    }
     systemPrompt += kbText;
-  } else if (dynamicSection) {
-    systemPrompt += `\n\n${dynamicSection}`;
   }
 
   // ── 개선 A: 전체 히스토리에서 이미 사용된 논거/수치 추출 ──────────────────
