@@ -3,9 +3,14 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import type { PoliticianMeta } from '@/types/politician';
 import { useChatStore } from '@/stores/chat-store';
 import DebateBanner from '@/components/debate/DebateBanner';
+import { useNavigate } from 'react-router';
 
 interface Props {
   politicians: PoliticianMeta[];
+}
+
+interface IssueHeadline {
+  title: string;
 }
 
 // 홈 화면에서 html/body/#root scroll 허용 (채팅 화면은 자체 fixed 레이아웃)
@@ -189,6 +194,18 @@ export default function PoliticianSelector({ politicians }: Props) {
   useBodyScrollUnlock();
   const setCurrentPolitician = useChatStore((s) => s.setCurrentPolitician);
   const cardsRef = useRef<(HTMLDivElement | null)[]>([]);
+  const navigate = useNavigate();
+  const [heroIssue, setHeroIssue] = useState<IssueHeadline | null>(null);
+  const [issueBattleType, setIssueBattleType] = useState<'seoul' | 'national' | 'leejeon' | 'kimjin' | 'hanhong'>('leejeon');
+  const [heroVisible, setHeroVisible] = useState(true);
+  const [issueError, setIssueError] = useState(false);
+  const issueTypes = [
+    { value: 'seoul', label: '오세훈 VS 정원오' },
+    { value: 'national', label: '정청래 VS 장동혁' },
+    { value: 'leejeon', label: '이준석 VS 전한길' },
+    { value: 'kimjin', label: '김어준 VS 진중권' },
+    { value: 'hanhong', label: '한동훈 VS 홍준표' },
+  ] as const;
 
   // 페이지 로드 즉시 모든 카드 stagger reveal (스크롤 불필요)
   useEffect(() => {
@@ -202,11 +219,57 @@ export default function PoliticianSelector({ politicians }: Props) {
     return () => timers.forEach(clearTimeout);
   }, [politicians]);
 
+  useEffect(() => {
+    const controller = new AbortController();
+    const loadIssues = async () => {
+      try {
+          const res = await fetch('/api/issues', { signal: controller.signal });
+        if (!res.ok) {
+          throw new Error('fetch failed');
+        }
+        const data = await res.json();
+        const first = (data?.issues || [])[0];
+        if (!controller.signal.aborted && first?.title) {
+          setHeroIssue({ title: first.title });
+        }
+      } catch {
+        setIssueError(true);
+      }
+    };
+
+    loadIssues();
+
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    if (issueError) {
+      setHeroVisible(false);
+    }
+  }, [issueError]);
+
+  const handleIssueSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!heroIssue?.title) return;
+    navigate(`/debate?type=${issueBattleType}&issue=${encodeURIComponent(heroIssue.title)}`);
+  };
+
+  const truncatedHero = heroIssue?.title.length && heroIssue.title.length > 45
+    ? `${heroIssue.title.slice(0, 45)}...`
+    : heroIssue?.title || '';
+
   return (
     <div style={{ background: '#0D0F1A', minHeight: '100vh' }}>
     <div className="polichat-bg overflow-x-hidden relative" style={{ maxWidth: '700px', margin: '0 auto', minHeight: '100svh' }}>
       {/* Mesh gradient background */}
       <div className="policy-pattern" />
+      <style>{`
+        @keyframes matchTeaserShimmer {
+          0% { transform: translateX(-100%); }
+          50% { transform: translateX(100%); }
+          100% { transform: translateX(200%); }
+        }
+      `}</style>
 
       <div
         className="mx-auto px-4 pt-10 pb-8 relative z-10"
@@ -269,10 +332,64 @@ export default function PoliticianSelector({ politicians }: Props) {
               공약·경력·발언을 학습한 AI — 정책 질문부터 일상 대화까지
             </p>
           </div>
-        </div>
+          </div>
+
+          {/* 오늘의 이슈 헤더 배너 */}
+          {heroVisible && heroIssue?.title && (
+            <div className="mb-6 animate-fade-in-up">
+              <form
+                onSubmit={handleIssueSubmit}
+                className="rounded-2xl border border-white/15 bg-slate-900/90 px-4 py-3 text-white shadow-lg"
+              >
+                <p className="text-[11px] uppercase tracking-[0.12em] text-rose-200">오늘의 이슈</p>
+                <p className="mt-1 text-sm font-bold flex items-center gap-1.5">
+                  <span>🔥</span>
+                  <span className="truncate" title={heroIssue.title}>
+                    {truncatedHero}
+                  </span>
+                </p>
+                <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <select
+                    value={issueBattleType}
+                    onChange={(e) => setIssueBattleType(e.target.value as typeof issueBattleType)}
+                    className="w-full sm:w-auto px-3 py-2 rounded-xl bg-slate-800/60 border border-white/20 text-sm text-white"
+                  >
+                    {issueTypes.map((item) => (
+                      <option key={item.value} value={item.value}>
+                        {item.label}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="submit"
+                    className="w-full sm:w-auto px-3 py-2 rounded-xl text-sm font-bold bg-white text-slate-900"
+                  >
+                    이 이슈로 토론 보기
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* 상단 탭 바 */}
+          <div className="mb-4 flex items-center justify-center gap-2">
+            <a href="#debate-battle" className="inline-flex px-3 py-2 rounded-full text-xs font-semibold bg-slate-900/80 text-white border border-white/20">
+              토론 배틀
+            </a>
+            <a href="#politician-chat" className="inline-flex px-3 py-2 rounded-full text-xs font-semibold bg-slate-200/80 text-slate-800 border border-slate-300">
+              AI 1:1 대화
+            </a>
+            <button
+              type="button"
+              onClick={() => navigate('/issues')}
+              className="inline-flex px-3 py-2 rounded-full text-xs font-semibold bg-amber-500 text-white border border-amber-300"
+            >
+              📰 이슈
+            </button>
+          </div>
 
         {/* 토론 배틀 배너 */}
-        <div className="animate-fade-in-up space-y-2" style={{ animationDelay: '0.12s' }}>
+        <div id="debate-battle" className="animate-fade-in-up space-y-2" style={{ animationDelay: '0.12s' }}>
           <div className="mb-2">
             <p className="text-[13px] font-bold text-gray-700 tracking-wide uppercase flex items-center gap-1.5" style={{ letterSpacing: '0.06em' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -292,10 +409,36 @@ export default function PoliticianSelector({ politicians }: Props) {
           <DebateBanner debateType="leejeon" />
           <DebateBanner debateType="kimjin" />
           <DebateBanner debateType="hanhong" />
+
+          <div
+            className="relative overflow-hidden rounded-2xl mb-5 px-5 py-4 bg-gradient-to-br from-slate-800 to-slate-900 opacity-90 cursor-default"
+            style={{ boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.12)' }}
+          >
+            <div className="absolute inset-0 pointer-events-none">
+              <div
+                className="h-full w-1/3 bg-gradient-to-r from-transparent via-white/25 to-transparent opacity-30"
+                style={{ animation: 'matchTeaserShimmer 2s linear infinite' }}
+              />
+            </div>
+            <div className="relative flex items-center gap-3">
+              <div className="flex gap-2">
+                <div className="w-12 h-12 rounded-full bg-slate-400/40 border border-slate-300/60 text-slate-700 text-2xl font-black flex items-center justify-center">
+                  ?
+                </div>
+                <div className="w-12 h-12 rounded-full bg-slate-400/40 border border-slate-300/60 text-slate-700 text-2xl font-black flex items-center justify-center">
+                  ?
+                </div>
+              </div>
+              <div>
+                <p className="text-xs text-slate-100 font-bold">🔜 곧 공개</p>
+                <p className="text-[12px] text-slate-300 mt-1">다음 대결 준비 중...</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Section title */}
-        <div className="mb-3 animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
+        <div id="politician-chat" className="mb-3 animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
           <p className="text-[13px] font-bold text-gray-700 tracking-wide uppercase flex items-center gap-1.5" style={{ letterSpacing: '0.06em' }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>

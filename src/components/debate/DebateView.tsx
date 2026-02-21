@@ -255,12 +255,29 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
     return scoreWithLabel.slice(0, 3);
   }, [messages, config.speakerA, config.speakerB, config.speakerAName, config.speakerBName]);
 
-  const tensionBackground = useMemo(() => {
-    if (tension < 33) return 'linear-gradient(180deg, #0f1b2d 0%, #080d1a 100%)';
-    if (tension < 67) return 'linear-gradient(180deg, #1a0f2d 0%, #0d0820 100%)';
-    if (tension < 86) return 'linear-gradient(180deg, #2d1a0f 0%, #1a0a00 100%)';
-    return 'linear-gradient(180deg, #2d0f0f 0%, #1a0000 100%)';
-  }, [tension]);
+  const speakerARound = useMemo(() => {
+    return messages.filter(
+      (msg) => msg.speaker !== '__moderator__' && msg.speaker === config.speakerA && !msg.isTopicChange,
+    ).length;
+  }, [messages, config.speakerA]);
+
+  const actBg = speakerARound <= 4 ? 'from-slate-50 to-slate-100' : speakerARound <= 8 ? 'from-amber-50 to-orange-50' : 'from-red-50 to-rose-100';
+  const actBgClass = `bg-gradient-to-b ${actBg} transition-all duration-[2000ms]`;
+
+const FACT_CHECK_SOURCES = ['AP통신', '연합뉴스', '조선일보', '한겨레', 'YTN', 'KBS', 'MBC', 'SBS', '헤럴드경제', '뉴스1'];
+
+function detectFacts(text: string): string | null {
+  if (/\d{4}년/.test(text) || /\d+%/.test(text)) {
+    return '📎 수치/날짜 인용';
+  }
+
+  const hit = FACT_CHECK_SOURCES.find((source) => text.includes(source));
+  if (hit) {
+    return `📎 ${hit} 인용`;
+  }
+
+  return null;
+}
 
   // 실행 취소용 ref
   const abortRef = useRef(false);
@@ -1237,8 +1254,8 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
 
   return (
     <div
-      className="app-bg fixed top-0 left-0 right-0 flex flex-col overflow-hidden"
-      style={{ height: '100svh', maxWidth: '700px', margin: '0 auto', bottom: 0, background: tensionBackground }}
+      className={`app-bg fixed top-0 left-0 right-0 flex flex-col overflow-hidden ${actBgClass}`}
+      style={{ height: '100svh', maxWidth: '700px', margin: '0 auto', bottom: 0 }}
     >
       {/* 헤더 */}
       <div
@@ -1492,13 +1509,26 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
         {/* 완료된 발언들 */}
         {messages.map((msg, i) => {
           const isLast = i === messages.length - 1;
+          const isSpeakerA = msg.speaker === config.speakerA;
+          const factLabel = detectFacts(msg.text || '');
           // 사회자 메시지 특수 처리 — 타이핑 효과
           if (msg.speaker === '__moderator__') {
             return <ModeratorMessage key={i} text={msg.text} />;
           }
           return (
-            <div key={i} style={{ position: 'relative' }}>
+            <div
+              key={i}
+              className={`flex flex-col ${isSpeakerA ? 'items-start' : 'items-end'}`}
+              style={{ position: 'relative' }}
+            >
               <MessageBubble msg={msg} config={config} />
+              {factLabel && !msg.isTopicChange && (
+                <div
+                  className={`text-xs text-gray-400 bg-gray-50 border border-gray-100 rounded-md px-2 py-1 mt-1 inline-block max-w-xs ${isSpeakerA ? 'ml-11' : 'mr-11'}`}
+                >
+                  {factLabel}
+                </div>
+              )}
               {/* 관중 반응 (마지막 완료 메시지에만) */}
               {isLast && phase === 'running' && (
               <AudienceReaction

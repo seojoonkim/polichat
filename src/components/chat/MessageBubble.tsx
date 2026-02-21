@@ -10,6 +10,13 @@ interface Props {
   onBubbleReveal?: () => void; // 새 버블이 나타날 때 호출 (스크롤용)
 }
 
+function sanitizeBubbleText(text: string) {
+  return text
+    .replace(/\[\[EMOTION:[^\]]+\]\]/g, '')
+    .replace(/\[\[TRIGGERED:true\]\]/g, '')
+    .trim();
+}
+
 // @username을 클릭 가능한 인스타그램 링크로 변환
 function parseInstagramHandles(text: string): React.ReactNode {
   // @로 시작하고 영문, 숫자, 언더스코어, 점으로 이루어진 아이디 매칭
@@ -152,9 +159,10 @@ function TypingBubble({
 export default function MessageBubble({ message, politician, isNew = false, onBubbleReveal }: Props) {
   const isUser = message.role === 'user';
   const isSystem = message.role === 'system';
+  const sanitizedText = sanitizeBubbleText(message.content || '');
 
   // 빈 메시지 렌더링 방지 (스트리밍 최초엔 isNew면 타이핑 인디케이터 표기)
-  if (!isUser && !isSystem && !message.content?.trim() && !isNew) return null;
+  if (!isUser && !isSystem && !sanitizedText && !isNew) return null;
 
   // 시스템 메시지: 가운데 정렬 배지
   if (isSystem) {
@@ -168,22 +176,22 @@ export default function MessageBubble({ message, politician, isNew = false, onBu
             border: `1px solid ${politician.themeColor}25`,
           }}
         >
-          {message.content}
+      {sanitizedText}
         </div>
       </div>
     );
   }
 
   // Split assistant messages by "||" for multiple bubbles
-  const splitParts = !isUser && message.content
-    ? message.content.split('||').map((s) => s.trim()).filter(Boolean)
+  const splitParts = !isUser && sanitizedText
+    ? sanitizedText.split('||').map((s) => s.trim()).filter(Boolean)
     : [];
 
   // Fallback: if split 결과가 비어도(예: 구분자만 왔다 갔다 하는 경우) 원본 텍스트를 유지
   const bubbleParts = splitParts.length > 0
     ? splitParts
-    : (!isUser && message.content?.trim()
-      ? [message.content.trim()]
+    : (!isUser && sanitizedText
+      ? [sanitizedText]
       : []);
 
   // 10초 이내 생성된 메시지만 애니메이션 적용
@@ -263,7 +271,7 @@ export default function MessageBubble({ message, politician, isNew = false, onBu
                 background: `linear-gradient(135deg, ${politician.themeColor}, ${politician.themeColorSecondary})`,
               }}
             >
-              {message.content}
+              {sanitizedText}
             </div>
             {/* 리액션 표시 - 말풍선 아래에 겹치지 않게 */}
             {message.reaction && (

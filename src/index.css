@@ -1112,6 +1112,22 @@ body {
   }
 }
 
+.chat-flash-trigger {
+  animation: redFlash 0.35s ease-in-out 2;
+}
+
+@keyframes redFlash {
+  0% {
+    background-color: rgba(255, 0, 0, 0);
+  }
+  50% {
+    background-color: rgba(239, 68, 68, 0.24);
+  }
+  100% {
+    background-color: rgba(255, 0, 0, 0);
+  }
+}
+
 .animate-toast-rainbow {
   animation: toast-rainbow 2s ease-in-out infinite;
 }

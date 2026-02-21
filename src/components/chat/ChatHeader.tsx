@@ -1,6 +1,7 @@
 import { TaglineRenderer } from '@/components/common/TaglineRenderer';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import type { PoliticianMeta } from '@/types/politician';
+import type { Message } from '@/types/chat';
 import { useChatStore } from '@/stores/chat-store';
 import { useUserStore } from '@/stores/user-store';
 import { formatRelativeTime, getTypingText } from '@/utils/language';
@@ -11,9 +12,11 @@ interface Props {
 
 export default function ChatHeader({ politician }: Props) {
   const [showResetModal, setShowResetModal] = useState(false);
+  const [emotion, setEmotion] = useState<'angry' | 'happy' | 'defensive' | 'neutral'>('neutral');
   
   const setCurrentPolitician = useChatStore((s) => s.setCurrentPolitician);
   const clearMessages = useChatStore((s) => s.clearMessages);
+  const messages = useChatStore((s) => s.messages);
   const lastMessageTime = useChatStore((s) => s.lastMessageTime);
   const isStreaming = useChatStore((s) => s.isStreaming);
   const resetUser = useUserStore((s) => s.reset);
@@ -24,6 +27,37 @@ export default function ChatHeader({ politician }: Props) {
     if (isStreaming) return getTypingText(politician.language);
     return formatRelativeTime(lastMessageTime, politician.language);
   }, [lastMessageTime, isStreaming, politician.language]);
+
+  useEffect(() => {
+    const lastAssistant = [...messages]
+      .reverse()
+      .find((msg: Message) => msg.role === 'assistant');
+
+    if (!lastAssistant) {
+      setEmotion('neutral');
+      return;
+    }
+
+    const match = lastAssistant.content.match(/\[\[EMOTION:([^\]]+)\]\]/);
+    const value = (match?.[1] || '').toLowerCase();
+
+    if (value === 'angry') {
+      setEmotion('angry');
+    } else if (value === 'happy') {
+      setEmotion('happy');
+    } else if (value === 'defensive') {
+      setEmotion('defensive');
+    } else {
+      setEmotion('neutral');
+    }
+  }, [messages]);
+
+  const emotionEmoji = useMemo(() => {
+    if (emotion === 'angry') return '😤';
+    if (emotion === 'happy') return '😊';
+    if (emotion === 'defensive') return '🛡️';
+    return '';
+  }, [emotion]);
 
   const handleBack = () => {
     setCurrentPolitician(null);
@@ -68,7 +102,7 @@ export default function ChatHeader({ politician }: Props) {
 
         {/* Profile */}
         <div
-          className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold bg-white/20 shrink-0 overflow-hidden ring-2 ring-white/30"
+          className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold bg-white/20 shrink-0 overflow-hidden ring-2 ring-white/30 relative"
         >
           {politician.profileImageUrl ? (
             <img
@@ -78,6 +112,14 @@ export default function ChatHeader({ politician }: Props) {
             />
           ) : (
             politician.nameKo.slice(0, 1)
+          )}
+          {emotionEmoji && (
+            <span
+              className="absolute -bottom-1 -right-1 text-[13px] bg-white/95 rounded-full leading-none shadow-sm"
+              aria-label="감정"
+            >
+              {emotionEmoji}
+            </span>
           )}
         </div>
 

@@ -67,6 +67,9 @@ export default function ChatLayout({ politician }: Props) {
   const { systemPrompt, knowledge } = useSystemPrompt(politician);
   const { messages, isStreaming, error, sendMessage, addAssistantMessage, historyLoaded } = useChat(systemPrompt, knowledge);
   const clearSuggestedQuestions = useChatStore((s) => s.clearSuggestedQuestions);
+  const triggeredMessageIdRef = useRef<string | null>(null);
+  const [showTriggerToast, setShowTriggerToast] = useState(false);
+  const [isFlashPulse, setIsFlashPulse] = useState(false);
   
   const greetingShown = useRef(false);
   const prevMessageCount = useRef<number | null>(null);
@@ -175,6 +178,26 @@ export default function ChatLayout({ politician }: Props) {
     }
   }, [isStreaming, pendingMessage, sendMessage]);
 
+  // [발끈 모드] 트리거 토스트/배경 깜빡임 처리
+  useEffect(() => {
+    const latestTriggered = [...messages]
+      .reverse()
+      .find((msg) => msg.role === 'assistant' && msg.content.includes('[[TRIGGERED:true]]'));
+
+    if (!latestTriggered || triggeredMessageIdRef.current === latestTriggered.id) return;
+
+    triggeredMessageIdRef.current = latestTriggered.id;
+    setIsFlashPulse(true);
+    setShowTriggerToast(true);
+    const flashTimer = setTimeout(() => setIsFlashPulse(false), 350);
+    const toastTimer = setTimeout(() => setShowTriggerToast(false), 2000);
+
+    return () => {
+      clearTimeout(flashTimer);
+      clearTimeout(toastTimer);
+    };
+  }, [messages]);
+
   // Persist messages on unload
   useEffect(() => {
     const handleUnload = () => {
@@ -188,9 +211,17 @@ export default function ChatLayout({ politician }: Props) {
   // 내부는 flexbox로 헤더-메시지-입력창 배치
   return (
     <div 
-      className="app-bg fixed top-0 left-0 right-0 flex flex-col overflow-hidden"
+      className={`app-bg fixed top-0 left-0 right-0 flex flex-col overflow-hidden relative ${isFlashPulse ? 'chat-flash-trigger' : ''}`}
       style={{ maxWidth: '700px', margin: '0 auto', height: '100svh' }}
     >
+      {showTriggerToast && (
+        <div className="pointer-events-none absolute top-3 left-1/2 z-40 -translate-x-1/2">
+          <div className="px-4 py-2 rounded-full bg-red-500 text-white text-xs font-bold shadow-lg animate-toast-glow">
+            🔥 발끈 모드 발동!
+          </div>
+        </div>
+      )}
+
       {/* 헤더: 절대 스크롤 안 됨 */}
       <ChatHeader politician={politician} />
       

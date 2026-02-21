@@ -9,6 +9,76 @@ export const config = {
 const identityCache = new Map();
 const CACHE_TTL = 5 * 60 * 1000; // 5분
 
+const EMOTION_PATTERNS = {
+  angry: ['화가', '분노', '어이없', '기가 막', '말이 됩니까', '선 넘'],
+  happy: ['감사', '기쁘', '다행', '좋습니다', '물론이죠'],
+  defensive: ['억울', '오해', '왜곡', '사실이 아닙니다', '근거 없'],
+};
+
+const TRIGGER_KEYWORDS = {
+  '이재명': ['대장동', '성남FC', '쌍방울', '변호사비'],
+  '전한길': ['현상금', '강간', '건국펀드', '공금횡령'],
+  '정청래': ['막말', '종북', '조폭', '입틀막'],
+  '장동혁': ['절윤', '尹어게인', '다주택', '6채'],
+  '이준석': ['성상납', '당원명부', '케이크', '내부총질'],
+  '한동훈': ['김건희', '채상병', '명품백', '검사독재'],
+  '홍준표': ['달빛동맹', '친윤배신', '여론조작'],
+  '오세훈': ['내곡동', 'BBK', '논문표절'],
+  'generic': ['거짓말', '사기꾼', '쓰레기', '역적'],
+  'leejunseok': ['성상납', '당원명부', '케이크', '내부총질'],
+  'ohsehoon': ['내곡동', 'BBK', '논문표절'],
+  'jungcr': ['막말', '종북', '조폭', '입틀막'],
+  'jangdh': ['절윤', '尹어게인', '다주택', '6채'],
+  'jeonhangil': ['현상금', '강간', '건국펀드', '공금횡령'],
+  'kimeoojun': ['사실이 아닙니다'],
+  'jinjungkwon': ['거짓말', '사기꾼'],
+  'handoonghoon': ['김건희', '채상병', '명품백', '검사독재'],
+  'hongjunpyo': ['달빛동맹', '친윤배신', '여론조작'],
+};
+
+function detectEmotion(text) {
+  const normalized = text.replace(/\s+/g, ' ');
+  if (EMOTION_PATTERNS.angry.some((word) => normalized.includes(word))) return 'angry';
+  if (EMOTION_PATTERNS.happy.some((word) => normalized.includes(word))) return 'happy';
+  if (EMOTION_PATTERNS.defensive.some((word) => normalized.includes(word))) return 'defensive';
+  return 'neutral';
+}
+
+function hasAnyKeyword(text, keywords) {
+  return keywords.some((keyword) => text.includes(keyword));
+}
+
+function isTriggeredPolitician(text, idolId, identity) {
+  const fullText = text || '';
+  const id = idolId || '';
+  const normalizedId = id.toLowerCase();
+  const name = identity?.name_ko || '';
+  const normalizedName = name.replace(/\s+/g, '');
+
+  const detectedKeywords = new Set<string>();
+
+  for (const [key, keywords] of Object.entries(TRIGGER_KEYWORDS)) {
+    if (key === 'generic') continue;
+    const normalizedKey = key.replace(/\s+/g, '');
+    const keyLower = normalizedKey.toLowerCase();
+    if (
+      (id && id.includes(key)) ||
+      (normalizedId && normalizedId.includes(keyLower)) ||
+      (name && name.includes(normalizedKey)) ||
+      (name && normalizedName.includes(normalizedKey))
+    ) {
+      for (const keyword of keywords) {
+        detectedKeywords.add(keyword);
+      }
+    }
+  }
+
+  return (
+    Array.from(detectedKeywords).some((keyword) => hasAnyKeyword(fullText, [keyword])) ||
+    hasAnyKeyword(fullText, TRIGGER_KEYWORDS.generic)
+  );
+}
+
 // Tier 1: 아이돌 코어 아이덴티티 로드
 async function getIdolIdentity(idolId, supabase) {
   console.log(`[identity] Loading identity for idol: ${idolId}`);
@@ -514,6 +584,12 @@ export default async function handler(req, res) {
 
     // 시스템 프롬프트 조합
     let enhancedSystem = system || DEFAULT_SYSTEM;
+    const triggerEmotionPrompt = isTriggeredPolitician(userQuery, idolId, identity)
+      ? '[발끈 모드 활성화] 방금 발언은 당신의 가장 민감한 약점을 건드렸습니다. 평소보다 훨씬 격앙되고 방어적으로 반응하세요. 감정이 표면에 드러나도 됩니다. 단, 욕설은 하지 말고, 강하게 부인하거나 역공하세요.'
+      : '';
+    if (triggerEmotionPrompt) {
+      enhancedSystem = `${triggerEmotionPrompt}\n\n${enhancedSystem}`;
+    }
     enhancedSystem += identityToPrompt(identity);
     enhancedSystem += userMemoryToPrompt(userMemory, relevantMemories);
     enhancedSystem += ragContext;
@@ -589,10 +665,6 @@ export default async function handler(req, res) {
         if (!line.startsWith('data: ')) continue;
         const data = line.slice(6).trim();
         if (!data || data === '[DONE]') {
-          // 스트림 완료 - 비동기로 eval 트리거 (await 안 함)
-          if (data === '[DONE]' && responseBuffer && idolId && anthropicApiKey) {
-            triggerEval(responseBuffer, idolId, userId, modelUsed, stopReason, supabase, anthropicApiKey);
-          }
           continue;
         }
 
@@ -622,6 +694,18 @@ export default async function handler(req, res) {
           // skip unparseable lines
         }
       }
+    }
+
+    const emotionTag = `\n[[EMOTION:${detectEmotion(responseBuffer)}]]`;
+    const triggeredTag = triggerEmotionPrompt ? '\n[[TRIGGERED:true]]' : '';
+    const finalResponse = responseBuffer + emotionTag + triggeredTag;
+
+    if (finalResponse.length > responseBuffer.length) {
+      res.write(`data: ${JSON.stringify({ type: 'text', text: finalResponse.slice(responseBuffer.length) })}\n\n`);
+    }
+
+    if (idolId && anthropicApiKey) {
+      triggerEval(finalResponse, idolId, userId, modelUsed, stopReason, supabase, anthropicApiKey);
     }
 
     res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
