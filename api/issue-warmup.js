@@ -28,11 +28,9 @@ async function isAlreadyCached(supabase, debateType, issue) {
       .select('created_at')
       .eq('topic', '__issue_kb__')
       .eq('style', styleKey)
-      .eq('debate_type', debateType)
       .gte('created_at', cutoff)
-      .limit(1)
-      .single();
-    return !!data;
+      .limit(1);
+    return !!(data && data.length > 0);
   } catch { return false; }
 }
 
@@ -43,7 +41,6 @@ async function saveKBToSupabase(supabase, debateType, issue, dynamicKB) {
     await supabase.from('debate_cache').insert({
       topic: '__issue_kb__',
       style: styleKey,
-      debate_type: debateType,
       messages: [{ role: 'kb', content: JSON.stringify(dynamicKB) }],
       version: 1,
     });

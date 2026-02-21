@@ -12,11 +12,20 @@ export function toKSTDate(d) {
   return kst.toISOString().slice(0, 10);
 }
 
+function cleanTitle(title) {
+  return title
+    .replace(/\s*[-–—]\s*(조선일보|동아일보|중앙일보|한겨레|경향신문|뉴스1|연합뉴스|YTN|MBC|KBS|SBS|JTBC|TV조선|채널A|서울신문|매일경제|한국경제|아시아경제|세계일보|국민일보|문화일보|데일리안|오마이뉴스|월간조선|뉴스핌|v\.daum\.net|news\.naver\.com)[^\n]*/gi, '')
+    .replace(/^\[[^\]]*\]\s*/, '') // [글로벌이슈] 등 접두 태그
+    .replace(/\s*"[^"]*"$/g, '')
+    .trim();
+}
+
+// ── 날짜별 이슈 저장 (한 날짜에 하나만 유지) ──────────────────────────────
 export async function saveIssueForDate(date, issueTitle, force = false) {
   const supabase = getSupabase();
   if (!supabase || !issueTitle) return;
   try {
-    // limit(1)+order로 중복 행 안전 처리
+    // 가장 최신 행 조회 (중복 행 안전 처리)
     const { data } = await supabase
       .from('debate_cache')
       .select('id')
@@ -27,17 +36,17 @@ export async function saveIssueForDate(date, issueTitle, force = false) {
     const existing = data?.[0];
 
     if (existing) {
-      if (!force) return; // 덮어쓰지 않음
+      if (!force) return; // 덮어쓰지 않음 (하루 1개 고정)
       // force=true: 최신 행 업데이트
       await supabase.from('debate_cache')
         .update({ messages: [{ role: 'issue', content: issueTitle }] })
         .eq('id', existing.id);
       return;
     }
+    // 신규 저장 (debate_type 컬럼 없음 — style로 날짜 구분)
     await supabase.from('debate_cache').insert({
       topic: '__issue_history__',
       style: date,
-      debate_type: 'history',
       messages: [{ role: 'issue', content: issueTitle }],
       version: 1,
     });
@@ -46,6 +55,7 @@ export async function saveIssueForDate(date, issueTitle, force = false) {
   }
 }
 
+// ── 최근 날짜 이슈 조회 ─────────────────────────────────────────────────────
 export async function getRecentIssues(days) {
   const supabase = getSupabase();
   if (!supabase) return [];
@@ -56,9 +66,8 @@ export async function getRecentIssues(days) {
       .from('debate_cache')
       .select('style, messages, created_at')
       .eq('topic', '__issue_history__')
-      .eq('debate_type', 'history')
       .gte('created_at', cutoff.toISOString())
-      .order('created_at', { ascending: false }); // 최신 행 우선
+      .order('created_at', { ascending: false });
 
     // 날짜별 중복 제거 (가장 최신 행만 유지)
     const seenDates = new Set();
@@ -68,21 +77,17 @@ export async function getRecentIssues(days) {
       return true;
     });
 
-    return deduped.map((row) => {
-      let title = row.messages?.[0]?.content || '';
-      // 언론사명·접두 태그 제거 (저장 시 이미 처리됐더라도 안전망)
-      title = title
-        .replace(/\s*[-–—]\s*(조선일보|동아일보|중앙일보|한겨레|경향신문|뉴스1|연합뉴스|YTN|MBC|KBS|SBS|JTBC|TV조선|채널A|서울신문|매일경제|한국경제|아시아경제|세계일보|국민일보|문화일보|데일리안|오마이뉴스|월간조선|v\.daum\.net|news\.naver\.com)[^\n]*/gi, '')
-        .replace(/^\[[^\]]*\]\s*/, '')
-        .replace(/\s*"[^"]*"$/g, '').trim();
-      return { date: row.style, title };
-    }).filter((r) => r.title);
+    return deduped.map(row => {
+      const raw = row.messages?.[0]?.content || '';
+      return { date: row.style, title: cleanTitle(raw) };
+    }).filter(r => r.title);
   } catch (e) {
+    console.error('[issue-history] getRecentIssues error:', e.message);
     return [];
   }
 }
 
-/** RSS에서 날짜별 이슈 직접 가져오기 (Supabase fallback용) */
+/** RSS에서 날짜별 이슈 직접 파싱 (Supabase fallback) */
 async function fetchIssuesByDateFromRSS(days) {
   const feeds = [
     'https://news.google.com/rss/search?q=%ED%95%9C%EA%B5%AD+%EC%A0%95%EC%B9%98&hl=ko&gl=KR&ceid=KR:ko',
@@ -90,25 +95,19 @@ async function fetchIssuesByDateFromRSS(days) {
     'https://rss.donga.com/politics.xml',
     'https://www.hani.co.kr/rss/politics/',
   ];
-
   const dateMap = {};
-
   for (const feedUrl of feeds) {
     try {
       const res = await fetch(feedUrl, { signal: AbortSignal.timeout(7000) });
       if (!res.ok) continue;
       const xml = await res.text();
-      const items = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)];
-
-      for (const m of items) {
+      for (const m of xml.matchAll(/<item>([\s\S]*?)<\/item>/g)) {
         const raw = m[1].match(/<title><!\[CDATA\[([^\]]+)\]\]><\/title>/)?.[1]
           || m[1].match(/<title>([^<]+)<\/title>/)?.[1] || '';
-        const title = raw.replace(/<[^>]+>/g, '').trim();
+        const title = cleanTitle(raw.replace(/<[^>]+>/g, '').trim());
         if (title.length < 10 || title.includes('광고')) continue;
-
         const pubDateRaw = m[1].match(/<pubDate>([^<]+)<\/pubDate>/)?.[1] || '';
         if (!pubDateRaw) continue;
-
         try {
           const d = new Date(pubDateRaw);
           if (isNaN(d.getTime())) continue;
@@ -117,18 +116,13 @@ async function fetchIssuesByDateFromRSS(days) {
         } catch {}
       }
     } catch {}
-
     if (Object.keys(dateMap).length >= days) break;
   }
-
-  // 최근 days일 필터링하여 내림차순 반환
   const result = [];
   for (let i = 0; i < days; i++) {
     const d = new Date(Date.now() + 9 * 60 * 60 * 1000 - i * 86400000);
     const dateStr = d.toISOString().slice(0, 10);
-    if (dateMap[dateStr]) {
-      result.push({ date: dateStr, title: dateMap[dateStr] });
-    }
+    if (dateMap[dateStr]) result.push({ date: dateStr, title: dateMap[dateStr] });
   }
   return result;
 }
@@ -139,28 +133,22 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const days = parseInt(req.query.days || '3', 10);
-
-  // 1차: Supabase에서 저장된 히스토리 조회
   const saved = await getRecentIssues(days + 1);
 
   if (saved.length >= days) {
     return res.status(200).json({ issues: saved.slice(0, days), source: 'supabase' });
   }
 
-  // 2차: Supabase 부족하면 RSS에서 직접 파싱
+  // Supabase 부족 → RSS 보완
   const rssIssues = await fetchIssuesByDateFromRSS(days);
-
-  // 병합: saved 우선, 빠진 날짜는 RSS로 보완
   const savedDates = new Set(saved.map(r => r.date));
   const merged = [...saved];
   for (const r of rssIssues) {
     if (!savedDates.has(r.date)) merged.push(r);
   }
-
-  // 날짜 내림차순 정렬
   merged.sort((a, b) => b.date.localeCompare(a.date));
 
-  // Supabase에 없는 것들 비동기 저장 (fire-and-forget)
+  // 빠진 날짜는 Supabase에 비동기 저장
   for (const item of merged) {
     if (!savedDates.has(item.date)) {
       saveIssueForDate(item.date, item.title).catch(() => {});

@@ -36,7 +36,6 @@ export default async function handler(req, res) {
         .select('*')
         .eq('topic', topic)
         .eq('style', styleKey)
-        .eq('debate_type', debateType)
         .order('version', { ascending: false })
         .limit(1)
         .single();
@@ -69,7 +68,6 @@ export default async function handler(req, res) {
         .select('version')
         .eq('topic', topic)
         .eq('style', styleKey)
-        .eq('debate_type', debateType)
         .order('version', { ascending: false })
         .limit(1)
         .single();
@@ -81,7 +79,7 @@ export default async function handler(req, res) {
       for (let attempt = 0; attempt < 3; attempt++) {
         ({ data, error } = await supabase
           .from('debate_cache')
-          .insert({ topic, style: styleKey, debate_type: debateType, version: nextVersion, messages, judgment: judgment || null })
+          .insert({ topic, style: styleKey, version: nextVersion, messages, judgment: judgment || null })
           .select()
           .single());
         

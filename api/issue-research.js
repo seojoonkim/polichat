@@ -32,7 +32,6 @@ async function getFromSupabase(supabase, debateType, issue) {
       .select('messages, created_at')
       .eq('topic', '__issue_kb__')
       .eq('style', styleKey)
-      .eq('debate_type', debateType)
       .gte('created_at', cutoff)
       .order('created_at', { ascending: false })
       .limit(1)
@@ -53,7 +52,6 @@ async function saveToSupabase(supabase, debateType, issue, dynamicKB) {
     await supabase.from('debate_cache').insert({
       topic: '__issue_kb__',
       style: styleKey,
-      debate_type: debateType,
       messages: [{ role: 'kb', content: JSON.stringify(dynamicKB) }],
       version: 1,
     });
