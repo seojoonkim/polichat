@@ -1782,7 +1782,7 @@ function getKnowledge(topicLabel, speaker) {
     return {
       myPosition,
       seoulContext: null,
-      attackPoints: myKb.공격포인트.slice(0, 4),
+      attackPoints: myKb.공격포인트.slice(0, 5),
       conflicts: conflictsFormatted,
       reversals: opponentKb.약점 || [],
       세부논거: myKb.세부논거 || null,
@@ -2107,6 +2107,94 @@ ${emoSlice}
   // 기본값
   return `${baseContext}\n\n자유롭게 논쟁하되, 모든 주장에 반드시 구체적 수치·사례·데이터를 근거로 제시하고 ${opponentName}의 주장 허점을 날카롭게 지적하라. 총 4문장 이내.
 \n⚠️ 말투 필수규칙: 반드시 존댓말(합쇼체 또는 해요체)을 사용해야 합니다. 혼잣말체("~겠지", "~다는 거야"), 반말("~야", "~다"), 독백체는 절대 금지입니다. 반드시 토론 연설 형식으로 발언하세요.`;
+}
+
+// ── 개선 A: 논거 추적 + 반복 방지 강화 (usedEvidence 시스템) ─────────────────
+function extractUsedEvidence(allMessages) {
+  const used = new Set();
+  for (const msg of allMessages) {
+    const content = typeof msg.text === 'string' ? msg.text : (typeof msg.content === 'string' ? msg.content : '');
+    if (!content) continue;
+    // 수치 패턴: "X조원", "X%", "X만명" 등
+    const numbers = content.match(/\d+[\.\,]?\d*\s*[조억만%원명票호건석위배점개월]/g) || [];
+    // 기관명 패턴
+    const orgs = content.match(/(현대경제연구원|갤럽|리얼미터|한국은행|통계청|대법원|헌재|SIPRI|OECD|국토부|기획재정부|한국감정원|부동산원|관세청|건보공단|보건복지부|고용부|선관위|국정원|한수원|국방부)[^\s]*/g) || [];
+    // 법안/사건명 패턴
+    const cases = content.match(/(10\.15|12\.3|캠프데이비드|판문점|GTX|강북르네상스|신통기획|공수처|반도체특별법)[^\s]*/g) || [];
+    numbers.forEach(n => used.add(n.trim()));
+    orgs.forEach(o => used.add(o.trim()));
+    cases.forEach(c => used.add(c.trim()));
+  }
+  return used;
+}
+
+// ── 개선 B: 상대방 발언 키워드 → 반박 논거 매칭 ──────────────────────────────
+function extractKeywords(text) {
+  if (!text) return [];
+  // 핵심 정치/정책 키워드 추출
+  const patterns = [
+    /부정선거/g, /선관위/g, /계엄/g, /탄핵/g, /내란/g,
+    /법인세/g, /상속세/g, /감세/g, /증세/g, /재정/g,
+    /부동산/g, /재건축/g, /재개발/g, /집값/g, /전세/g,
+    /연금/g, /복지/g, /기본소득/g, /최저임금/g,
+    /검찰/g, /공수처/g, /수사권/g, /사법/g,
+    /AI/g, /반도체/g, /원전/g, /에너지/g,
+    /교육/g, /의대/g, /청년/g, /일자리/g,
+    /한미동맹/g, /대북/g, /핵무장/g, /외교/g,
+    /젠더/g, /페미/g, /병역/g, /여가부/g,
+    /음모론/g, /가짜뉴스/g, /언론/g,
+    /성접대/g, /막말/g, /건국펀드/g, /노사모/g,
+    /GDP/g, /성장률/g, /실업/g, /물가/g,
+    /조국/g, /이재명/g, /윤석열/g, /문재인/g,
+    /팬덤/g, /내로남불/g, /공정/g,
+  ];
+  const found = new Set();
+  for (const p of patterns) {
+    p.lastIndex = 0;
+    if (p.test(text)) {
+      found.add(text.match(p)?.[0] || '');
+    }
+  }
+  return Array.from(found).filter(k => k.length > 0);
+}
+
+function getCounterArguments(opponentLastMessage, myKb) {
+  if (!opponentLastMessage || !myKb?.세부논거) return [];
+  const keywords = extractKeywords(opponentLastMessage);
+  if (keywords.length === 0) return [];
+  const counters = [];
+  for (const [topic, args] of Object.entries(myKb.세부논거)) {
+    if (!Array.isArray(args)) continue;
+    for (const arg of args) {
+      const relevanceScore = keywords.filter(k => arg.includes(k)).length;
+      if (relevanceScore > 0) {
+        counters.push({ arg, score: relevanceScore, topic });
+      }
+    }
+  }
+  return counters.sort((a, b) => b.score - a.score).slice(0, 3).map(c => c.arg);
+}
+
+// ── 개선 C: 논거 로테이션 시스템 ─────────────────────────────────────────────
+function getRotatedArguments(args, historyLength, count = 4) {
+  if (!args || args.length === 0) return [];
+  const start = (historyLength * count) % args.length;
+  const rotated = [...args.slice(start), ...args.slice(0, start)];
+  return rotated.slice(0, count);
+}
+
+// ── 개선 D: 공격/방어 균형 지시 ──────────────────────────────────────────────
+function getAttackDefenseBalance(historyLength) {
+  if (historyLength % 3 === 0) return '🗡️ 전략: 이번 턴은 상대방 발언의 허점을 집중 공격하라. 방어는 최소화.';
+  if (historyLength % 3 === 1) return '🛡️ 전략: 이번 턴은 상대방의 공격에 먼저 방어하고, 새로운 논거로 반격하라.';
+  return '🔄 전략: 이번 턴은 새로운 주제/각도로 선제 공세를 펼쳐라. 이전에 안 쓴 논거 사용.';
+}
+
+// ── 개선 E: 토론 단계별 논거 깊이 조절 ───────────────────────────────────────
+function getDepthByAct(historyLength) {
+  if (historyLength < 6) return { focus: '핵심입장', useDetail: false, attackDepth: 1, guide: '핵심 입장과 기본 데이터로 탐색하라. 세부 수치보다 큰 그림을 그려라.' };
+  if (historyLength < 16) return { focus: '세부논거', useDetail: true, attackDepth: 2, guide: '세부 논거와 구체적 수치로 정면 대결하라. 상대 논거를 데이터로 반박하라.' };
+  return { focus: '결정타', useDetail: true, attackDepth: 3, guide: '가장 강력한 결정타를 날려라. 감정+논리를 결합해 최종 설득하라.' };
 }
 
 // ── 테마 추출 함수: 과거 발언에서 핵심 키워드/개념 추출 ─────────────────────────
@@ -2528,6 +2616,29 @@ export default async function handler(req, res) {
     }
     systemPrompt += kbText;
   }
+
+  // ── 개선 A: 전체 히스토리에서 이미 사용된 논거/수치 추출 ──────────────────
+  const usedEvidence = extractUsedEvidence(safeRecentHistory);
+  if (usedEvidence.size > 0) {
+    const evidenceList = Array.from(usedEvidence).slice(0, 15).join(', ');
+    systemPrompt += `\n\n⚠️ 이미 토론에서 사용된 논거/수치 (양측 포함, 절대 반복 금지):\n${evidenceList}\n새로운 각도와 데이터만 사용하라.`;
+  }
+
+  // ── 개선 B: 상대방 발언에 맞는 반박 논거 매칭 ─────────────────────────────
+  if (opponentLastMessage && kb.세부논거) {
+    const counterArgs = getCounterArguments(opponentLastMessage, kb);
+    if (counterArgs.length > 0) {
+      systemPrompt += `\n\n🎯 이번에 반박해야 할 핵심 주장에 대한 맞춤 논거:\n` + counterArgs.map((a, i) => `${i + 1}. ${a}`).join('\n');
+    }
+  }
+
+  // ── 개선 D: 공격/방어 균형 지시 ────────────────────────────────────────────
+  const balanceDirective = getAttackDefenseBalance(safeRecentHistory.length);
+  systemPrompt += `\n\n${balanceDirective}`;
+
+  // ── 개선 E: 토론 단계별 깊이 조절 ─────────────────────────────────────────
+  const depth = getDepthByAct(safeRecentHistory.length);
+  systemPrompt += `\n\n📊 토론 단계: ${depth.focus} (깊이 ${depth.attackDepth}/3)\n${depth.guide}`;
 
   const compactHistory = safeRecentHistory.slice(-8).map((m) => ({
     ...m,
