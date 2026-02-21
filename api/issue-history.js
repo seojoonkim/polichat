@@ -16,15 +16,19 @@ export async function saveIssueForDate(date, issueTitle, force = false) {
   const supabase = getSupabase();
   if (!supabase || !issueTitle) return;
   try {
-    const { data: existing } = await supabase
+    // limit(1)+order로 중복 행 안전 처리
+    const { data } = await supabase
       .from('debate_cache')
       .select('id')
       .eq('topic', '__issue_history__')
       .eq('style', date)
-      .maybeSingle();
+      .order('created_at', { ascending: false })
+      .limit(1);
+    const existing = data?.[0];
+
     if (existing) {
       if (!force) return; // 덮어쓰지 않음
-      // force=true: 기존 항목 업데이트
+      // force=true: 최신 행 업데이트
       await supabase.from('debate_cache')
         .update({ messages: [{ role: 'issue', content: issueTitle }] })
         .eq('id', existing.id);
@@ -54,12 +58,22 @@ export async function getRecentIssues(days) {
       .eq('topic', '__issue_history__')
       .eq('debate_type', 'history')
       .gte('created_at', cutoff.toISOString())
-      .order('created_at', { ascending: false });
-    return (data || []).map((row) => {
+      .order('created_at', { ascending: false }); // 최신 행 우선
+
+    // 날짜별 중복 제거 (가장 최신 행만 유지)
+    const seenDates = new Set();
+    const deduped = (data || []).filter(row => {
+      if (seenDates.has(row.style)) return false;
+      seenDates.add(row.style);
+      return true;
+    });
+
+    return deduped.map((row) => {
       let title = row.messages?.[0]?.content || '';
-      // 기존 저장 데이터에 언론사명 포함된 경우 제거
+      // 언론사명·접두 태그 제거 (저장 시 이미 처리됐더라도 안전망)
       title = title
-        .replace(/\s*[-–—]\s*(조선일보|동아일보|중앙일보|한겨레|경향신문|뉴스1|연합뉴스|YTN|MBC|KBS|SBS|JTBC|TV조선|채널A|서울신문|매일경제|한국경제|아시아경제|세계일보|국민일보|문화일보|데일리안|오마이뉴스|v\.daum\.net|news\.naver\.com)[^\n]*/gi, '')
+        .replace(/\s*[-–—]\s*(조선일보|동아일보|중앙일보|한겨레|경향신문|뉴스1|연합뉴스|YTN|MBC|KBS|SBS|JTBC|TV조선|채널A|서울신문|매일경제|한국경제|아시아경제|세계일보|국민일보|문화일보|데일리안|오마이뉴스|월간조선|v\.daum\.net|news\.naver\.com)[^\n]*/gi, '')
+        .replace(/^\[[^\]]*\]\s*/, '')
         .replace(/\s*"[^"]*"$/g, '').trim();
       return { date: row.style, title };
     }).filter((r) => r.title);
