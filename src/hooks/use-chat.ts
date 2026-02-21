@@ -168,17 +168,24 @@ export function useChat(systemPrompt: string, knowledge?: Record<KnowledgeCatego
 
             if (bubbles.length > 1) {
               // 여러 말풍선으로 분리
-              // 1) 마지막 assistant 메시지를 첫 번째 버블로 교체
+              // 1) 첫 번째 버블로 즉시 교체 (isStreaming: false → 바로 표시)
               const firstBubble = bubbles[0];
               useChatStore.setState(state => ({
                 messages: state.messages.map(m =>
                   m.id === lastMsg.id ? { ...m, content: firstBubble } : m
                 ) as Message[],
-                isStreaming: true, // 계속 스트리밍 상태로
+                isStreaming: false, // 즉시 표시
               }));
 
-              // 2) 나머지 버블을 순차적으로 추가 (타이핑 딜레이 포함)
+              // 2) 나머지 버블을 순차적으로 추가
+              //    각 버블 추가 전 200ms 먼저 타이핑 인디케이터를 켜서 순차감 부여
               bubbles.slice(1).forEach((bubble, index) => {
+                const baseDelay = (index + 1) * 1500;
+                // 버블 추가 200ms 전에 타이핑 인디케이터 ON
+                setTimeout(() => {
+                  useChatStore.setState({ isStreaming: true });
+                }, baseDelay - 200);
+
                 setTimeout(() => {
                   const isLast = index === bubbles.length - 2;
                   const newMsg = {
@@ -226,7 +233,7 @@ export function useChat(systemPrompt: string, knowledge?: Record<KnowledgeCatego
                       setTimeout(() => { sendMessage(pendingText); }, 100);
                     }
                   }
-                }, (index + 1) * 1500); // 각 말풍선 1500ms 간격 (자연스러운 타이밍)
+                }, baseDelay); // 각 말풍선 1500ms 간격 (자연스러운 타이밍)
               });
             } else {
               // 단일 말풍선: ** 제거만 적용
