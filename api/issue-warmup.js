@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { saveIssueForDate, toKSTDate } from './issue-history.js';
+import { saveIssueForDate, toKSTDate, getRecentIssues } from './issue-history.js';
 
 const DEBATE_TYPES = ['seoul', 'national', 'leejeon', 'kimjin', 'hanhong'];
 
@@ -36,7 +36,7 @@ async function isAlreadyCached(supabase, debateType, issue) {
   } catch { return false; }
 }
 
-async function saveToSupabase(supabase, debateType, issue, dynamicKB) {
+async function saveKBToSupabase(supabase, debateType, issue, dynamicKB) {
   if (!supabase) return;
   try {
     const styleKey = `${debateType}||${issue.slice(0, 80)}`;
@@ -54,17 +54,14 @@ async function saveToSupabase(supabase, debateType, issue, dynamicKB) {
 
 function stripMediaName(title) {
   return title
-    .replace(/\s*[-–—]\s*(조선일보|동아일보|중앙일보|한겨레|경향신문|뉴스1|연합뉴스|YTN|MBC|KBS|SBS|JTBC|TV조선|채널A|매일경제|한국경제|아시아경제|세계일보|국민일보|문화일보|데일리안|오마이뉴스|v\.daum\.net)[^\n]*/gi, '')
-    .replace(/\s*"[^"]*"$/g, '').trim();
+    .replace(/\s*[-–—]\s*(조선일보|동아일보|중앙일보|한겨레|경향신문|뉴스1|연합뉴스|YTN|MBC|KBS|SBS|JTBC|TV조선|채널A|매일경제|한국경제|아시아경제|세계일보|국민일보|문화일보|데일리안|오마이뉴스|월간조선|v\.daum\.net|news\.naver\.com)[^\n]*/gi, '')
+    .replace(/\s*"[^"]*"$/g, '')
+    .replace(/^\[[^\]]*\]\s*/, '') // [글로벌이슈] 같은 접두 태그 제거
+    .trim();
 }
 
-async function fetchTopIssue(todayKST) {
-  // 오늘 이슈 이미 있으면 재사용 (하루 1개 고정)
-  const cached = await getRecentIssues(1);
-  const todayCached = cached.find(r => r.date === todayKST);
-  if (todayCached?.title) return todayCached.title;
-
-  // 여러 피드 동시 수집 (어제 자정 이후)
+// ── RSS 최신 기사 수집 ──────────────────────────────────────────────────────
+async function collectFreshItems() {
   const FEEDS = [
     'https://news.google.com/rss/search?q=%ED%95%9C%EA%B5%AD+%EC%A0%95%EC%B9%98&hl=ko&gl=KR&ceid=KR:ko',
     'https://www.ytn.co.kr/_ln/0101_rss.xml',
@@ -89,36 +86,48 @@ async function fetchTopIssue(todayKST) {
       && new Date(i.publishedAt).getTime() >= cutoff);
   }));
 
-  const items = results.filter(r => r.status === 'fulfilled').flatMap(r => r.value).slice(0, 40);
-  if (items.length === 0) return null;
+  return results.filter(r => r.status === 'fulfilled').flatMap(r => r.value).slice(0, 40);
+}
 
-  // LLM으로 화제 이슈 선택 + 논점화
-  const key = process.env.OPENROUTER_API_KEY;
-  if (!key) return items[0]?.title || null;
+// ── RSS items → Claude로 최적 논점 선택 ────────────────────────────────────
+async function selectFromItems(items) {
+  if (items.length === 0) return null;
+  const key = process.env.ANTHROPIC_API_KEY;
+  if (!key) return stripMediaName(items[0]?.title || '');
   const headlines = items.map((it, i) => `${i + 1}. ${it.title}`).join('\n');
   try {
-    const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'openai/gpt-4o',
-        messages: [{ role: 'user', content: `아래 한국 정치 뉴스 헤드라인 중 오늘 가장 화제가 되고 여야 대립 구도가 명확한 이슈 1개를 선택해 토론 논제로 재작성하세요.\n조건: 언론사명 제거, 대립구도 명확, 20~35자\nJSON만 출력: {"topic": "..."}\n\n${headlines}` }],
-        max_tokens: 100, temperature: 0.3,
-        response_format: { type: 'json_object' },
+        model: 'claude-3-5-haiku-20241022',
+        max_tokens: 150,
+        messages: [{ role: 'user', content: `아래 한국 정치 뉴스 헤드라인 중 오늘 가장 화제가 되고 여야 대립 구도가 명확한 이슈 1개를 선택해 토론 논제로 재작성하세요.\n조건: 언론사명 제거, 접두 태그([...]) 제거, 대립구도 명확, 20~35자\nJSON만 출력: {"topic": "..."}\n\n${headlines}` }],
       }),
       signal: AbortSignal.timeout(20000),
     });
     const d = await r.json();
-    const content = d.choices?.[0]?.message?.content?.trim();
-    const parsed = content ? JSON.parse(content) : null;
-    return parsed?.topic?.length >= 5 ? parsed.topic : items[0].title;
-  } catch { return items[0].title; }
+    const content = d.content?.[0]?.text?.trim();
+    const match = content?.match(/"topic"\s*:\s*"([^"]+)"/);
+    const topic = match?.[1];
+    return topic?.length >= 5 ? topic : stripMediaName(items[0].title);
+  } catch { return stripMediaName(items[0].title); }
 }
 
+// ── Supabase 캐시 있으면 반환, 없으면 RSS+Claude ──────────────────────────
+async function fetchTopIssue(todayKST) {
+  const cached = await getRecentIssues(1);
+  const todayCached = cached.find(r => r.date === todayKST);
+  if (todayCached?.title) return todayCached.title;
+  const items = await collectFreshItems();
+  return selectFromItems(items);
+}
+
+// ── 매치업별 KB 생성 (Claude) ───────────────────────────────────────────────
 async function generateKB(issue, debateType) {
   const speakers = SPEAKER_MAP[debateType] || { A: 'A', B: 'B' };
-  const OPENROUTER_KEY = process.env.OPENROUTER_API_KEY;
-  if (!OPENROUTER_KEY) return null;
+  const key = process.env.ANTHROPIC_API_KEY;
+  if (!key) return null;
 
   const prompt = `당신은 한국 정치 토론 전문가입니다. 다음 이슈에 대해 두 정치인의 토론 논거를 JSON으로 생성해주세요.
 
@@ -138,23 +147,20 @@ async function generateKB(issue, debateType) {
 }`;
 
   try {
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${OPENROUTER_KEY}`,
-        'Content-Type': 'application/json',
-      },
+      headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'openai/gpt-4o',
-        messages: [{ role: 'user', content: prompt }],
+        model: 'claude-3-5-haiku-20241022',
         max_tokens: 1500,
-        temperature: 0.7,
-        response_format: { type: 'json_object' },
+        messages: [{ role: 'user', content: prompt }],
       }),
       signal: AbortSignal.timeout(30000),
     });
     const data = await res.json();
-    return JSON.parse(data.choices?.[0]?.message?.content || 'null');
+    const text = data.content?.[0]?.text || '';
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    return jsonMatch ? JSON.parse(jsonMatch[0]) : null;
   } catch (e) {
     console.error('[warmup] LLM error:', e.message);
     return null;
@@ -173,26 +179,34 @@ export default async function handler(req, res) {
   }
 
   const todayKST = toKSTDate();
+  const force = req.query.force === '1';
 
-  // 1. 오늘 이슈 1개 가져오기 (캐시 우선)
-  const issueTitle = await fetchTopIssue(todayKST);
+  // 1. 오늘 이슈 확보 (force면 RSS+Claude 새로 수집, 아니면 캐시 우선)
+  let issueTitle;
+  if (force) {
+    const items = await collectFreshItems();
+    issueTitle = items.length > 0 ? await selectFromItems(items) : null;
+  } else {
+    issueTitle = await fetchTopIssue(todayKST);
+  }
+
   if (!issueTitle) {
     return res.status(200).json({ warmed: 0, message: 'no issues found' });
   }
 
-  await saveIssueForDate(todayKST, issueTitle);
+  // 2. Supabase issue_history 저장 (force면 덮어쓰기)
+  await saveIssueForDate(todayKST, issueTitle, force);
 
   const supabase = getSupabase();
 
-  // 2. 5개 매치업 병렬 생성
+  // 3. 5개 매치업 KB 병렬 생성
   const tasks = DEBATE_TYPES.map(async (type) => {
-    // 이미 캐시됐으면 스킵
-    if (await isAlreadyCached(supabase, type, issueTitle)) {
+    if (!force && await isAlreadyCached(supabase, type, issueTitle)) {
       return { type, status: 'skipped (cached)' };
     }
     const kb = await generateKB(issueTitle, type);
     if (!kb) return { type, status: 'error: LLM failed' };
-    await saveToSupabase(supabase, type, issueTitle, kb);
+    await saveKBToSupabase(supabase, type, issueTitle, kb);
     return { type, status: 'ok' };
   });
 

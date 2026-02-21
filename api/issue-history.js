@@ -12,7 +12,7 @@ export function toKSTDate(d) {
   return kst.toISOString().slice(0, 10);
 }
 
-export async function saveIssueForDate(date, issueTitle) {
+export async function saveIssueForDate(date, issueTitle, force = false) {
   const supabase = getSupabase();
   if (!supabase || !issueTitle) return;
   try {
@@ -22,7 +22,14 @@ export async function saveIssueForDate(date, issueTitle) {
       .eq('topic', '__issue_history__')
       .eq('style', date)
       .maybeSingle();
-    if (existing) return;
+    if (existing) {
+      if (!force) return; // 덮어쓰지 않음
+      // force=true: 기존 항목 업데이트
+      await supabase.from('debate_cache')
+        .update({ messages: [{ role: 'issue', content: issueTitle }] })
+        .eq('id', existing.id);
+      return;
+    }
     await supabase.from('debate_cache').insert({
       topic: '__issue_history__',
       style: date,

@@ -55,9 +55,9 @@ async function collectAllItems() {
   return all.slice(0, 40); // 최대 40개
 }
 
-// ── LLM: 화제성 기준 1개 선택 + 논점 제목 생성 ──────────────────────────────
+// ── LLM: 화제성 기준 1개 선택 + 논점 제목 생성 (Anthropic Claude) ───────────
 async function selectTopDebateTopic(items) {
-  const key = process.env.OPENROUTER_API_KEY;
+  const key = process.env.ANTHROPIC_API_KEY;
   if (!key || items.length === 0) return items[0]?.title || null;
 
   const headlines = items
@@ -65,11 +65,16 @@ async function selectTopDebateTopic(items) {
     .join('\n');
 
   try {
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      headers: {
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({
-        model: 'openai/gpt-4o',
+        model: 'claude-3-5-haiku-20241022',
+        max_tokens: 150,
         messages: [{
           role: 'user',
           content: `아래는 오늘 한국 주요 정치 뉴스 헤드라인 목록입니다.
@@ -89,17 +94,15 @@ JSON만 출력: {"topic": "논점 제목"}
 헤드라인 목록:
 ${headlines}`,
         }],
-        max_tokens: 120,
-        temperature: 0.3,
-        response_format: { type: 'json_object' },
       }),
       signal: AbortSignal.timeout(20000),
     });
     const data = await res.json();
-    const content = data.choices?.[0]?.message?.content?.trim();
+    const content = data.content?.[0]?.text?.trim();
     if (!content) return items[0]?.title || null;
-    const parsed = JSON.parse(content);
-    return parsed.topic && parsed.topic.length >= 5 ? parsed.topic : items[0]?.title || null;
+    const match = content.match(/"topic"\s*:\s*"([^"]+)"/);
+    const topic = match?.[1];
+    return topic && topic.length >= 5 ? topic : items[0]?.title || null;
   } catch {
     return items[0]?.title || null;
   }
@@ -138,8 +141,8 @@ export default async function handler(req, res) {
       return res.json({ issues: [{ title: '오늘의 이슈 분석 중', source: 'fallback', publishedAt: new Date().toISOString() }] });
     }
 
-    // 4) Supabase에 오늘 날짜로 고정 저장
-    await saveIssueForDate(todayKST, debateTopic);
+    // 4) Supabase에 오늘 날짜로 저장 (force=1이면 기존 항목 덮어쓰기)
+    await saveIssueForDate(todayKST, debateTopic, force && secret === expectedSecret);
 
     return res.json({ issues: [{ title: debateTopic, source: 'rss', publishedAt: new Date().toISOString() }] });
   } catch (e) {
