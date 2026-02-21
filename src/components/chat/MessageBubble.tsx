@@ -84,26 +84,8 @@ function RotatingPhrase({ politicianId, color }: { politicianId: string; color: 
     return () => clearInterval(interval);
   }, [phrases]);
 
-  if (!phrases || phrases.length === 0) {
-    return (
-      <span className="flex items-center gap-2">
-        <TypingDots color={color} />
-        <span className="text-xs text-gray-400">답변을 준비하고 있습니다...</span>
-      </span>
-    );
-  }
-
-  return (
-    <span className="flex items-center gap-2">
-      <TypingDots color={color} />
-      <span
-        className="text-xs transition-opacity duration-300"
-        style={{ color: `${color}99`, opacity: fade ? 1 : 0 }}
-      >
-        &ldquo;{phrases[index]}&rdquo;
-      </span>
-    </span>
-  );
+  // 타이핑 인디케이터만 표시 (문구 제거)
+  return <TypingDots color={color} />;
 }
 
 // 타이핑 애니메이션이 있는 버블
