@@ -253,6 +253,12 @@ export default function PoliticianSelector({ politicians }: Props) {
   const [heroVisible, setHeroVisible] = useState(true);
   const [issueError, setIssueError] = useState(false);
   const [issueHistory, setIssueHistory] = useState<IssueHistoryItem[]>([]);
+  const [expandedDates, setExpandedDates] = useState<Set<string>>(() => new Set([todayKST]));
+  const toggleDate = (date: string) => setExpandedDates(prev => {
+    const next = new Set(prev);
+    if (next.has(date)) next.delete(date); else next.add(date);
+    return next;
+  });
   const todayKST = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
   const issueTypes = [
     { value: 'seoul',    nameA: '오세훈', nameB: '정원오',  imgA: '/politicians/ohsehoon/profile.jpg',    imgB: '/politicians/jungwono/profile.jpg' },
@@ -594,7 +600,7 @@ export default function PoliticianSelector({ politicians }: Props) {
         )}
 
         {activeTab === 'issue' && (
-          <div className="px-4 py-4 space-y-6">
+          <div className="px-4 py-4 space-y-4">
             {(() => {
               const displayList = issueHistory.length > 0
                 ? issueHistory
@@ -609,55 +615,62 @@ export default function PoliticianSelector({ politicians }: Props) {
               }
 
               return displayList.map((dayIssue) => {
-
+                const isExpanded = expandedDates.has(dayIssue.date);
                 const dateParts = dayIssue.date.split('-');
                 const calYear = dateParts[0] || '';
                 const calMonth = parseInt(dateParts[1] || '0', 10);
                 const calDay = parseInt(dateParts[2] || '0', 10);
                 const monthNames = ['','JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
                 const calMonthName = monthNames[calMonth] || '';
+
                 return (
-                  <div key={dayIssue.date} className="space-y-2">
-                    {/* Issue headline card with calendar badge */}
-                    <div className="rounded-2xl overflow-hidden" style={{background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%)'}}>
-                      <div className="px-4 py-3.5 flex items-start gap-3">
-                        {/* Calendar badge — 연도·월 / 일 2단 */}
-                        <div className="shrink-0 flex flex-col items-center rounded-xl overflow-hidden shadow-md" style={{minWidth: '50px', border: '1px solid rgba(167,139,250,0.4)'}}>
-                          <div className="w-full text-center px-1 py-[4px] text-[9px] font-black tracking-wide text-white" style={{background: '#4c1d95'}}>
-                            {calYear}·{calMonthName}
+                  <div key={dayIssue.date}>
+                    {/* 헤더 — 클릭 시 토론자 펼침/접힘 */}
+                    <div
+                      className="rounded-2xl overflow-hidden cursor-pointer active:opacity-90 transition-opacity"
+                      style={{background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%)'}}
+                      onClick={() => toggleDate(dayIssue.date)}
+                    >
+                      <div className="px-4 py-3 flex items-center gap-3">
+                        {/* 달력 뱃지 — 정사각형 */}
+                        <div className="shrink-0 flex flex-col rounded-xl overflow-hidden shadow-md" style={{width: '52px', height: '52px', border: '1px solid rgba(167,139,250,0.4)'}}>
+                          <div className="flex-1 flex items-center justify-center text-[9px] font-black tracking-wide text-white" style={{background: '#4c1d95'}}>
+                            {calYear} {calMonthName}
                           </div>
-                          <div className="w-full text-center bg-white py-[3px]">
-                            <span className="text-[22px] font-black text-gray-900 leading-none">{calDay}</span>
+                          <div className="flex-1 flex items-center justify-center bg-white">
+                            <span className="text-[20px] font-black text-gray-900 leading-none">{calDay}</span>
                           </div>
                         </div>
-                        {/* Title */}
-                        <p className="text-[16px] font-bold text-white leading-snug flex-1 pt-0.5">{dayIssue.title}</p>
+                        {/* 제목 — 크게 */}
+                        <p className="text-[18px] font-bold text-white leading-snug flex-1">{dayIssue.title}</p>
+                        {/* 접기/펼치기 화살표 */}
+                        <span className="shrink-0 text-white/50 text-xs transition-transform duration-200" style={{transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)'}}>▼</span>
                       </div>
                     </div>
 
-                    {/* Matchup buttons */}
-                    <div className="space-y-1.5">
-                      {issueTypes.map((item) => (
-                        <button
-                          key={item.value}
-                          onClick={() => navigate(`/debate?type=${item.value}&issue=${encodeURIComponent(dayIssue.title)}&autostart=1`)}
-                          className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl border border-gray-200 bg-white hover:border-violet-300 hover:bg-violet-50 active:scale-[0.98] transition-all duration-150"
-                        >
-                          {/* A 그룹 */}
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            <img src={item.imgA} alt={item.nameA} className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm" onError={(e) => { e.currentTarget.style.display='none'; }} />
-                            <span className="text-[15px] font-bold text-gray-800">{item.nameA}</span>
-                          </div>
-                          <span className="text-[11px] font-bold text-gray-400 shrink-0 px-1">VS</span>
-                          {/* B 그룹 */}
-                          <div className="flex items-center gap-1.5 flex-1">
-                            <img src={item.imgB} alt={item.nameB} className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm" onError={(e) => { e.currentTarget.style.display='none'; }} />
-                            <span className="text-[15px] font-bold text-gray-800">{item.nameB}</span>
-                          </div>
-                          <span className="shrink-0 text-violet-500 text-xs font-bold">시작 →</span>
-                        </button>
-                      ))}
-                    </div>
+                    {/* 아코디언 — 토론자 목록 */}
+                    {isExpanded && (
+                      <div className="mt-2 space-y-1.5">
+                        {issueTypes.map((item) => (
+                          <button
+                            key={item.value}
+                            onClick={() => navigate(`/debate?type=${item.value}&issue=${encodeURIComponent(dayIssue.title)}&autostart=1`)}
+                            className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl border border-gray-200 bg-white hover:border-violet-300 hover:bg-violet-50 active:scale-[0.98] transition-all duration-150"
+                          >
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <img src={item.imgA} alt={item.nameA} className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm" onError={(e) => { e.currentTarget.style.display='none'; }} />
+                              <span className="text-[15px] font-bold text-gray-800">{item.nameA}</span>
+                            </div>
+                            <span className="text-[11px] font-bold text-gray-400 shrink-0 px-1">VS</span>
+                            <div className="flex items-center gap-1.5 flex-1">
+                              <img src={item.imgB} alt={item.nameB} className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm" onError={(e) => { e.currentTarget.style.display='none'; }} />
+                              <span className="text-[15px] font-bold text-gray-800">{item.nameB}</span>
+                            </div>
+                            <span className="shrink-0 text-violet-500 text-xs font-bold">시작 →</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 );
               });
