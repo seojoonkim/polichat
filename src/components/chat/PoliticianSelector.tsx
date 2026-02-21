@@ -31,7 +31,7 @@ const TABS: TabItem[] = [
     id: 'battle',
     label: 'AI 5분 토론',
     icon: (active: boolean) => (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
         stroke={active ? '#7c3aed' : '#71717a'} strokeWidth="2"
         strokeLinecap="round" strokeLinejoin="round">
         <path d="M14.5 17.5L3 6V3h3l11.5 11.5"/>
@@ -45,7 +45,7 @@ const TABS: TabItem[] = [
     id: 'chat',
     label: 'AI 1:1 대화',
     icon: (active: boolean) => (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
         stroke={active ? '#7c3aed' : '#71717a'} strokeWidth="2"
         strokeLinecap="round" strokeLinejoin="round">
         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
@@ -56,7 +56,7 @@ const TABS: TabItem[] = [
     id: 'issue',
     label: '이슈 토론',
     icon: (active: boolean) => (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
         stroke={active ? '#7c3aed' : '#71717a'} strokeWidth="2"
         strokeLinecap="round" strokeLinejoin="round">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -432,7 +432,7 @@ export default function PoliticianSelector({ politicians }: Props) {
                   className={`flex-1 flex flex-col items-center gap-1.5 pt-3.5 pb-3 relative transition-colors duration-200`}
                 >
                   {tab.icon(isActive)}
-                  <span className={`text-[12px] font-bold tracking-tight ${isActive ? 'text-violet-700' : 'text-gray-600'}`}>
+                  <span className={`text-[14px] font-bold tracking-tight ${isActive ? 'text-violet-700' : 'text-gray-600'}`}>
                     {tab.label}
                   </span>
                   {isActive && (
