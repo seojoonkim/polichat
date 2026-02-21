@@ -609,7 +609,7 @@ export default function PoliticianSelector({ politicians }: Props) {
               }
 
               return displayList.map((dayIssue) => {
-                const isToday = dayIssue.date === todayKST;
+
                 const dateParts = dayIssue.date.split('-');
                 const calYear = dateParts[0] || '';
                 const calMonth = parseInt(dateParts[1] || '0', 10);
