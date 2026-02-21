@@ -55,7 +55,7 @@ function isTriggeredPolitician(text, idolId, identity) {
   const name = identity?.name_ko || '';
   const normalizedName = name.replace(/\s+/g, '');
 
-  const detectedKeywords = new Set<string>();
+  const detectedKeywords = new Set();
 
   for (const [key, keywords] of Object.entries(TRIGGER_KEYWORDS)) {
     if (key === 'generic') continue;
