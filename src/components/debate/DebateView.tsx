@@ -1016,6 +1016,11 @@ function detectFacts(text: string): { label: string; detail: string } | null {
     setJudgment(null);
     setRound(0);
     setTimeLeft(300);
+    // autoStart(이슈 탭 진입)면 종료 시 홈으로 이동 (무한 로딩 방지)
+    if (autoStart) {
+      navigate('/');
+      return;
+    }
     setPhase('setup');
   };
 

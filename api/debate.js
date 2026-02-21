@@ -2985,6 +2985,7 @@ export default async function handler(req, res) {
         const argOffset = (safeUsedArgCount || 0) % fullPool.length;
         const rotated = [...fullPool.slice(argOffset), ...fullPool.slice(0, argOffset)];
         const argPool = rotated.slice(0, 8);
+        const usedEvidence = extractUsedEvidence(safeRecentHistory);
         const usedEvidenceText = Array.from(usedEvidence).join(' ');
         if (isArgumentExhausted(argPool.join(' '), usedEvidenceText)) {
           const crossArgs = getCrossArguments(kb, safeSpeaker, safeTopic, usedEvidenceText);
@@ -3004,9 +3005,9 @@ export default async function handler(req, res) {
   }
 
   // ── 개선 A: 전체 히스토리에서 이미 사용된 논거/수치 추출 ──────────────────
-  const usedEvidence = extractUsedEvidence(safeRecentHistory);
-  if (usedEvidence.size > 0) {
-    const evidenceList = Array.from(usedEvidence).slice(0, 15).join(', ');
+  const usedEvidenceAll = extractUsedEvidence(safeRecentHistory);
+  if (usedEvidenceAll.size > 0) {
+    const evidenceList = Array.from(usedEvidenceAll).slice(0, 15).join(', ');
     systemPrompt += `\n\n⚠️ 이미 토론에서 사용된 논거/수치 (양측 포함, 절대 반복 금지):\n${evidenceList}\n새로운 각도와 데이터만 사용하라.`;
   }
 
