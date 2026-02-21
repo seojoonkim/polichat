@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import PoliticianSelector from '@/components/chat/PoliticianSelector';
 import ChatLayout from '@/components/chat/ChatLayout';
+import PolichatLogoSpinner from '@/components/common/PolichatLogoSpinner';
 
 type TransitionPhase = 'idle' | 'exit' | 'enter';
 
@@ -92,10 +93,7 @@ export default function ChatPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-        <div className="flex flex-col items-center gap-3">
-          <div className="loading-spinner" />
-          <div className="text-gray-400 text-sm animate-pulse">Loading...</div>
-        </div>
+        <PolichatLogoSpinner size={80} message="불러오는 중..." />
       </div>
     );
   }
