@@ -755,7 +755,7 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
           let actionInserted = false;
 
           // 한국어 연결어 — "다" 뒤에 이 글자들이 오면 문장이 아직 끝나지 않은 것 (예: 하락했다는 점은)
-          const KR_CONNECTOR = /^[는은이가을를와과도고로에서으로의하여해서므로지만]/; // "고" 추가: 있다고/됐다고 연결어 처리
+          const KR_CONNECTOR = /^[는은이가을를와과도고로에서으로의하여해서므로지만면]/; // "면" 추가: 나아간다면/하게되면 등
           let pendingFlush = false;  // "다"로 끝났지만 다음 글자 보고 결정
 
           const appendTextChunk = async (segment: string) => {
@@ -945,6 +945,7 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
               // 사회자 타이핑 완료까지 대기: 시작딜레이(120) + 글자수×52ms + 여유(1000)
               const modWait = 120 + modMsg.text.length * 52 + 1000;
               await sleep(modWait);
+              await sleep(1800); // 사회자 발언 후 잠시 침묵
             }
           }
         } catch (_e) {
@@ -978,6 +979,7 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
         // 사회자 타이핑 완료까지 대기
         const modWait = 120 + modText.length * 52 + 600;
         await sleep(modWait);
+        await sleep(1800); // 사회자 발언 후 잠시 침묵
       }
     }
 
@@ -1615,17 +1617,17 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
                 <div
                   className={`mt-1 inline-flex items-center gap-1.5 rounded-md bg-slate-100/80 px-2.5 py-1 ${isSpeakerA ? 'mr-11' : 'ml-11'}`}
                 >
-                  <span className="text-[9px] opacity-60">📚</span>
-                  <span className="text-[10px] font-semibold text-slate-600">
+                  <span className="text-[10px] opacity-60">📚</span>
+                  <span className="text-[11px] font-semibold text-slate-600">
                     {factLabel.label}
                   </span>
                   {factLabel.subtitle && (
-                    <span className="text-[10px] text-slate-400">
+                    <span className="text-[11px] text-slate-400">
                       ({factLabel.subtitle})
                     </span>
                   )}
                   {factLabel.detail && (
-                    <span className="text-[10px] font-bold text-slate-700 ml-0.5">
+                    <span className="text-[11px] font-bold text-slate-700 ml-0.5">
                       {factLabel.detail}
                     </span>
                   )}
@@ -2139,7 +2141,7 @@ function ModeratorMessage({ text }: { text: string }) {
       border: '1px solid rgba(200,210,240,0.15)',
       borderRadius: 14,
       padding: '12px 16px',
-      margin: '8px 4px',
+      margin: '24px 4px',
       display: 'flex',
       alignItems: 'center',
       gap: 14,
@@ -2157,7 +2159,7 @@ function ModeratorMessage({ text }: { text: string }) {
           boxShadow: '0 0 12px rgba(150,180,255,0.25)',
         }}
       />
-      <span style={{ fontSize: 17, color: '#cbd5e1', fontStyle: 'italic', lineHeight: 1.6 }}>
+      <span style={{ fontSize: 17, color: '#cbd5e1', fontStyle: 'normal', lineHeight: 1.6 }}>
         {displayed}
         {!done && (
           <span

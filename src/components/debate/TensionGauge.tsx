@@ -78,7 +78,7 @@ export default function TensionGauge({
             display: 'inline-flex',
             alignItems: 'center',
             gap: 5,
-            fontSize: 11,
+            fontSize: 13,
             fontWeight: 700,
             color: current.color,
             background: current.bg,
@@ -96,7 +96,7 @@ export default function TensionGauge({
       </div>
 
       {/* 통합 3단계 프로그레스바 */}
-      <div style={{ display: 'flex', height: 6, borderRadius: 6, overflow: 'hidden', gap: 2, position: 'relative' }}>
+      <div style={{ display: 'flex', height: 10, borderRadius: 8, overflow: 'hidden', gap: 2, position: 'relative' }}>
         {PHASES.map((ph, idx) => {
           const fill = segFill(idx);
           const isActive = idx === timePhase;
@@ -133,7 +133,7 @@ export default function TensionGauge({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: 8,
+                    fontSize: 10,
                     fontWeight: 700,
                     color: 'rgba(255,255,255,0.9)',
                     pointerEvents: 'none',
