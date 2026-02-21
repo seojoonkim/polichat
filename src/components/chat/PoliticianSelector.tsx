@@ -611,6 +611,7 @@ export default function PoliticianSelector({ politicians }: Props) {
               return displayList.map((dayIssue) => {
                 const isToday = dayIssue.date === todayKST;
                 const dateParts = dayIssue.date.split('-');
+                const calYear = dateParts[0] || '';
                 const calMonth = parseInt(dateParts[1] || '0', 10);
                 const calDay = parseInt(dateParts[2] || '0', 10);
                 const monthNames = ['','JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
@@ -620,17 +621,20 @@ export default function PoliticianSelector({ politicians }: Props) {
                     {/* Issue headline card with calendar badge */}
                     <div className="rounded-2xl overflow-hidden" style={{background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%)'}}>
                       <div className="px-4 py-3.5 flex items-start gap-3">
-                        {/* Calendar badge */}
-                        <div className="shrink-0 flex flex-col items-center rounded-xl overflow-hidden shadow-md" style={{minWidth: '42px', border: '1px solid rgba(167,139,250,0.4)'}}>
-                          <div className="w-full text-center py-0.5 text-[9px] font-black tracking-wider text-white" style={{background: isToday ? '#7c3aed' : '#4c1d95'}}>
-                            {isToday ? '오늘' : calMonthName}
+                        {/* Calendar badge — 연도/월/일 3단 */}
+                        <div className="shrink-0 flex flex-col items-center rounded-xl overflow-hidden shadow-md" style={{minWidth: '46px', border: '1px solid rgba(167,139,250,0.4)'}}>
+                          <div className="w-full text-center py-[3px] text-[8px] font-black tracking-wider text-white" style={{background: isToday ? '#7c3aed' : '#4c1d95'}}>
+                            {calYear}
                           </div>
-                          <div className="w-full text-center bg-white py-0.5">
-                            <span className="text-[19px] font-black text-gray-900 leading-none">{calDay}</span>
+                          <div className="w-full text-center bg-violet-100 py-[2px]">
+                            <span className="text-[9px] font-black text-violet-700">{isToday ? '오늘·' : ''}{calMonthName}</span>
+                          </div>
+                          <div className="w-full text-center bg-white pb-[3px] pt-[1px]">
+                            <span className="text-[20px] font-black text-gray-900 leading-none">{calDay}</span>
                           </div>
                         </div>
                         {/* Title */}
-                        <p className="text-sm font-bold text-white leading-snug flex-1 pt-0.5">{dayIssue.title}</p>
+                        <p className="text-[15px] font-bold text-white leading-snug flex-1 pt-0.5">{dayIssue.title}</p>
                       </div>
                     </div>
 
@@ -640,17 +644,15 @@ export default function PoliticianSelector({ politicians }: Props) {
                         <button
                           key={item.value}
                           onClick={() => navigate(`/debate?type=${item.value}&issue=${encodeURIComponent(dayIssue.title)}&autostart=1`)}
-                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border border-gray-200 bg-white hover:border-violet-300 hover:bg-violet-50 active:scale-[0.98] transition-all duration-150"
+                          className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl border border-gray-200 bg-white hover:border-violet-300 hover:bg-violet-50 active:scale-[0.98] transition-all duration-150"
                         >
-                          {/* 프로필 이미지 쌍 */}
-                          <div className="flex items-center shrink-0">
-                            <img src={item.imgA} alt={item.nameA} className="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm" onError={(e) => { e.currentTarget.style.display='none'; }} />
-                            <img src={item.imgB} alt={item.nameB} className="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm -ml-2" onError={(e) => { e.currentTarget.style.display='none'; }} />
-                          </div>
-                          {/* 이름 */}
-                          <span className="flex-1 text-sm font-semibold text-gray-700 text-left">
-                            {item.nameA} <span className="text-gray-400 font-normal text-xs mx-0.5">VS</span> {item.nameB}
-                          </span>
+                          {/* A: 얼굴 + 이름 */}
+                          <img src={item.imgA} alt={item.nameA} className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm shrink-0" onError={(e) => { e.currentTarget.style.display='none'; }} />
+                          <span className="text-[15px] font-semibold text-gray-800 shrink-0">{item.nameA}</span>
+                          <span className="text-gray-400 font-normal text-[11px] shrink-0">VS</span>
+                          {/* B: 얼굴 + 이름 */}
+                          <img src={item.imgB} alt={item.nameB} className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm shrink-0" onError={(e) => { e.currentTarget.style.display='none'; }} />
+                          <span className="text-[15px] font-semibold text-gray-800 flex-1">{item.nameB}</span>
                           <span className="shrink-0 text-violet-500 text-xs font-bold">토론 시작 →</span>
                         </button>
                       ))}
