@@ -180,11 +180,11 @@ export function useChat(systemPrompt: string, knowledge?: Record<KnowledgeCatego
               // 2) 나머지 버블을 순차적으로 추가
               //    각 버블 추가 전 200ms 먼저 타이핑 인디케이터를 켜서 순차감 부여
               bubbles.slice(1).forEach((bubble, index) => {
-                const baseDelay = (index + 1) * 1500;
-                // 버블 추가 200ms 전에 타이핑 인디케이터 ON
+                const baseDelay = (index + 1) * 1800;
+                // 버블 추가 600ms 전에 타이핑 인디케이터 ON (첫 버블 충분히 보인 후)
                 setTimeout(() => {
                   useChatStore.setState({ isStreaming: true });
-                }, baseDelay - 200);
+                }, baseDelay - 600);
 
                 setTimeout(() => {
                   const isLast = index === bubbles.length - 2;

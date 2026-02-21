@@ -10,7 +10,9 @@ export function splitIntoBubbles(text: string): string[] {
 
   if (cleaned.includes('||')) {
     const parts = cleaned.split('||').map((s) => s.trim()).filter((s) => s.length > 0);
-    return parts.length > 0 ? parts : [cleaned];
+    // 중복 버블 제거 (LLM이 동일 내용을 반복 생성하는 버그 방어)
+    const deduped = parts.filter((p, i, arr) => arr.indexOf(p) === i);
+    return deduped.length > 0 ? deduped : [cleaned];
   }
 
   return [cleaned];
