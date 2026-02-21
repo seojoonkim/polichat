@@ -187,9 +187,9 @@ const calcHighlightScore = (text: string): number => {
 const getTypingMs = (text: string): number => {
   const angryKeywords = ['거짓', '말이 됩니까', '황당', '사기', '위선', '기만'];
   const coldKeywords = ['당연히', '웃기는', '물론이죠', '아,', '뭐,'];
-  if (angryKeywords.some((word) => text.includes(word))) return 28;
-  if (coldKeywords.some((word) => text.includes(word))) return 68;
-  return 45;
+  if (angryKeywords.some((word) => text.includes(word))) return 42;
+  if (coldKeywords.some((word) => text.includes(word))) return 95;
+  return 65;
 };
 
 // 상대 발언에서 가장 반박하기 좋은 문장 1개 추출 (B)
@@ -472,15 +472,15 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
       setRound(i);
       setCurrentSpeaker(msg.speaker);
       setCurrentText('');
-      await sleep(600);
+      await sleep(800);
 
-      // 글자 단위 타이핑 (30ms 간격)
+      // 글자 단위 타이핑
       let displayed = '';
       for (const char of msg.text) {
         if (abortRef.current) break;
         displayed += char;
         setCurrentText(displayed);
-        const delay = ['.', '!', '?', ','].includes(char) ? 220 : 110;
+        const delay = ['.', '!', '?', ','].includes(char) ? 300 : 150;
         await sleep(delay);
       }
 
@@ -491,7 +491,7 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
       setCurrentSpeaker(null); // 다음 화자 전환 전 인디케이터 제거
       setMessages((prev) => [...prev, { speaker: msg.speaker, text: msg.text, timestamp: msg.timestamp }]);
       scrollToBottom();
-      await sleep(900);
+      await sleep(1400);
     }
 
     if (!abortRef.current) {
@@ -745,7 +745,7 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
             setCurrentText('');
             currentBubble = '';
             bubbleCount++;
-            await sleep(900);
+            await sleep(1400);
           };
 
           // 30% 확률 행동 묘사 삽입 플래그
@@ -1780,14 +1780,16 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
 
 function renderBubbleText(text: string): React.ReactNode {
   if (!text || text === '\u00A0') return text;
+  // 출처 패턴 제거 — 하단 출처 카드로 표시됨
+  const cleaned = text.replace(/\s*\(출처:[^)]*\)/g, '').trim() || '\u00A0';
   // 스트리밍 중: 아직 닫히지 않은 괄호로 시작하는 경우 (예: "(마이크를 가까이 당기며")
   // `)` 없으면 전체를 이탤릭으로 처리 → 완성 시 번쩍임 방지
-  if (/^\([^)]*$/.test(text)) {
-    return <em className="italic">{text}</em>;
+  if (/^\([^)]*$/.test(cleaned)) {
+    return <em className="italic">{cleaned}</em>;
   }
   // 완성된 (행동 묘사) 패턴을 이탤릭으로 렌더링
-  const parts = text.split(/(\([^)]+\))/g);
-  if (parts.length <= 1) return text;
+  const parts = cleaned.split(/(\([^)]+\))/g);
+  if (parts.length <= 1) return cleaned;
   return parts.map((part, i) => {
     if (/^\([^)]+\)$/.test(part)) {
       return <em key={i} className="italic">{part}</em>;
@@ -1816,6 +1818,7 @@ function MessageBubble({
   const bubbleBg = isA 
     ? `${config.speakerAColor}20` 
     : `${config.speakerBColor}20`;
+  const hasSource = /\(출처:/.test(msg.text || '');
 
   // 주제 전환 카드 — 게임스럽게
   if (msg.isTopicChange) {
@@ -1915,6 +1918,9 @@ function MessageBubble({
                 className="inline-block w-0.5 h-4 ml-0.5 align-middle animate-pulse"
                 style={{ background: color }}
               />
+            )}
+            {!isActive && hasSource && (
+              <span className="inline-block ml-1.5 text-[11px] align-baseline" style={{ opacity: 0.45 }}>📚</span>
             )}
           </p>
         </div>
