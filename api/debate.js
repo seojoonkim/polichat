@@ -2127,13 +2127,18 @@ function extractUsedEvidence(allMessages) {
   for (const msg of allMessages) {
     const content = typeof msg.text === 'string' ? msg.text : (typeof msg.content === 'string' ? msg.content : '');
     if (!content) continue;
-    // 수치 패턴: "X조원", "X%", "X만명" 등
-    const numbers = content.match(/\d+[\.\,]?\d*\s*[조억만%원명票호건석위배점개월]/g) || [];
+    // 수치 패턴: "X%", "X조원", "X만명" 등 (퍼센트 명시 강화)
+    const numbers = content.match(/\d+\.?\d*\s*%/g) || [];
+    const amounts = content.match(/\d+[\.\,]?\d*\s*[조억만원명票호건석위배점개월km㎡]/g) || [];
+    // 연도+수치 조합
+    const yearNums = content.match(/20\d{2}년[^\s,。]{0,15}/g) || [];
     // 기관명 패턴
-    const orgs = content.match(/(현대경제연구원|갤럽|리얼미터|한국은행|통계청|대법원|헌재|SIPRI|OECD|국토부|기획재정부|한국감정원|부동산원|관세청|건보공단|보건복지부|고용부|선관위|국정원|한수원|국방부)[^\s]*/g) || [];
+    const orgs = content.match(/(현대경제연구원|갤럽|리얼미터|한국은행|통계청|대법원|헌재|SIPRI|OECD|국토부|기획재정부|한국감정원|부동산원|관세청|건보공단|보건복지부|고용부|선관위|국정원|한수원|국방부|서울시|서울연구원|KDI|국토연구원)[^\s]*/g) || [];
     // 법안/사건명 패턴
     const cases = content.match(/(10\.15|12\.3|캠프데이비드|판문점|GTX|강북르네상스|신통기획|공수처|반도체특별법)[^\s]*/g) || [];
     numbers.forEach(n => used.add(n.trim()));
+    amounts.forEach(n => used.add(n.trim()));
+    yearNums.forEach(n => used.add(n.trim()));
     orgs.forEach(o => used.add(o.trim()));
     cases.forEach(c => used.add(c.trim()));
   }
@@ -3024,8 +3029,8 @@ export default async function handler(req, res) {
   // ── 개선 A: 전체 히스토리에서 이미 사용된 논거/수치 추출 ──────────────────
   const usedEvidenceAll = extractUsedEvidence(safeRecentHistory);
   if (usedEvidenceAll.size > 0) {
-    const evidenceList = Array.from(usedEvidenceAll).slice(0, 15).join(', ');
-    systemPrompt += `\n\n⚠️ 이미 토론에서 사용된 논거/수치 (양측 포함, 절대 반복 금지):\n${evidenceList}\n새로운 각도와 데이터만 사용하라.`;
+    const evidenceList = Array.from(usedEvidenceAll).slice(0, 20).join(', ');
+    systemPrompt += `\n\n🔴 이미 토론에서 언급된 수치/기관 (양측 포함, 재인용 절대 금지):\n${evidenceList}\n→ 위 수치를 다시 쓰면 토론 실격. 완전히 새로운 수치·사례·출처만 사용하라.\n→ 상대방이 쓴 수치를 내 논거로 재활용하는 것도 금지. 반박 시에도 새 데이터로 반박하라.`;
   }
 
   // ── 개선 B: 상대방 발언에 맞는 반박 논거 매칭 ─────────────────────────────
@@ -3084,7 +3089,7 @@ export default async function handler(req, res) {
         .concat(allMyText.match(/\d+\s*(?:만표|만호|만명|만원|조원)/g) || [])
     )].slice(0, 10);
     if (usedNumbers.length > 0) {
-      systemPrompt += `\n⛔ 이미 사용한 수치 (다시 쓰지 마라, 다른 수치로 대체): ${usedNumbers.join(', ')}`;
+      systemPrompt += `\n⛔ 내가 이미 사용한 수치 (완전 금지 — 같은 숫자 어떤 형태로도 재사용 불가): ${usedNumbers.join(', ')}`;
     }
     systemPrompt += `\n✅ 위 논거 후보 중 아직 안 쓴 것으로 새로운 각도에서 공격/방어하라.`;
     
