@@ -1023,7 +1023,7 @@ function detectFacts(text: string): { label: string; detail: string } | null {
   useEffect(() => {
     if (!autoStart || autoStartedRef.current || phase !== 'setup') return;
     autoStartedRef.current = true;
-    const t = setTimeout(() => { startDebate(); }, 500);
+    const t = setTimeout(() => { startDebate(); }, 100);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoStart, phase]);
@@ -1062,6 +1062,14 @@ function detectFacts(text: string): { label: string; detail: string } | null {
   // ─── UI: 설정 화면 ─────────────────────────────────────────────────────────
 
   if (phase === 'setup') {
+    // autoStart: 설정 화면 건너뛰고 즉시 토론 시작 대기 (깜빡임 방지)
+    if (autoStart) {
+      return (
+        <div className="app-bg flex items-center justify-center" style={{ height: '100svh' }}>
+          <p className="text-gray-400 text-sm animate-pulse">토론 준비 중...</p>
+        </div>
+      );
+    }
     return (
       <div className="app-bg flex flex-col overflow-y-auto" style={{ height: '100svh', maxWidth: '700px', margin: '0 auto', width: '100%', WebkitOverflowScrolling: 'touch' }}>
         {issueTitle && (
