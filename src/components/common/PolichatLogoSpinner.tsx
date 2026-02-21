@@ -7,7 +7,7 @@ interface Props {
 export default function PolichatLogoSpinner({ size = 72, message = '로딩 중...', dark = false }: Props) {
   const textColor = dark ? 'text-gray-300' : 'text-gray-500';
   return (
-    <div className="flex flex-col items-center gap-3 select-none">
+    <div className="flex flex-col items-center gap-4 select-none">
       <style>{`
         @keyframes logoFloat {
           0%, 100% { transform: translateY(0px) scale(1); }
@@ -34,6 +34,36 @@ export default function PolichatLogoSpinner({ size = 72, message = '로딩 중..
           50%       { opacity: 0.5; }
         }
       `}</style>
+
+      {/* 메인 로고 (헤더와 동일) */}
+      <div className="flex items-center gap-2" style={{ animation: 'logoFloat 2.4s ease-in-out infinite' }}>
+        <img src="/logo.svg" alt="Polichat" style={{ width: 36, height: 36 }} />
+        <div className="flex items-baseline gap-0.5">
+          <span
+            className="logo-text-gradient"
+            style={{
+              fontFamily: "'Rammetto One', sans-serif",
+              fontWeight: 400,
+              fontSize: '28px',
+              letterSpacing: '-0.01em',
+              lineHeight: 1,
+            }}
+          >
+            Polichat
+          </span>
+          <span
+            style={{
+              fontSize: '16px',
+              fontFamily: "'Pretendard Variable', sans-serif",
+              fontWeight: 700,
+              color: '#7C3AED',
+              opacity: 0.85,
+            }}
+          >
+            .kr
+          </span>
+        </div>
+      </div>
 
       {/* Logo + orbit wrapper */}
       <div className="relative flex items-center justify-center" style={{ width: size + 32, height: size + 32 }}>
