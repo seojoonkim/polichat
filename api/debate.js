@@ -2917,7 +2917,13 @@ export default async function handler(req, res) {
 
 
   // ── 정책 지식베이스 주입 ───────────────────────────────────────────────
-  const kb = getKnowledge(safeTopic, safeSpeaker);
+  // 오늘의 이슈 모드 감지: 긴 이슈 형태 제목이면 KB 완전 스킵 (KB가 주제 오염 유발)
+  const isIssueTopic = !dynamicKB && safeTopic.length > 20 &&
+    (safeTopic.includes('—') || safeTopic.includes('vs') || safeTopic.includes('인가') || safeTopic.includes('인지'));
+  if (isIssueTopic) {
+    systemPrompt += `\n\n🔴 [오늘의 이슈 토론 — 반드시 준수]\n현재 토론 주제: "${safeTopic}"\n이 주제 하나에만 집중해서 발언하라. 물가, 경제, 부동산, 언론 등 관련 없는 KB 데이터를 꺼내지 말 것.\n이 이슈에 대해 캐릭터의 정치적 입장에서 구체적 사실(판례, 헌법 조항, 국제 비교 사례, 날짜)을 들어 발언하라.`;
+  }
+  const kb = isIssueTopic ? { myPosition: null, conflicts: [], attackPoints: [], reversals: [], 세부논거: null, seoulContext: null } : getKnowledge(safeTopic, safeSpeaker);
   const safeSpeakerA = typeof speakerA === 'string' ? speakerA : '';
   const speakerKey = safeSpeaker === safeSpeakerA ? 'A' : 'B';
   const dynamicSection =
@@ -3002,12 +3008,6 @@ export default async function handler(req, res) {
     systemPrompt += kbText;
   } else if (dynamicSection) {
     systemPrompt += `\n\n${dynamicSection}`;
-  }
-
-  // ── 오늘의 이슈 모드: safeTopic이 실제 뉴스 이슈 형태면 강제 주입 ──────────
-  const isIssueTopic = safeTopic.length > 20 && (safeTopic.includes('—') || safeTopic.includes('vs') || safeTopic.includes('인가') || safeTopic.includes('인지'));
-  if (isIssueTopic) {
-    systemPrompt += `\n\n🔴 [오늘의 이슈 토론 — 최우선 지시]\n지금 토론 주제는 정확히 다음이다: "${safeTopic}"\n이 주제에서 절대 벗어나지 말 것. KB의 다른 주제(언론, 선거 등) 내용을 끌어오지 말 것.\n이 이슈에 대해 네 캐릭터의 정치적 입장에서 구체적 논거(날짜, 사례, 국제 비교)를 들어 발언하라.`;
   }
 
   // ── 개선 A: 전체 히스토리에서 이미 사용된 논거/수치 추출 ──────────────────

@@ -1097,11 +1097,6 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
     }
     return (
       <div className="app-bg flex flex-col overflow-y-auto" style={{ height: '100svh', maxWidth: '700px', margin: '0 auto', width: '100%', WebkitOverflowScrolling: 'touch' }}>
-        {issueTitle && (
-          <div className="px-4 py-2 text-xs text-orange-300 bg-orange-950/40 border-b border-orange-900/30">
-            📰 오늘의 이슈: {issueTitle}
-          </div>
-        )}
         {/* 헤더 */}
         <div
           className="flex items-center gap-3 px-4 pb-4"
@@ -1338,11 +1333,6 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
       className={`app-bg fixed top-0 left-0 right-0 flex flex-col overflow-hidden ${actBgClass}`}
       style={{ height: '100svh', maxWidth: '700px', margin: '0 auto', bottom: 0 }}
     >
-      {issueTitle && (
-        <div className="px-4 py-2 text-xs text-orange-300 bg-orange-950/40 border-b border-orange-900/30">
-          📰 오늘의 이슈: {issueTitle}
-        </div>
-      )}
       {/* 헤더 */}
       <div
         className="shrink-0 flex items-center justify-between px-4 pb-3 border-b"
