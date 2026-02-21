@@ -354,7 +354,7 @@ export default function PoliticianSelector({ politicians }: Props) {
   };
 
   return (
-    <div style={{ background: '#F6F6FA', minHeight: '100vh' }}>
+    <div style={{ background: '#F7F8F8', minHeight: '100vh' }}>
     <div className="polichat-bg overflow-x-hidden relative" style={{ maxWidth: '700px', margin: '0 auto', minHeight: '100svh' }}>
       {/* Mesh gradient background */}
       <div className="policy-pattern" />
@@ -653,7 +653,7 @@ export default function PoliticianSelector({ politicians }: Props) {
 
                     {/* 아코디언 — 카드에 물린 토론자 목록 */}
                     {isExpanded && (
-                      <div className="bg-[#F6F6FA] mx-2 mb-2 rounded-xl overflow-hidden divide-y divide-gray-100">
+                      <div className="bg-[#F7F8F8] mx-2 mb-2 rounded-xl overflow-hidden divide-y divide-gray-100">
                         {(dayIssue.matchups && dayIssue.matchups.length > 0
                           ? issueTypes.filter(t => dayIssue.matchups!.includes(t.value))
                           : issueTypes
