@@ -651,18 +651,21 @@ export default function PoliticianSelector({ politicians }: Props) {
                           <button
                             key={item.value}
                             onClick={() => navigate(`/debate?type=${item.value}&issue=${encodeURIComponent(dayIssue.title)}&autostart=1`)}
-                            className="w-full flex items-center gap-2 px-3 py-2.5 bg-white hover:bg-violet-50 active:bg-violet-100 transition-colors"
+                            className="w-full flex items-center px-3 py-2.5 bg-white hover:bg-violet-50 active:bg-violet-100 transition-colors"
                           >
-                            <div className="flex items-center gap-1.5 shrink-0">
-                              <img src={item.imgA} alt={item.nameA} className="w-9 h-9 rounded-full object-cover border-2 border-white shadow-sm" onError={(e) => { e.currentTarget.style.display='none'; }} />
-                              <span className="text-[14px] font-bold text-gray-800">{item.nameA}</span>
+                            {/* 중앙 정렬 매치업 */}
+                            <div className="flex-1 flex items-center justify-center gap-2">
+                              <div className="flex items-center gap-1.5">
+                                <img src={item.imgA} alt={item.nameA} className="w-9 h-9 rounded-full object-cover border-2 border-white shadow-sm" onError={(e) => { e.currentTarget.style.display='none'; }} />
+                                <span className="text-[14px] font-bold text-gray-800">{item.nameA}</span>
+                              </div>
+                              <span className="text-[10px] font-bold text-gray-400 px-0.5">VS</span>
+                              <div className="flex items-center gap-1.5">
+                                <img src={item.imgB} alt={item.nameB} className="w-9 h-9 rounded-full object-cover border-2 border-white shadow-sm" onError={(e) => { e.currentTarget.style.display='none'; }} />
+                                <span className="text-[14px] font-bold text-gray-800">{item.nameB}</span>
+                              </div>
                             </div>
-                            <span className="text-[10px] font-bold text-gray-400 shrink-0 px-1">VS</span>
-                            <div className="flex items-center gap-1.5 flex-1">
-                              <img src={item.imgB} alt={item.nameB} className="w-9 h-9 rounded-full object-cover border-2 border-white shadow-sm" onError={(e) => { e.currentTarget.style.display='none'; }} />
-                              <span className="text-[14px] font-bold text-gray-800">{item.nameB}</span>
-                            </div>
-                            <span className="shrink-0 text-violet-500 text-[11px] font-bold">시작 →</span>
+                            <span className="shrink-0 text-violet-500 text-[11px] font-bold ml-2">시작 →</span>
                           </button>
                         ))}
                       </div>

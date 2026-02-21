@@ -48,10 +48,14 @@ export async function getRecentIssues(days) {
       .eq('debate_type', 'history')
       .gte('created_at', cutoff.toISOString())
       .order('created_at', { ascending: false });
-    return (data || []).map((row) => ({
-      date: row.style,
-      title: row.messages?.[0]?.content || '',
-    })).filter((r) => r.title);
+    return (data || []).map((row) => {
+      let title = row.messages?.[0]?.content || '';
+      // 기존 저장 데이터에 언론사명 포함된 경우 제거
+      title = title
+        .replace(/\s*[-–—]\s*(조선일보|동아일보|중앙일보|한겨레|경향신문|뉴스1|연합뉴스|YTN|MBC|KBS|SBS|JTBC|TV조선|채널A|서울신문|매일경제|한국경제|아시아경제|세계일보|국민일보|문화일보|데일리안|오마이뉴스|v\.daum\.net|news\.naver\.com)[^\n]*/gi, '')
+        .replace(/\s*"[^"]*"$/g, '').trim();
+      return { date: row.style, title };
+    }).filter((r) => r.title);
   } catch (e) {
     return [];
   }
