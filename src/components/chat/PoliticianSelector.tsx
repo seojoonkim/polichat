@@ -460,18 +460,18 @@ export default function PoliticianSelector({ politicians }: Props) {
         {activeTab !== 'issue' && heroVisible && heroIssue?.title && (
           <button
             onClick={() => switchTab('issue')}
-            className="mx-4 mt-5 mb-1 w-[calc(100%-2rem)] flex items-start gap-2.5 px-4 py-3 rounded-2xl text-left transition-all hover:scale-[1.01] active:scale-[0.99]"
+            className="mx-4 mt-5 mb-1 w-[calc(100%-2rem)] flex items-center gap-2.5 px-4 py-3 rounded-2xl text-left transition-all hover:scale-[1.01] active:scale-[0.99]"
             style={{
               background: 'linear-gradient(135deg, #7c3aed 0%, #9333ea 100%)',
               border: '1px solid #6d28d9',
               boxShadow: '0 4px 14px rgba(109,40,217,0.35)',
             }}
           >
-            <span className="text-sm shrink-0 mt-0.5">🔥</span>
+            <span className="text-sm shrink-0">🔥</span>
             <span className="text-xs font-semibold text-white flex-1 leading-snug line-clamp-2">
               {heroIssue.title}
             </span>
-            <span className="shrink-0 text-[10px] font-bold text-purple-900 bg-white/90 px-2 py-0.5 rounded-full whitespace-nowrap mt-0.5">이슈 토론 &gt;</span>
+            <span className="shrink-0 text-[10px] font-bold text-purple-900 bg-white/90 px-2 py-0.5 rounded-full whitespace-nowrap">이슈 토론 &gt;</span>
           </button>
         )}
 
