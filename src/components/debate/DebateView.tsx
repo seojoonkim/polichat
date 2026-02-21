@@ -225,7 +225,8 @@ export default function DebateView({ debateType = 'seoul', dynamicKB, issueTitle
   // 설정 상태
   const [selectedTopic, setSelectedTopic] = useState<string>('free');
   const [_selectedStyle, setSelectedStyle] = useState<'policy' | 'emotional' | 'consensus'>('policy');
-  const selectedStyle = debateType === 'leejeon' ? 'emotional' : _selectedStyle;
+  // 이슈 토론 모드: 항상 policy 스타일 (주제 집중). 일반 토론: leejeon이면 emotional 고정
+  const selectedStyle = issueTitle ? 'policy' : (debateType === 'leejeon' ? 'emotional' : _selectedStyle);
 
   // 토론 상태
   const [phase, setPhase] = useState<Phase>('setup');
@@ -420,6 +421,8 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
   // ─── 캐시 조회 ─────────────────────────────────────────────────────────────
 
   const fetchCache = async (topic: string, style: string): Promise<{ messages: DebateMessage[]; judgment: Judgment | null } | null> => {
+    // 이슈 토론 모드: 매번 새 이슈이므로 캐시 사용 안 함
+    if (issueTitle) return null;
     try {
       const res = await fetch(
         `/api/debate-cache?topic=${encodeURIComponent(topic)}&style=${encodeURIComponent(style)}&debateType=${debateType}&pv=${PROMPT_VERSION}`
@@ -952,12 +955,14 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
     setCurrentSpeaker(null);
 
     if (!abortRef.current && allMessages.length > 0) {
-      // 캐시 저장 (판정 없이, 비동기, 실패해도 무시)
-      fetch('/api/debate-cache', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic: initialTopic, style, messages: allMessages, judgment: null, promptVersion: PROMPT_VERSION }),
-      }).catch(() => {});
+      // 이슈 토론 모드는 캐시 저장 안 함 (오염 방지)
+      if (!issueTitle) {
+        fetch('/api/debate-cache', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ topic: initialTopic, style, messages: allMessages, judgment: null, promptVersion: PROMPT_VERSION }),
+        }).catch(() => {});
+      }
       // 30라운드 정상 완료 시 finished 단계로 전환
       setPhase('finished');
     }

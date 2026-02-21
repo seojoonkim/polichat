@@ -97,7 +97,7 @@ export default function DebatePage() {
           debateType={debateType}
           dynamicKB={dynamicKB}
           issueTitle={issueParam ? decodeURIComponent(issueParam) : undefined}
-          autoStart={autoStart}
+          autoStart={autoStart && (!issueParam || researchState === 'done')}
         />
       </div>
     </div>
