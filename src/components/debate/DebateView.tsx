@@ -900,8 +900,9 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               messages: allMessages.slice(-6),
-              currentTopic: selectedTopic === 'free' ? freeTopicRef.current : initialTopic,
+              currentTopic: issueTitle || (selectedTopic === 'free' ? freeTopicRef.current : initialTopic),
               debateType,
+              dynamicKB: dynamicKB || undefined,
             }),
           });
           if (modRes.ok) {
