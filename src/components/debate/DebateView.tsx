@@ -288,26 +288,19 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
     : yearMatch ? yearMatch[0].match(/\d{4}년/)?.[0] || ''
     : '';
 
-  // 핵심 수치/내용 (최대 60자)
+  // 핵심 수치/내용 (최대 120자)
   const stat = percentMatch
-    ? percentMatch[0].trim().slice(0, 60)
+    ? percentMatch[0].trim().slice(0, 120)
     : rankMatch
-    ? rankMatch[0].trim().slice(0, 60)
+    ? rankMatch[0].trim().slice(0, 120)
     : yearMatch
-    ? yearMatch[0].trim().slice(0, 60)
+    ? yearMatch[0].trim().slice(0, 120)
     : '';
 
-  if (sourceHit) {
+  // 구체적인 언론사/기관 출처 + 날짜가 모두 있을 때만 표시
+  // (출처 없는 "통계 데이터", "인용 데이터" 등 generic 라벨은 표시 안 함)
+  if (sourceHit && dateStr) {
     return { label: sourceHit, subtitle: dateStr, detail: stat };
-  }
-  if (percentMatch) {
-    return { label: '통계 데이터', subtitle: dateStr, detail: stat };
-  }
-  if (rankMatch) {
-    return { label: '순위 데이터', subtitle: dateStr, detail: stat };
-  }
-  if (yearMatch && yearMatch[0].length > 8) {
-    return { label: '인용 데이터', subtitle: dateStr, detail: stat };
   }
   return null;
 }

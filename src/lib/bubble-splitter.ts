@@ -1,7 +1,7 @@
 export const BUBBLE_CONFIG = {
   MAX_BUBBLES: 3,
   MAX_SENTENCES_PER_BUBBLE: 2,
-  MIN_BUBBLE_LENGTH: 25,
+  MIN_BUBBLE_LENGTH: 35,
 } as const;
 
 /** 완성된 텍스트를 말풍선 배열로 분할 (use-chat.ts용) */
@@ -38,6 +38,9 @@ export function isSentenceEnd(text: string): boolean {
   if (/[.!?]$/.test(trimmed)) {
     // 소수점 제외: "40.3" 같은 경우
     if (trimmed.endsWith('.') && /\d/.test(trimmed[trimmed.length - 2] ?? '')) return false;
+    // 불완전 문장 끝 패턴 제외: 조사/부사격/접속어 + 마침표 (문장 중간일 가능성 높음)
+    // 예: "5년마다." "원칙으로." "법원에서." "그러나." "하지만."
+    if (/(?:마다|으로|에서|에게|처럼|만큼|위해|때문|동안|이후|이전|통해|위한|관한|대해|대한|부터|까지|반면|반해|함께|그런데|하지만|그러나|그리고|따라서|그래서|또한|또는|아니면|뿐만|뿐)[.!?]$/.test(trimmed)) return false;
     return true;
   }
 
