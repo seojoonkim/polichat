@@ -16,6 +16,7 @@ export default function ChatHeader({ politician }: Props) {
   
   const setCurrentPolitician = useChatStore((s) => s.setCurrentPolitician);
   const clearMessages = useChatStore((s) => s.clearMessages);
+  const clearSuggestedQuestions = useChatStore((s) => s.clearSuggestedQuestions);
   const messages = useChatStore((s) => s.messages);
   const lastMessageTime = useChatStore((s) => s.lastMessageTime);
   const isStreaming = useChatStore((s) => s.isStreaming);
@@ -65,6 +66,7 @@ export default function ChatHeader({ politician }: Props) {
 
   const handleReset = () => {
     clearMessages();
+    clearSuggestedQuestions();
     resetUser();
     setOnboardingStep('name');
     // 첫 방문 플래그 제거 → 초기화 후 첫 방문 인사 다시 표시
