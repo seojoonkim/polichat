@@ -1,5 +1,5 @@
 import { TaglineRenderer } from '@/components/common/TaglineRenderer';
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, type ReactNode } from 'react';
 import type { PoliticianMeta } from '@/types/politician';
 import { useChatStore } from '@/stores/chat-store';
 import DebateBanner from '@/components/debate/DebateBanner';
@@ -14,6 +14,57 @@ interface IssueHeadline {
 }
 
 type TabId = 'battle' | 'chat' | 'issue';
+
+interface IssueHistoryItem {
+  date: string;
+  title: string;
+}
+
+type TabItem = {
+  id: TabId;
+  label: string;
+  icon: (active: boolean) => ReactNode;
+};
+
+const TABS: TabItem[] = [
+  {
+    id: 'battle',
+    label: '토론 배틀',
+    icon: (active: boolean) => (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+        stroke={active ? '#7c3aed' : '#71717a'} strokeWidth="2"
+        strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14.5 17.5L3 6V3h3l11.5 11.5"/>
+        <path d="M13 19l6-6M16 16l4 4M19 21l2-2"/>
+        <path d="M14.5 6.5L18 3h3v3L9.5 17.5"/>
+        <path d="M5 14l4 4M7 21l2-2"/>
+      </svg>
+    ),
+  },
+  {
+    id: 'chat',
+    label: '1:1 대화',
+    icon: (active: boolean) => (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+        stroke={active ? '#7c3aed' : '#71717a'} strokeWidth="2"
+        strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+    ),
+  },
+  {
+    id: 'issue',
+    label: '오늘의 이슈',
+    icon: (active: boolean) => (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+        stroke={active ? '#7c3aed' : '#71717a'} strokeWidth="2"
+        strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+      </svg>
+    ),
+  },
+];
 
 // 홈 화면에서 html/body/#root scroll 허용 (채팅 화면은 자체 fixed 레이아웃)
 function useBodyScrollUnlock() {
@@ -199,9 +250,10 @@ export default function PoliticianSelector({ politicians }: Props) {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabId>('battle');
   const [heroIssue, setHeroIssue] = useState<IssueHeadline | null>(null);
-  const [issueBattleType, setIssueBattleType] = useState<'seoul' | 'national' | 'leejeon' | 'kimjin' | 'hanhong' | ''>('');
   const [heroVisible, setHeroVisible] = useState(true);
   const [issueError, setIssueError] = useState(false);
+  const [issueHistory, setIssueHistory] = useState<IssueHistoryItem[]>([]);
+  const todayKST = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
   const issueTypes = [
     { value: 'seoul', label: '오세훈 VS 정원오' },
     { value: 'national', label: '정청래 VS 장동혁' },
@@ -210,17 +262,29 @@ export default function PoliticianSelector({ politicians }: Props) {
     { value: 'hanhong', label: '한동훈 VS 홍준표' },
   ] as const;
 
+function formatIssueDate(dateStr: string): string {
+  const parts = dateStr.split('-');
+  const month = parseInt(parts[1] || '0', 10);
+  const day = parseInt(parts[2] || '0', 10);
+  return `${month}월 ${day}일`;
+}
+
   // 페이지 로드 즉시 모든 카드 stagger reveal (스크롤 불필요)
   useEffect(() => {
+    if (activeTab !== 'chat') return;
     const timers: ReturnType<typeof setTimeout>[] = [];
-    cardsRef.current.forEach((el) => {
-      if (!el) return;
-      const delay = Number(el.dataset.revealDelay || '0');
-      const t = setTimeout(() => el.classList.add('revealed'), delay);
-      timers.push(t);
-    });
+    const kickoff = setTimeout(() => {
+      cardsRef.current.forEach((el) => {
+        if (!el) return;
+        el.classList.remove('revealed');
+        const delay = Number(el.dataset.revealDelay || '0');
+        const t = setTimeout(() => el.classList.add('revealed'), delay + 50);
+        timers.push(t);
+      });
+    }, 10);
+    timers.push(kickoff);
     return () => timers.forEach(clearTimeout);
-  }, [politicians]);
+  }, [politicians, activeTab]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -234,6 +298,12 @@ export default function PoliticianSelector({ politicians }: Props) {
         const first = (data?.issues || [])[0];
         if (!controller.signal.aborted && first?.title) {
           setHeroIssue({ title: first.title });
+          fetch('/api/issue-history')
+            .then((r) => r.json())
+            .then((data) => {
+              if (data?.issues?.length) setIssueHistory(data.issues);
+            })
+            .catch(() => {});
 
           // 백그라운드에서 모든 매치업 타입 프리패치 (silent)
           const prefetchTypes = ['seoul', 'national', 'leejeon', 'kimjin', 'hanhong'];
@@ -281,11 +351,6 @@ export default function PoliticianSelector({ politicians }: Props) {
     }
   };
 
-  const handleIssueStart = () => {
-    if (!heroIssue?.title || !issueBattleType) return;
-    navigate(`/debate?type=${issueBattleType}&issue=${encodeURIComponent(heroIssue.title)}`);
-  };
-
   return (
     <div style={{ background: '#0D0F1A', minHeight: '100vh' }}>
     <div className="polichat-bg overflow-x-hidden relative" style={{ maxWidth: '700px', margin: '0 auto', minHeight: '100svh' }}>
@@ -300,21 +365,21 @@ export default function PoliticianSelector({ politicians }: Props) {
       `}</style>
 
       <div
-        className="mx-auto px-4 pt-10 pb-8 relative z-10"
+        className="mx-auto px-4 pt-5 pb-8 relative z-10"
         style={{ maxWidth: '700px' }}
       >
         {/* Hero */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-4">
           {/* Logo */}
           <div className="flex items-center justify-center gap-2 mb-5 animate-fade-in">
-            <img src="/logo.svg" alt="Polichat" className="w-14 h-14" />
+            <img src="/logo.svg" alt="Polichat" className="w-10 h-10" />
             <div className="flex items-baseline gap-0.5">
               <h1
                 className="logo-text-gradient"
                 style={{
                   fontFamily: "'Rammetto One', sans-serif",
                   fontWeight: 400,
-                  fontSize: '42px',
+                  fontSize: '34px',
                   letterSpacing: '-0.01em',
                   lineHeight: 1,
                 }}
@@ -336,12 +401,12 @@ export default function PoliticianSelector({ politicians }: Props) {
 
           {/* Hero tagline */}
           <div className="animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-            <div className="flex items-center justify-center gap-2.5 mb-3">
+            <div className="flex items-center justify-center gap-2.5 mb-2">
               <h2
                 style={{
                   fontFamily: "'SUITE Variable', sans-serif",
                   fontWeight: 800,
-                  fontSize: '19px',
+                  fontSize: '16px',
                   letterSpacing: '-0.03em',
                   color: '#1A0845',
                 }}
@@ -356,41 +421,36 @@ export default function PoliticianSelector({ politicians }: Props) {
                 <span className="text-[10px] font-bold text-slate-600 tracking-wider">LIVE</span>
               </div>
             </div>
-            <p className="text-[13px] text-gray-500 leading-relaxed max-w-[280px] mx-auto">
+            <p className="hidden text-[13px] text-gray-500 leading-relaxed max-w-[280px] mx-auto">
               공약·경력·발언을 학습한 AI — 정책 질문부터 일상 대화까지
             </p>
           </div>
         </div>
 
         {/* ── 탭 바 ─────────────────────────────────────────── */}
-        <div className="sticky top-0 z-30 bg-white/90 backdrop-blur-sm border-b border-gray-100 mb-0">
+        <div className="sticky top-0 z-30 bg-[#0D0F1A]/98 backdrop-blur-md border-b border-white/10">
           <div className="flex">
-            {[
-              { id: 'battle', icon: '⚔️', label: '토론 배틀' },
-              { id: 'chat', icon: '💬', label: '1:1 대화' },
-              { id: 'issue', icon: '📰', label: '오늘의 이슈' },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => switchTab(tab.id as TabId)}
-                className={`flex-1 flex flex-col items-center gap-1 py-3 text-xs font-bold transition-all duration-200 relative
-                  ${activeTab === tab.id
-                    ? 'text-violet-700'
-                    : 'text-gray-400 hover:text-gray-600'
-                  }`}
-              >
-                <span className="text-base">{tab.icon}</span>
-                <span>{tab.label}</span>
-                {/* Active indicator */}
-                {activeTab === tab.id && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-violet-600 rounded-t-full" />
-                )}
-                {/* Badge for issue tab when heroIssue is available */}
-                {tab.id === 'issue' && heroIssue && activeTab !== 'issue' && (
-                  <span className="absolute top-2 right-[calc(50%-16px)] w-2 h-2 bg-red-500 rounded-full" />
-                )}
-              </button>
-            ))}
+            {TABS.map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => switchTab(tab.id)}
+                  className={`flex-1 flex flex-col items-center gap-1 pt-3 pb-2.5 relative transition-colors duration-200`}
+                >
+                  {tab.icon(isActive)}
+                  <span className={`text-[11px] font-semibold tracking-tight ${isActive ? 'text-violet-400' : 'text-gray-500'}`}>
+                    {tab.label}
+                  </span>
+                  {isActive && (
+                    <span className="absolute bottom-0 left-4 right-4 h-[2px] bg-violet-600 rounded-full" />
+                  )}
+                  {tab.id === 'issue' && heroIssue && !isActive && (
+                    <span className="absolute top-2 right-[calc(50%-14px)] w-2 h-2 bg-red-500 rounded-full border border-white" />
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -398,29 +458,20 @@ export default function PoliticianSelector({ politicians }: Props) {
         {activeTab !== 'issue' && heroVisible && heroIssue?.title && (
           <button
             onClick={() => switchTab('issue')}
-            className="w-full flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-50 to-rose-50 border-b border-orange-100 text-left"
+            className="w-full flex items-center gap-2.5 px-4 py-2.5 bg-violet-50 border-b border-violet-100 text-left"
           >
-            <span className="text-base shrink-0">🔥</span>
-            <span className="text-xs font-semibold text-orange-800 truncate flex-1">
-              {heroIssue.title.length > 40 ? heroIssue.title.slice(0, 40) + '...' : heroIssue.title}
+            <span className="text-sm shrink-0">🔥</span>
+            <span className="text-xs font-semibold text-violet-900 truncate flex-1">
+              {heroIssue.title.length > 38 ? heroIssue.title.slice(0, 38) + '…' : heroIssue.title}
             </span>
-            <span className="text-xs text-orange-500 shrink-0 font-bold">이슈 토론 →</span>
+            <span className="shrink-0 text-[10px] font-bold text-violet-600 bg-violet-100 px-2 py-0.5 rounded-full whitespace-nowrap">이슈 토론 →</span>
           </button>
         )}
 
         {activeTab === 'battle' && (
           <div id="debate-battle" className="animate-fade-in-up space-y-2" style={{ animationDelay: '0.12s' }}>
             <div className="mb-2">
-              <p className="text-[13px] font-bold text-gray-700 tracking-wide uppercase flex items-center gap-1.5" style={{ letterSpacing: '0.06em' }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/>
-                  <line x1="13" y1="19" x2="19" y2="13"/>
-                  <line x1="16" y1="16" x2="20" y2="20"/>
-                  <line x1="19" y1="21" x2="21" y2="19"/>
-                  <polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/>
-                  <line x1="5" y1="14" x2="9" y2="18"/>
-                  <line x1="7" y1="21" x2="9" y2="19"/>
-                </svg>
+              <p className="text-[12px] font-bold text-gray-500 uppercase tracking-widest mb-3 px-1">
                 AI 5분 토론
               </p>
             </div>
@@ -479,7 +530,7 @@ export default function PoliticianSelector({ politicians }: Props) {
                   key={politician.id}
                   ref={(el) => { cardsRef.current[index] = el; }}
                   className="reveal-card"
-                  data-reveal-delay={index * 100}
+                  data-reveal-delay={index * 40}
                 >
                   <button
                     onClick={() => setCurrentPolitician(politician.id)}
@@ -567,59 +618,62 @@ export default function PoliticianSelector({ politicians }: Props) {
         )}
 
         {activeTab === 'issue' && (
-          <div className="px-4 py-6 animate-fade-in-up">
-            {!heroIssue?.title ? (
-              <div className="space-y-3">
-                <div className="h-6 rounded-full bg-gray-100 animate-pulse w-3/4" />
-                <div className="h-4 rounded-full bg-gray-100 animate-pulse w-1/2" />
-              </div>
-            ) : (
-              <div className="space-y-5">
-                {/* Issue headline */}
-                <div className="rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 p-5 text-white">
-                  <p className="text-[10px] uppercase tracking-widest text-orange-300 mb-2">오늘의 이슈</p>
-                  <p className="text-base font-bold leading-snug">{heroIssue.title}</p>
-                </div>
+          <div className="px-4 py-4 space-y-6">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[12px] font-bold text-gray-400 uppercase tracking-widest">📰 오늘의 이슈 토론</span>
+            </div>
+            {(() => {
+              // Build list: history first, fallback to today's hero issue
+              const displayList = issueHistory.length > 0
+                ? issueHistory
+                : heroIssue?.title
+                  ? [{ date: todayKST, title: heroIssue.title }]
+                  : [];
 
-                {/* Matchup selector */}
-                <div>
-                  <p className="text-sm font-bold text-gray-700 mb-3">누구의 시각으로 토론할까요?</p>
-                  <div className="space-y-2">
-                    {issueTypes.map((item) => (
-                      <button
-                        key={item.value}
-                        onClick={() => setIssueBattleType(item.value)}
-                        className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl border-2 transition-all duration-150 text-sm font-semibold
-                          ${issueBattleType === item.value
-                            ? 'border-violet-500 bg-violet-50 text-violet-800'
-                            : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
-                          }`}
-                      >
-                        <span>{item.label}</span>
-                        {issueBattleType === item.value && (
-                          <span className="text-violet-500">✓</span>
-                        )}
-                      </button>
-                    ))}
+              if (displayList.length === 0) {
+                return (
+                  <p className="text-center text-gray-400 text-sm py-16">이슈를 불러오는 중...</p>
+                );
+              }
+
+              return displayList.map((dayIssue) => {
+                const isToday = dayIssue.date === todayKST;
+                return (
+                  <div key={dayIssue.date} className="space-y-2.5">
+                    {/* Date label */}
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs font-bold uppercase tracking-wide px-2 py-0.5 rounded-full
+                        ${isToday ? 'bg-violet-100 text-violet-700' : 'text-gray-400'}`}>
+                        {isToday ? '오늘' : formatIssueDate(dayIssue.date)}
+                      </span>
+                      <div className="flex-1 h-px bg-gray-100" />
+                    </div>
+
+                    {/* Issue headline card */}
+                    <div className="rounded-2xl overflow-hidden" style={{background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%)'}}>
+                      <div className="px-4 py-3.5">
+                        <p className="text-[10px] uppercase tracking-widest text-violet-300 mb-1.5">📰 오늘의 이슈</p>
+                        <p className="text-sm font-bold text-white leading-snug">{dayIssue.title}</p>
+                      </div>
+                    </div>
+
+                    {/* Matchup buttons */}
+                    <div className="space-y-1.5">
+                      {issueTypes.map((item) => (
+                        <button
+                          key={item.value}
+                          onClick={() => navigate(`/debate?type=${item.value}&issue=${encodeURIComponent(dayIssue.title)}`)}
+                          className="w-full flex items-center justify-between px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 hover:border-violet-300 hover:bg-violet-50 active:scale-[0.98] transition-all duration-150"
+                        >
+                          <span>{item.label}</span>
+                          <span className="text-violet-500 text-xs font-bold">토론 시작 →</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-
-                {/* CTA */}
-                <button
-                  disabled={!issueBattleType}
-                  onClick={handleIssueStart}
-                  className="w-full py-4 rounded-2xl text-base font-bold text-white transition-all duration-200
-                    disabled:opacity-40 disabled:cursor-not-allowed"
-                  style={{
-                    background: issueBattleType
-                      ? 'linear-gradient(135deg, #6366f1, #7c3aed)'
-                      : '#9ca3af'
-                  }}
-                >
-                  {issueBattleType ? '🔥 지금 바로 토론 시작' : '매치업을 선택하세요'}
-                </button>
-              </div>
-            )}
+                );
+              });
+            })()}
           </div>
         )}
       </div>
