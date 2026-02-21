@@ -278,8 +278,13 @@ const FACT_CHECK_SOURCES = [
   '통계청', '한국은행', '국토교통부', '기획재정부', '보건복지부', '교육부', '국방부', '외교부',
   '한국환경공단', '환경부', '행정안전부', '산업통상자원부', '고용노동부', '국세청',
   '서울시', '경기도', '부산시', '인천시',
+  // 부동산/주택
+  '한국부동산원', '한국토지주택공사', 'LH', '주택도시보증공사', 'HUG',
   // 연구기관
   'KDI', 'KIEP', '한국경제연구원', '국회예산정책처', '국회입법조사처', '국책연구원',
+  '서울연구원', '국토연구원', '한국노동연구원', '한국보건사회연구원',
+  // 국제기관
+  'OECD', 'IMF', '세계은행', 'UN', 'WHO',
   // 사법/선거
   '선관위', '중앙선거관리위원회', '헌법재판소', '대법원', '검찰청',
   // 여론조사
@@ -287,31 +292,41 @@ const FACT_CHECK_SOURCES = [
 ];
 
 function detectFacts(text: string): { label: string; subtitle: string; detail: string } | null {
+  // 1순위: 명시적 출처 패턴 "(출처: 기관명 자료명 연도)" 감지
+  const explicitMatch = text.match(/\(출처:\s*([^)]+)\)/);
+  if (explicitMatch) {
+    const raw = explicitMatch[1].trim();
+    const dateM = raw.match(/\d{4}년(?:\s*\d{1,2}월)?/);
+    const dateStr = dateM ? dateM[0] : '';
+    const label = dateStr ? raw.replace(dateStr, '').trim().replace(/\s+$/, '') : raw;
+    const pct = text.match(/\d+(?:\.\d+)?%/);
+    const rnk = text.match(/\d+위/);
+    return { label: label.slice(0, 35), subtitle: dateStr, detail: pct ? pct[0] : rnk ? rnk[0] : '' };
+  }
+
+  // 2순위: FACT_CHECK_SOURCES 키워드 매칭
   const sourceHit = FACT_CHECK_SOURCES.find((s) => text.includes(s));
+  if (!sourceHit) return null;
 
-  // 연도+월 포함 문맥 추출
+  // 출처 키워드 이후 최대 25자에서 자료명 추출 (조사/동사 이전까지)
+  const pos = text.indexOf(sourceHit);
+  const after = text.slice(pos + sourceHit.length, pos + sourceHit.length + 35);
+  const reportMatch = after.match(/^[은는이가의에서\s]*([가-힣A-Za-z0-9·\s]{2,20}(?:보고서|조사|자료|통계|발표|기준|지수|지표|현황|동향|백서|계획))/);
+  const reportName = reportMatch ? reportMatch[1].trim() : '';
+  const label = reportName ? `${sourceHit} ${reportName}` : sourceHit;
+
+  // 날짜 추출 (연도+월 우선, 연도만 fallback)
   const yearMonthMatch = text.match(/\d{4}년\s*\d{1,2}월/);
-  // 연도 포함 문맥 추출
   const yearMatch = text.match(/\d{4}년/);
+  const dateStr = yearMonthMatch ? yearMonthMatch[0] : yearMatch ? yearMatch[0] : '';
 
-  // 날짜 추출 (YYYY년 MM월 또는 YYYY년)
-  const dateStr = yearMonthMatch ? yearMonthMatch[0] || ''
-    : yearMatch ? yearMatch[0] || ''
-    : '';
-
-  // 핵심 수치만 (% 또는 순위) — 최대 20자, 없으면 빈 문자열
-  // 말한 내용 전체 X, 논문 출처 스타일
+  // 수치 (%, 위, 조원, 만명 등)
   const percentMatch = text.match(/\d+(?:\.\d+)?%/);
   const rankMatch = text.match(/\d+위/);
-  const stat = percentMatch ? percentMatch[0]
-    : rankMatch ? rankMatch[0]
-    : '';
+  const stat = percentMatch ? percentMatch[0] : rankMatch ? rankMatch[0] : '';
 
-  // 구체적인 출처(언론사/기관) + 날짜 모두 있을 때만 표시
-  if (sourceHit && dateStr) {
-    return { label: sourceHit, subtitle: dateStr, detail: stat };
-  }
-  return null;
+  // 출처만 있어도 표시 (날짜 없어도 OK)
+  return { label, subtitle: dateStr, detail: stat };
 }
 
   // 실행 취소용 ref
@@ -1594,7 +1609,14 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
         {messages.map((msg, i) => {
           const isLast = i === messages.length - 1;
           const isSpeakerA = msg.speaker === config.speakerA;
-          const factLabel = detectFacts(msg.text || '');
+          // 이미 표시된 출처 Set (반복 방지)
+          const shownSources = new Set(
+            messages.slice(0, i)
+              .map(m => detectFacts(m.text || '')?.label)
+              .filter(Boolean)
+          );
+          const rawFact = detectFacts(msg.text || '');
+          const factLabel = rawFact && !shownSources.has(rawFact.label) ? rawFact : null;
           // 사회자 메시지 특수 처리 — 타이핑 효과
           if (msg.speaker === '__moderator__') {
             return <ModeratorMessage key={i} text={msg.text} />;
@@ -1606,25 +1628,25 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
               style={{ position: 'relative' }}
             >
               <MessageBubble msg={msg} config={config} />
-              {/* 논문 인용 스타일 카드: 출처명 + 날짜만 표시 */}
+              {/* 출처 카드: 기관명·자료명·날짜 — 토론 내 최초 1회만 */}
               {factLabel && !msg.isTopicChange && (
                 <div
-                  className={`mt-1 inline-flex items-center gap-2 rounded-lg border-l-2 border-blue-400 bg-blue-50/70 pl-2 pr-3 py-1 ${isSpeakerA ? 'mr-11' : 'ml-11'}`}
+                  className={`mt-1 inline-flex items-center gap-1.5 rounded-md bg-slate-100/80 px-2.5 py-1 ${isSpeakerA ? 'mr-11' : 'ml-11'}`}
                 >
-                  <span className="text-[9px] text-blue-400">📚</span>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-[10px] font-bold text-blue-600">
-                      {factLabel.label}
-                    </span>
-                    <span className="text-[10px] text-blue-400">
+                  <span className="text-[9px] opacity-60">📚</span>
+                  <span className="text-[10px] font-semibold text-slate-600">
+                    {factLabel.label}
+                  </span>
+                  {factLabel.subtitle && (
+                    <span className="text-[10px] text-slate-400">
                       ({factLabel.subtitle})
                     </span>
-                    {factLabel.detail && (
-                      <span className="text-[10px] font-semibold text-blue-700 ml-1">
-                        {factLabel.detail}
-                      </span>
-                    )}
-                  </div>
+                  )}
+                  {factLabel.detail && (
+                    <span className="text-[10px] font-bold text-slate-700 ml-0.5">
+                      {factLabel.detail}
+                    </span>
+                  )}
                 </div>
               )}
               {/* 관중 반응 (마지막 완료 메시지에만) */}
