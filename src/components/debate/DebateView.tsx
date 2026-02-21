@@ -269,36 +269,45 @@ export default function DebateView({ debateType = 'seoul', dynamicKB, issueTitle
   const actBg = speakerARound <= 4 ? 'from-slate-50 to-slate-100' : speakerARound <= 8 ? 'from-amber-50 to-orange-50' : 'from-red-50 to-rose-100';
   const actBgClass = `bg-gradient-to-b ${actBg} transition-all duration-[2000ms]`;
 
-const FACT_CHECK_SOURCES = ['AP통신', '연합뉴스', '조선일보', '한겨레', 'YTN', 'KBS', 'MBC', 'SBS', '헤럴드경제', '뉴스1'];
+// 언론사 + 정부/공공기관 + 연구기관 + 여론조사기관
+const FACT_CHECK_SOURCES = [
+  // 언론사
+  'AP통신', '연합뉴스', '조선일보', '한겨레', 'YTN', 'KBS', 'MBC', 'SBS', '헤럴드경제', '뉴스1',
+  '동아일보', '중앙일보', '한국일보', 'JTBC', 'TV조선', '채널A', 'MBN', '경향신문',
+  // 정부/공공기관
+  '통계청', '한국은행', '국토교통부', '기획재정부', '보건복지부', '교육부', '국방부', '외교부',
+  '한국환경공단', '환경부', '행정안전부', '산업통상자원부', '고용노동부', '국세청',
+  '서울시', '경기도', '부산시', '인천시',
+  // 연구기관
+  'KDI', 'KIEP', '한국경제연구원', '국회예산정책처', '국회입법조사처', '국책연구원',
+  // 사법/선거
+  '선관위', '중앙선거관리위원회', '헌법재판소', '대법원', '검찰청',
+  // 여론조사
+  '한국갤럽', '리얼미터', '엠브레인', 'NBS', '여론조사',
+];
 
 function detectFacts(text: string): { label: string; subtitle: string; detail: string } | null {
   const sourceHit = FACT_CHECK_SOURCES.find((s) => text.includes(s));
 
-  // 퍼센트 포함 문맥 추출 (넓은 범위)
-  const percentMatch = text.match(/[^。、,.!?]*\d+(?:\.\d+)?%[^。、,.!?]*/);
   // 연도+월 포함 문맥 추출
-  const yearMonthMatch = text.match(/\d{4}년\s*\d{1,2}월[^。、,.!?]{0,40}/);
+  const yearMonthMatch = text.match(/\d{4}년\s*\d{1,2}월/);
   // 연도 포함 문맥 추출
-  const yearMatch = text.match(/\d{4}년[^。、,.!?]{0,40}/);
-  // 순위/등수 추출
-  const rankMatch = text.match(/\d+위[^。、,.!?]{0,30}/);
+  const yearMatch = text.match(/\d{4}년/);
 
   // 날짜 추출 (YYYY년 MM월 또는 YYYY년)
-  const dateStr = yearMonthMatch ? yearMonthMatch[0].match(/\d{4}년\s*\d{1,2}월/)?.[0] || ''
-    : yearMatch ? yearMatch[0].match(/\d{4}년/)?.[0] || ''
+  const dateStr = yearMonthMatch ? yearMonthMatch[0] || ''
+    : yearMatch ? yearMatch[0] || ''
     : '';
 
-  // 핵심 수치/내용 (최대 120자)
-  const stat = percentMatch
-    ? percentMatch[0].trim().slice(0, 120)
-    : rankMatch
-    ? rankMatch[0].trim().slice(0, 120)
-    : yearMatch
-    ? yearMatch[0].trim().slice(0, 120)
+  // 핵심 수치만 (% 또는 순위) — 최대 20자, 없으면 빈 문자열
+  // 말한 내용 전체 X, 논문 출처 스타일
+  const percentMatch = text.match(/\d+(?:\.\d+)?%/);
+  const rankMatch = text.match(/\d+위/);
+  const stat = percentMatch ? percentMatch[0]
+    : rankMatch ? rankMatch[0]
     : '';
 
-  // 구체적인 언론사/기관 출처 + 날짜가 모두 있을 때만 표시
-  // (출처 없는 "통계 데이터", "인용 데이터" 등 generic 라벨은 표시 안 함)
+  // 구체적인 출처(언론사/기관) + 날짜 모두 있을 때만 표시
   if (sourceHit && dateStr) {
     return { label: sourceHit, subtitle: dateStr, detail: stat };
   }
@@ -1598,24 +1607,24 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
             >
               <MessageBubble msg={msg} config={config} />
               {factLabel && !msg.isTopicChange && (
+                {/* 논문 인용 스타일 카드: 출처명 + 날짜만 표시 */}
                 <div
-                  className={`mt-1 inline-flex flex-col max-w-[280px] rounded-xl border border-blue-100 bg-blue-50 px-3 py-1.5 ${isSpeakerA ? 'mr-11' : 'ml-11'}`}
+                  className={`mt-1 inline-flex items-center gap-2 rounded-lg border-l-2 border-blue-400 bg-blue-50/70 pl-2 pr-3 py-1 ${isSpeakerA ? 'mr-11' : 'ml-11'}`}
                 >
-                  <div className="flex items-center gap-1 flex-wrap">
-                    <span className="text-[10px] font-black text-blue-500 tracking-wide">
-                      📎 {factLabel.label}
+                  <span className="text-[9px] text-blue-400">📚</span>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-[10px] font-bold text-blue-600">
+                      {factLabel.label}
                     </span>
-                    {factLabel.subtitle && (
-                      <span className="text-[10px] text-blue-400 font-semibold">
-                        · {factLabel.subtitle}
+                    <span className="text-[10px] text-blue-400">
+                      ({factLabel.subtitle})
+                    </span>
+                    {factLabel.detail && (
+                      <span className="text-[10px] font-semibold text-blue-700 ml-1">
+                        {factLabel.detail}
                       </span>
                     )}
                   </div>
-                  {factLabel.detail && (
-                    <span className="text-[11px] text-blue-800 leading-snug mt-0.5 font-medium">
-                      {factLabel.detail}
-                    </span>
-                  )}
                 </div>
               )}
               {/* 관중 반응 (마지막 완료 메시지에만) */}
