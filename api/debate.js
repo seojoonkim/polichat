@@ -2187,6 +2187,67 @@ function getRotatedArguments(args, historyLength, count = 4) {
   return rotated.slice(0, count);
 }
 
+function isArgumentExhausted(argSlice, usedEvidText) {
+  const keywords = (argSlice || '').match(/[가-힣a-zA-Z0-9]{8,}/g) || [];
+  const used = (usedEvidText || '').match(/[가-힣a-zA-Z0-9]{6,}/g) || [];
+  if (keywords.length === 0) return false;
+  const usedSet = new Set(used);
+  const overlap = keywords.filter((kw) => usedSet.has(kw)).length;
+  return overlap >= Math.min(2, keywords.length);
+}
+
+function getCrossArguments(kbData, speakerKey, currentTopic, usedEvidText) {
+  if (!kbData || typeof kbData !== 'object') return [];
+  const normalizeTopic = (value) => String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '');
+  const currentNormalized = normalizeTopic(currentTopic);
+  const used = new Set((usedEvidText || '').match(/[가-힣a-zA-Z0-9]{6,}/g) || []);
+  const seen = new Set();
+  const results = [];
+
+  const hasOverlap = (argText) => {
+    if (used.size === 0) return false;
+    return Array.from(used).some((kw) => kw.length >= 6 && argText.includes(kw));
+  };
+
+  const pushArgs = (topicName, args) => {
+    if (!Array.isArray(args)) return;
+    if (normalizeTopic(topicName) && normalizeTopic(topicName) === currentNormalized) return;
+    for (const arg of args) {
+      if (typeof arg !== 'string') continue;
+      const trimmed = arg.trim();
+      if (!trimmed || seen.has(trimmed)) continue;
+      if (trimmed.length < 6) continue;
+      if (hasOverlap(trimmed)) continue;
+      seen.add(trimmed);
+      results.push(trimmed);
+    }
+  };
+
+  const appendFromMap = (source) => {
+    if (!source || typeof source !== 'object') return;
+    for (const [topicName, args] of Object.entries(source)) {
+      if (topicName === speakerKey) continue;
+      pushArgs(topicName, args);
+    }
+  };
+
+  const attackPoints = kbData.attackPoints;
+  if (Array.isArray(attackPoints)) {
+    pushArgs('attackPoints', attackPoints);
+  } else if (attackPoints && typeof attackPoints === 'object') {
+    pushArgs('speakerAttack', attackPoints[speakerKey]);
+    appendFromMap(attackPoints);
+  }
+
+  appendFromMap(kbData.세부논거);
+  appendFromMap(kbData.subArguments);
+
+  return results;
+}
+
 // ── 개선 D: 공격/방어 균형 지시 ──────────────────────────────────────────────
 function getAttackDefenseBalance(historyLength) {
   if (historyLength % 3 === 0) return '🗡️ 전략: 이번 턴은 상대방 발언의 허점을 집중 공격하라. 방어는 최소화.';
@@ -2199,6 +2260,26 @@ function getDepthByAct(historyLength) {
   if (historyLength < 6) return { focus: '핵심입장', useDetail: false, attackDepth: 1, guide: '핵심 입장과 기본 데이터로 탐색하라. 세부 수치보다 큰 그림을 그려라.' };
   if (historyLength < 16) return { focus: '세부논거', useDetail: true, attackDepth: 2, guide: '세부 논거와 구체적 수치로 정면 대결하라. 상대 논거를 데이터로 반박하라.' };
   return { focus: '결정타', useDetail: true, attackDepth: 3, guide: '가장 강력한 결정타를 날려라. 감정+논리를 결합해 최종 설득하라.' };
+}
+
+const WEAKNESS_PATTERNS = [
+  { pattern: /(\d+)%/, type: '수치왜곡', rebut: (m) => `상대가 ${m[1]}%를 언급했는데, 이 수치의 출처와 맥락을 검증하라. 실제 공식 통계와 차이가 있는지 지적하라.` },
+  { pattern: /항상|늘|반드시|무조건/, type: '과잉일반화', rebut: () => '상대가 과잉일반화 오류를 범하고 있다. 반례를 하나 제시하여 무너뜨려라.' },
+  { pattern: /국민이|국민들이|모든 국민/, type: '국민 대변 오류', rebut: () => '상대가 전체 국민을 대표하는 척 말하고 있다. 다양한 여론 데이터를 제시하며 반박하라.' },
+  { pattern: /증명됐|확인됐|밝혀졌/, type: '출처 없는 단정', rebut: () => '"증명됐다"는 주장에 출처를 요구하라. "어디서, 누가, 언제 증명했는지" 구체적으로 추궁하라.' },
+  { pattern: /전통|역사적으로|원래부터/, type: '전통에의 호소', rebut: () => '전통이 곧 정당성은 아니다. "예전부터 그랬다"는 것은 논거가 될 수 없다고 지적하라.' },
+];
+
+function detectOpponentWeakness(text) {
+  if (!text) return null;
+  const target = String(text);
+  for (const item of WEAKNESS_PATTERNS) {
+    const match = target.match(item.pattern);
+    if (match) {
+      return { type: item.type, instruction: item.rebut(match) };
+    }
+  }
+  return null;
 }
 
 // ── 테마 추출 함수: 과거 발언에서 핵심 키워드/개념 추출 ─────────────────────────
@@ -2615,6 +2696,13 @@ export default async function handler(req, res) {
         const argOffset = (safeUsedArgCount || 0) % fullPool.length;
         const rotated = [...fullPool.slice(argOffset), ...fullPool.slice(0, argOffset)];
         const argPool = rotated.slice(0, 8);
+        const usedEvidenceText = Array.from(usedEvidence).join(' ');
+        if (isArgumentExhausted(argPool.join(' '), usedEvidenceText)) {
+          const crossArgs = getCrossArguments(kb, safeSpeaker, safeTopic, usedEvidenceText);
+          if (crossArgs.length > 0) {
+            systemPrompt += `\n\n⚠️ 논거 소진 감지: 현재 주제 논거를 모두 사용했습니다. 새로운 각도에서 공격하세요: [${crossArgs.slice(0, 3).join(' / ')}]`;
+          }
+        }
         kbText += `\n\n💡 이번 발언 논거 후보 (8개, 이미 쓴 것 제외하고 새로운 것 선택):\n` + argPool.map((a,i)=>`${i+1}. ${a}`).join('\n');
       }
     }
@@ -2756,6 +2844,10 @@ export default async function handler(req, res) {
 
   // ── B: 상대방 핵심 주장 반박 의무화 (3단 구조) ────────────────────────────
   const rebutClaim = safeMustRebutClaim || extractKeyClaim(opponentLastMessage || '');
+  const weakness = detectOpponentWeakness(opponentLastMessage || '');
+  if (weakness) {
+    systemPrompt += `\n\n⚠️ 상대 약점 감지 (${weakness.type}): ${weakness.instruction}`;
+  }
   if (rebutClaim) {
     const rebutAct = getAct(safeRecentHistory.length, safeTimeLeft);
     if (rebutAct.intensity === 'low') {

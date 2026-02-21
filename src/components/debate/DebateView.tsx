@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { PROMPT_VERSION } from '@/constants/debate-config';
 import { isSentenceEnd, BUBBLE_CONFIG } from '@/lib/bubble-splitter';
@@ -169,6 +169,25 @@ const stripActionForSentenceEnd = (text: string): string => {
   return text.replace(/^\([^)]+\)\s*/, '');
 };
 
+const calcHighlightScore = (text: string): number => {
+  const hotwords = ['거짓', '증거', '팩트', '사기', '126건', '탄핵', '위헌', '만장일치', '국민'];
+  let score = 0;
+  for (const word of hotwords) {
+    if (text.includes(word)) score += 10;
+  }
+  if (/\d/.test(text)) score += 5;
+  score += Math.min(20, text.length / 10);
+  return score;
+};
+
+const getTypingMs = (text: string): number => {
+  const angryKeywords = ['거짓', '말이 됩니까', '황당', '사기', '위선', '기만'];
+  const coldKeywords = ['당연히', '웃기는', '물론이죠', '아,', '뭐,'];
+  if (angryKeywords.some((word) => text.includes(word))) return 28;
+  if (coldKeywords.some((word) => text.includes(word))) return 68;
+  return 45;
+};
+
 // 상대 발언에서 가장 반박하기 좋은 문장 1개 추출 (B)
 function extractKeyClaimClient(text: string): string | null {
   if (!text) return null;
@@ -217,6 +236,31 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
   const [timeLeft, setTimeLeft] = useState(300); // 5분 = 300초
   const timeLeftRef = useRef(300); // 최신 timeLeft를 항상 참조
   const [audienceReactionTrigger, setAudienceReactionTrigger] = useState(0); // 관중 반응 트리거
+  const tension = useMemo(() => calcTension(messages, _round, 30), [messages, _round]);
+
+  const topHighlights = useMemo(() => {
+    const scoreWithLabel = messages
+      .filter((m) => m.speaker !== '__moderator__' && m.text.length >= 40)
+      .map((m) => ({
+        msg: m,
+        speakerName: m.speaker === config.speakerA
+          ? config.speakerAName
+          : m.speaker === config.speakerB
+            ? config.speakerBName
+            : m.speaker,
+        score: calcHighlightScore(m.text),
+        preview: m.text.slice(0, 120),
+      }))
+      .sort((a, b) => b.score - a.score || b.msg.text.length - a.msg.text.length);
+    return scoreWithLabel.slice(0, 3);
+  }, [messages, config.speakerA, config.speakerB, config.speakerAName, config.speakerBName]);
+
+  const tensionBackground = useMemo(() => {
+    if (tension < 33) return 'linear-gradient(180deg, #0f1b2d 0%, #080d1a 100%)';
+    if (tension < 67) return 'linear-gradient(180deg, #1a0f2d 0%, #0d0820 100%)';
+    if (tension < 86) return 'linear-gradient(180deg, #2d1a0f 0%, #1a0a00 100%)';
+    return 'linear-gradient(180deg, #2d0f0f 0%, #1a0000 100%)';
+  }, [tension]);
 
   // 실행 취소용 ref
   const abortRef = useRef(false);
@@ -547,9 +591,6 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
     setMessages([]);
     setCurrentText('');
 
-    // 모바일(640px 미만)은 화면이 좁아 글자가 빠르게 쌓여 보임 → 딜레이 더 줌
-    const charDelay = window.innerWidth < 640 ? 62 : 45;
-
     // 스피커 순서 초기화
     speakerOrderRef.current = speakerOrder || [config.speakerA, config.speakerB];
     speakerIndexRef.current = 0;
@@ -657,7 +698,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
                 if (KR_CONNECTOR.test(char) || char === '"' || char === '\u201C' || char === '\u201D') {
                   currentBubble += char;
                   setCurrentText(currentBubble);
-                  await sleep(charDelay);
+                  await sleep(getTypingMs(currentBubble));
                   continue;
                 } else {
                   // 실제 문장 끝 → flush 후 이 글자 새 버블 시작
@@ -678,7 +719,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
 
               currentBubble += char;
               setCurrentText(currentBubble);
-              await sleep(charDelay);
+              await sleep(getTypingMs(currentBubble));
 
               // 실시간 문장 끝 감지 → 버블 flush 대기
               const textForEnd = stripActionForSentenceEnd(currentBubble);
@@ -943,7 +984,36 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
     setPhase('setup');
   };
 
-  // finished: 별도 UI 없음 — 기존 running 화면 그대로 유지 (스크롤만 가능)
+  const handleShareResult = async () => {
+    const topLines = topHighlights.slice(0, 2).map((item, idx) => {
+      const rank = idx + 1;
+      return `${rank}위 ${item.speakerName}: ${item.preview}`;
+    });
+    const shareText = [
+      '폴리챗 토론 결과',
+      ...topLines,
+      'polichat.kr에서 직접 토론 관람!',
+      '#폴리챗 #AI토론',
+    ].join('\n');
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ text: shareText });
+        return;
+      } catch (_e) {
+        // share 취소/실패는 fallback으로 이어감
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(shareText);
+      alert('공유 텍스트가 클립보드에 복사되었습니다.');
+    } catch (_e) {
+      alert('공유를 지원하지 않습니다. 텍스트를 수동으로 복사해 주세요.');
+    }
+  };
+
+  // finished: 하이라이트 + 공유 기능 표시
 
   // ─── UI: 설정 화면 ─────────────────────────────────────────────────────────
 
@@ -1168,7 +1238,7 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
   return (
     <div
       className="app-bg fixed top-0 left-0 right-0 flex flex-col overflow-hidden"
-      style={{ height: '100svh', maxWidth: '700px', margin: '0 auto', bottom: 0 }}
+      style={{ height: '100svh', maxWidth: '700px', margin: '0 auto', bottom: 0, background: tensionBackground }}
     >
       {/* 헤더 */}
       <div
@@ -1431,9 +1501,9 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
               <MessageBubble msg={msg} config={config} />
               {/* 관중 반응 (마지막 완료 메시지에만) */}
               {isLast && phase === 'running' && (
-                <AudienceReaction
+              <AudienceReaction
                   messageText={msg.text}
-                  tension={calcTension(messages, _round, 30)}
+                  tension={tension}
                   trigger={audienceReactionTrigger}
                 />
               )}
@@ -1485,6 +1555,38 @@ export default function DebateView({ debateType = 'seoul' }: DebateViewProps) {
         {/* 판정 결과 */}
         {phase === 'result' && judgment && (
           <JudgmentCard judgment={judgment} oshPct={oshPct} jwoPct={jwoPct} config={config} />
+        )}
+
+        {phase === 'finished' && (
+          <div className="rounded-2xl bg-black/30 border-l-4 border-orange-400 px-4 py-3 space-y-2 text-white">
+            <div className="font-bold text-[16px]">🏆 토론 하이라이트</div>
+            {topHighlights.length > 0 ? (
+              <div className="space-y-2">
+                {topHighlights.map((item, idx) => (
+                  <div
+                    key={`${item.msg.speaker}-${item.msg.timestamp}-${idx}`}
+                    className="rounded-xl bg-white/10 p-3 text-sm"
+                  >
+                    <div className="font-semibold mb-1">
+                      {idx + 1}위 · {item.speakerName}
+                    </div>
+                    <p className="text-xs text-white/85 leading-relaxed">
+                      {item.preview}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-sm text-white/75">하이라이트가 충분하지 않습니다.</div>
+            )}
+            <button
+              onClick={handleShareResult}
+              className="w-full py-2.5 rounded-xl text-sm font-bold text-white border border-orange-300/40"
+              style={{ background: 'rgba(234, 88, 12, 0.2)' }}
+            >
+              📤 카카오톡/인스타에 공유하기
+            </button>
+          </div>
         )}
 
         <div ref={messagesEndRef} className="h-16" />
