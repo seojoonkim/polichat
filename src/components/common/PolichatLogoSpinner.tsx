@@ -13,10 +13,6 @@ export default function PolichatLogoSpinner({ size = 72, message = '로딩 중..
           0%, 100% { transform: translateY(0px) scale(1); }
           50%       { transform: translateY(-8px) scale(1.05); }
         }
-        @keyframes logoGlow {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(124,58,237,0.0); }
-          50%       { box-shadow: 0 0 24px 8px rgba(124,58,237,0.28); }
-        }
         @keyframes orbitDot {
           from { transform: rotate(0deg) translateX(42px) rotate(0deg); }
           to   { transform: rotate(360deg) translateX(42px) rotate(-360deg); }
@@ -58,8 +54,7 @@ export default function PolichatLogoSpinner({ size = 72, message = '로딩 중..
           style={{
             width: size,
             height: size,
-            animation: 'logoFloat 2.4s ease-in-out infinite, logoGlow 2.4s ease-in-out infinite',
-            borderRadius: '50%',
+            animation: 'logoFloat 2.4s ease-in-out infinite',
           }}
         />
       </div>
