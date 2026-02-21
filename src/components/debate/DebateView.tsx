@@ -243,22 +243,21 @@ export default function DebateView({ debateType = 'seoul', dynamicKB, issueTitle
   const [audienceReactionTrigger, setAudienceReactionTrigger] = useState(0); // 관중 반응 트리거
   const tension = useMemo(() => calcTension(messages, _round, 30), [messages, _round]);
 
-  const topHighlights = useMemo(() => {
-    const scoreWithLabel = messages
-      .filter((m) => m.speaker !== '__moderator__' && m.text.length >= 40)
-      .map((m) => ({
-        msg: m,
-        speakerName: m.speaker === config.speakerA
-          ? config.speakerAName
-          : m.speaker === config.speakerB
-            ? config.speakerBName
-            : m.speaker,
-        score: calcHighlightScore(m.text),
-        preview: m.text.slice(0, 120),
-      }))
-      .sort((a, b) => b.score - a.score || b.msg.text.length - a.msg.text.length);
-    return scoreWithLabel.slice(0, 3);
-  }, [messages, config.speakerA, config.speakerB, config.speakerAName, config.speakerBName]);
+  const highlightsA = useMemo(() => {
+    return messages
+      .filter(m => m.speaker === config.speakerA && m.text.length >= 30 && !m.isTopicChange)
+      .map(m => ({ text: m.text, score: calcHighlightScore(m.text) }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3);
+  }, [messages, config.speakerA]);
+
+  const highlightsB = useMemo(() => {
+    return messages
+      .filter(m => m.speaker === config.speakerB && m.text.length >= 30 && !m.isTopicChange)
+      .map(m => ({ text: m.text, score: calcHighlightScore(m.text) }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3);
+  }, [messages, config.speakerB]);
 
   const speakerARound = useMemo(() => {
     return messages.filter(
@@ -1088,36 +1087,7 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoStart, phase]);
 
-  const handleShareResult = async () => {
-    const topLines = topHighlights.slice(0, 2).map((item, idx) => {
-      const rank = idx + 1;
-      return `${rank}위 ${item.speakerName}: ${item.preview}`;
-    });
-    const shareText = [
-      '폴리챗 토론 결과',
-      ...topLines,
-      'polichat.kr에서 직접 토론 관람!',
-      '#폴리챗 #AI토론',
-    ].join('\n');
-
-    if (navigator.share) {
-      try {
-        await navigator.share({ text: shareText });
-        return;
-      } catch (_e) {
-        // share 취소/실패는 fallback으로 이어감
-      }
-    }
-
-    try {
-      await navigator.clipboard.writeText(shareText);
-      alert('공유 텍스트가 클립보드에 복사되었습니다.');
-    } catch (_e) {
-      alert('공유를 지원하지 않습니다. 텍스트를 수동으로 복사해 주세요.');
-    }
-  };
-
-  // finished: 하이라이트 + 공유 기능 표시
+  // finished: 하이라이트
 
   // ─── UI: 설정 화면 ─────────────────────────────────────────────────────────
 
@@ -1720,34 +1690,72 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
         )}
 
         {phase === 'finished' && (
-          <div className="rounded-2xl bg-black/30 border-l-4 border-orange-400 px-4 py-3 space-y-2 text-white">
-            <div className="font-bold text-[16px]">🏆 토론 하이라이트</div>
-            {topHighlights.length > 0 ? (
-              <div className="space-y-2">
-                {topHighlights.map((item, idx) => (
-                  <div
-                    key={`${item.msg.speaker}-${item.msg.timestamp}-${idx}`}
-                    className="rounded-xl bg-white/10 p-3 text-sm"
-                  >
-                    <div className="font-semibold mb-1">
-                      {idx + 1}위 · {item.speakerName}
-                    </div>
-                    <p className="text-xs text-white/85 leading-relaxed">
-                      {item.preview}
-                    </p>
+          <div className="rounded-2xl overflow-hidden text-white" style={{ background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.12)' }}>
+            {/* 헤더 */}
+            <div className="px-4 py-3 font-bold text-[15px] flex items-center gap-2" style={{ background: 'rgba(0,0,0,0.2)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+              🏆 토론 하이라이트
+            </div>
+            <div className="px-4 py-4 space-y-5">
+              {/* speakerA 섹션 */}
+              {highlightsA.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <img
+                      src={`/politicians/${config.speakerA}/profile.jpg`}
+                      alt={config.speakerAName}
+                      className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                      style={{ border: `2px solid ${config.speakerAColor}80` }}
+                      onError={e => { e.currentTarget.style.display = 'none'; }}
+                    />
+                    <span className="text-[13px] font-bold" style={{ color: config.speakerAColor }}>{config.speakerAName}</span>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-sm text-white/75">하이라이트가 충분하지 않습니다.</div>
-            )}
-            <button
-              onClick={handleShareResult}
-              className="w-full py-2.5 rounded-xl text-sm font-bold text-white border border-orange-300/40"
-              style={{ background: 'rgba(234, 88, 12, 0.2)' }}
-            >
-              📤 카카오톡/인스타에 공유하기
-            </button>
+                  <div className="space-y-2 ml-2">
+                    {highlightsA.map((h, i) => (
+                      <div
+                        key={i}
+                        className="rounded-2xl rounded-tl-sm px-3.5 py-2.5 text-[13px] leading-relaxed text-white/90"
+                        style={{ background: `${config.speakerAColor}22`, border: `1px solid ${config.speakerAColor}35` }}
+                      >
+                        {h.text}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {/* 구분선 */}
+              {highlightsA.length > 0 && highlightsB.length > 0 && (
+                <div style={{ height: '1px', background: 'rgba(255,255,255,0.08)' }} />
+              )}
+              {/* speakerB 섹션 */}
+              {highlightsB.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <img
+                      src={`/politicians/${config.speakerB}/profile.jpg`}
+                      alt={config.speakerBName}
+                      className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                      style={{ border: `2px solid ${config.speakerBColor}80` }}
+                      onError={e => { e.currentTarget.style.display = 'none'; }}
+                    />
+                    <span className="text-[13px] font-bold" style={{ color: config.speakerBColor === '#5A5A5A' ? '#c0c0c0' : config.speakerBColor }}>{config.speakerBName}</span>
+                  </div>
+                  <div className="space-y-2 ml-2">
+                    {highlightsB.map((h, i) => (
+                      <div
+                        key={i}
+                        className="rounded-2xl rounded-tl-sm px-3.5 py-2.5 text-[13px] leading-relaxed text-white/90"
+                        style={{ background: `${config.speakerBColor}22`, border: `1px solid ${config.speakerBColor}35` }}
+                      >
+                        {h.text}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {highlightsA.length === 0 && highlightsB.length === 0 && (
+                <p className="text-sm text-white/60 text-center py-2">하이라이트가 충분하지 않습니다.</p>
+              )}
+            </div>
           </div>
         )}
 
