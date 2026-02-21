@@ -1477,12 +1477,12 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
               <div style={{ position: 'relative', width: 72, height: 72 }}>
                 <img
                   src={`/politicians/${config.speakerA}/profile.jpg`}
-                  style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', border: '3px solid #D4AF37',
-                    filter: 'sepia(0.4) contrast(1.1) brightness(1.02) saturate(0.8)',
-                    boxShadow: '0 0 10px rgba(212,175,55,0.4)' }}
+                  style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', border: '3px solid #A8B8C8',
+                    filter: 'grayscale(0.5) contrast(1.08) brightness(1.05) saturate(0.45)',
+                    boxShadow: '0 0 10px rgba(160,185,210,0.4)' }}
                 />
                 <div style={{ position: 'absolute', inset: 0, borderRadius: '50%',
-                  background: 'linear-gradient(135deg, rgba(255,248,180,0.2) 0%, transparent 60%)', pointerEvents: 'none' }} />
+                  background: 'linear-gradient(135deg, rgba(235,242,255,0.2) 0%, transparent 60%)', pointerEvents: 'none' }} />
               </div>
               <span className="text-white/90 text-sm mt-2 font-semibold">{config.speakerAName.split(' ')[0]}</span>
             </div>
@@ -1497,7 +1497,7 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
                   height: 154,
                   borderRadius: '50%',
                   background: 'transparent',
-                  boxShadow: '0 0 28px 6px rgba(212,175,55,0.55), 0 0 60px 10px rgba(212,175,55,0.18)',
+                  boxShadow: '0 0 28px 6px rgba(160,185,210,0.55), 0 0 60px 10px rgba(160,185,210,0.18)',
                   animation: 'orbitRing 1.4s ease-in-out infinite alternate',
                   pointerEvents: 'none',
                 }} />
@@ -1514,7 +1514,7 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
                     transform: coinFlipStage === 'revealed'
                       ? (coinFlipWinner?.key === config.speakerA ? 'rotateY(0deg)' : 'rotateY(180deg)')
                       : undefined,
-                    filter: coinFlipStage === 'spinning' ? 'drop-shadow(0 0 12px rgba(212,175,55,0.8))' : 'drop-shadow(0 4px 20px rgba(212,175,55,0.6))',
+                    filter: coinFlipStage === 'spinning' ? 'drop-shadow(0 0 12px rgba(160,185,210,0.8))' : 'drop-shadow(0 4px 20px rgba(160,185,210,0.6))',
                   }}
                 >
                   {/* 앞면: Speaker A — 골드 코인 */}
@@ -1524,26 +1524,26 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
                     WebkitBackfaceVisibility: 'hidden',
                     borderRadius: '50%',
                     overflow: 'hidden',
-                    border: '5px solid #D4AF37',
-                    boxShadow: 'inset 0 0 0 2px rgba(255,220,80,0.6), inset 0 0 0 4px rgba(180,130,10,0.4), 0 0 20px rgba(212,175,55,0.5)',
-                    outline: '2px solid rgba(255,200,40,0.2)',
+                    border: '5px solid #A8B8C8',
+                    boxShadow: 'inset 0 0 0 2px rgba(210,225,240,0.6), inset 0 0 0 4px rgba(100,130,160,0.4), 0 0 20px rgba(160,185,210,0.5)',
+                    outline: '2px solid rgba(190,210,230,0.2)',
                   }}>
                     <img
                       src={`/politicians/${config.speakerA}/profile.jpg`}
                       style={{ width: '100%', height: '100%', objectFit: 'cover',
-                        filter: 'sepia(0.55) contrast(1.15) brightness(1.05) saturate(0.75)' }}
+                        filter: 'grayscale(0.65) contrast(1.1) brightness(1.08) saturate(0.35)' }}
                       alt={config.speakerAName}
                     />
                     {/* 릿지 오버레이 */}
                     <div style={{
                       position: 'absolute', inset: 0, borderRadius: '50%',
-                      background: 'radial-gradient(circle at 35% 28%, rgba(255,240,160,0.45) 0%, rgba(200,160,20,0.08) 45%, transparent 70%)',
+                      background: 'radial-gradient(circle at 35% 28%, rgba(230,240,255,0.4) 0%, rgba(140,165,190,0.08) 45%, transparent 70%)',
                       pointerEvents: 'none',
                     }} />
                     {/* 하이라이트 사선 */}
                     <div style={{
                       position: 'absolute', inset: 0, borderRadius: '50%',
-                      background: 'linear-gradient(135deg, rgba(255,248,180,0.35) 0%, transparent 50%, rgba(120,80,0,0.15) 100%)',
+                      background: 'linear-gradient(135deg, rgba(235,242,255,0.35) 0%, transparent 50%, rgba(50,80,120,0.12) 100%)',
                       pointerEvents: 'none',
                     }} />
                   </div>
@@ -1556,24 +1556,24 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
                     transform: 'rotateY(180deg)',
                     borderRadius: '50%',
                     overflow: 'hidden',
-                    border: '5px solid #D4AF37',
-                    boxShadow: 'inset 0 0 0 2px rgba(255,220,80,0.6), inset 0 0 0 4px rgba(180,130,10,0.4), 0 0 20px rgba(212,175,55,0.5)',
-                    outline: '2px solid rgba(255,200,40,0.2)',
+                    border: '5px solid #A8B8C8',
+                    boxShadow: 'inset 0 0 0 2px rgba(210,225,240,0.6), inset 0 0 0 4px rgba(100,130,160,0.4), 0 0 20px rgba(160,185,210,0.5)',
+                    outline: '2px solid rgba(190,210,230,0.2)',
                   }}>
                     <img
                       src={`/politicians/${config.speakerB}/profile.jpg`}
                       style={{ width: '100%', height: '100%', objectFit: 'cover',
-                        filter: 'sepia(0.55) contrast(1.15) brightness(1.05) saturate(0.75)' }}
+                        filter: 'grayscale(0.65) contrast(1.1) brightness(1.08) saturate(0.35)' }}
                       alt={config.speakerBName}
                     />
                     <div style={{
                       position: 'absolute', inset: 0, borderRadius: '50%',
-                      background: 'radial-gradient(circle at 35% 28%, rgba(255,240,160,0.45) 0%, rgba(200,160,20,0.08) 45%, transparent 70%)',
+                      background: 'radial-gradient(circle at 35% 28%, rgba(230,240,255,0.4) 0%, rgba(140,165,190,0.08) 45%, transparent 70%)',
                       pointerEvents: 'none',
                     }} />
                     <div style={{
                       position: 'absolute', inset: 0, borderRadius: '50%',
-                      background: 'linear-gradient(135deg, rgba(255,248,180,0.35) 0%, transparent 50%, rgba(120,80,0,0.15) 100%)',
+                      background: 'linear-gradient(135deg, rgba(235,242,255,0.35) 0%, transparent 50%, rgba(50,80,120,0.12) 100%)',
                       pointerEvents: 'none',
                     }} />
                   </div>
@@ -1592,12 +1592,12 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
               <div style={{ position: 'relative', width: 72, height: 72 }}>
                 <img
                   src={`/politicians/${config.speakerB}/profile.jpg`}
-                  style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', border: '3px solid #D4AF37',
-                    filter: 'sepia(0.4) contrast(1.1) brightness(1.02) saturate(0.8)',
-                    boxShadow: '0 0 10px rgba(212,175,55,0.4)' }}
+                  style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', border: '3px solid #A8B8C8',
+                    filter: 'grayscale(0.5) contrast(1.08) brightness(1.05) saturate(0.45)',
+                    boxShadow: '0 0 10px rgba(160,185,210,0.4)' }}
                 />
                 <div style={{ position: 'absolute', inset: 0, borderRadius: '50%',
-                  background: 'linear-gradient(135deg, rgba(255,248,180,0.2) 0%, transparent 60%)', pointerEvents: 'none' }} />
+                  background: 'linear-gradient(135deg, rgba(235,242,255,0.2) 0%, transparent 60%)', pointerEvents: 'none' }} />
               </div>
               <span className="text-white/90 text-sm mt-2 font-semibold">{config.speakerBName.split(' ')[0]}</span>
             </div>
