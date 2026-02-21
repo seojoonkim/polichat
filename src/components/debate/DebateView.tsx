@@ -909,8 +909,8 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
 
       if (abortRef.current) break;
 
-      // 사회자 AI 개입 (6라운드마다)
-      if (roundSuccess && !abortRef.current && (i + 1) % 6 === 0 && i > 0) {
+      // 사회자 AI 개입 (1/3·1/2 시점 — 10번째·15번째 라운드)
+      if (roundSuccess && !abortRef.current && (i === 9 || i === 14)) {
         try {
           const modRes = await fetch('/api/debate-moderator', {
             method: 'POST',
@@ -950,13 +950,14 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
         lastText = '';
         topicChangedRef.current = false;
 
-        // 주제 전환 카드 삽입
-        const changeMsg: DebateMessage = {
-          speaker: config.speakerA,
-          text: newTopic,
-          timestamp: Date.now(),
-          isTopicChange: true,
-        };
+        // 자유토론 주제 전환 — 사회자가 발언하면서 주제 소개
+        const topicAnnouncements = [
+          `🎙️ 여기서 주제를 바꾸겠습니다. 이번 주제는 "${newTopic}"입니다. 두 분 계속해주세요.`,
+          `🎙️ 새로운 주제로 넘어가겠습니다. "${newTopic}"에 대해 각자의 입장을 말씀해 주시기 바랍니다.`,
+          `🎙️ 잠시 정리하고 주제를 전환하겠습니다. 다음 주제는 "${newTopic}"입니다.`,
+        ];
+        const modText = topicAnnouncements[Math.floor(Math.random() * topicAnnouncements.length)] ?? topicAnnouncements[0]!;
+        const changeMsg: DebateMessage = { speaker: '__moderator__', text: modText, timestamp: Date.now() };
         allMessages.push(changeMsg);
         setMessages(prev => [...prev, changeMsg]);
         scrollToBottom();
@@ -965,8 +966,9 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
         speakerOrderRef.current = [speakerOrderRef.current[1], speakerOrderRef.current[0]];
         speakerIndexRef.current = 0;
 
-        // 드라마틱한 주제 전환 pause
-        await sleep(1800);
+        // 사회자 타이핑 완료까지 대기
+        const modWait = 120 + modText.length * 52 + 600;
+        await sleep(modWait);
       }
     }
 
