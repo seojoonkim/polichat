@@ -624,13 +624,13 @@ export default function PoliticianSelector({ politicians }: Props) {
                       className="px-4 py-3 flex items-center gap-3 cursor-pointer active:opacity-90 transition-opacity"
                       onClick={() => toggleDate(dayIssue.date)}
                     >
-                      {/* 달력 뱃지 — 정사각형, 날짜 위/연도월 아래 */}
+                      {/* 달력 뱃지 — 정사각형, 연도월 위/날짜 아래 */}
                       <div className="shrink-0 flex flex-col rounded-xl overflow-hidden shadow-md" style={{width: '52px', height: '52px', border: '1px solid rgba(167,139,250,0.4)'}}>
-                        <div className="flex-[3] flex items-center justify-center bg-white">
-                          <span className="text-[21px] font-black text-gray-900 leading-none">{calDay}</span>
-                        </div>
                         <div className="flex-[2] flex items-center justify-center text-[8px] font-black tracking-wide text-white" style={{background: '#4c1d95'}}>
                           {calYear} {calMonthName}
+                        </div>
+                        <div className="flex-[3] flex items-center justify-center bg-white">
+                          <span className="text-[21px] font-black text-gray-900 leading-none">{calDay}</span>
                         </div>
                       </div>
                       {/* 제목 */}
