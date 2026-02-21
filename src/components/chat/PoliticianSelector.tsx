@@ -491,20 +491,22 @@ export default function PoliticianSelector({ politicians }: Props) {
               <div className="absolute inset-0 pointer-events-none overflow-hidden">
                 <div className="h-full w-1/3 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-30" style={{ animation: 'matchTeaserShimmer 2s linear infinite' }} />
               </div>
-              {/* 매치업 레이아웃 */}
-              <div className="relative flex items-center justify-center px-6 py-4">
-                <div className="flex items-center gap-3">
-                  {/* 왼쪽 ? */}
+              {/* 매치업 레이아웃 — 3열 균등 분할 */}
+              <div className="relative grid grid-cols-3 items-center px-6 py-4">
+                {/* 왼쪽 ? */}
+                <div className="flex justify-center">
                   <div className="w-9 h-9 rounded-full bg-slate-600/50 border-2 border-dashed border-slate-400/50 flex items-center justify-center">
                     <span className="text-base font-black text-slate-400">?</span>
                   </div>
-                  {/* VS + 텍스트 */}
-                  <div className="flex flex-col items-center gap-0.5 px-2">
-                    <span className="text-[18px] font-black text-slate-400 leading-none">VS</span>
-                    <span className="text-[11px] font-bold text-slate-300 mt-0.5">곧 공개</span>
-                    <span className="text-[10px] text-slate-500">다음 대결 준비 중...</span>
-                  </div>
-                  {/* 오른쪽 ? */}
+                </div>
+                {/* VS + 텍스트 */}
+                <div className="flex flex-col items-center gap-0.5">
+                  <span className="text-[18px] font-black text-slate-400 leading-none">VS</span>
+                  <span className="text-[11px] font-bold text-slate-300 mt-0.5">곧 공개</span>
+                  <span className="text-[10px] text-slate-500">다음 대결 준비 중...</span>
+                </div>
+                {/* 오른쪽 ? */}
+                <div className="flex justify-center">
                   <div className="w-9 h-9 rounded-full bg-slate-600/50 border-2 border-dashed border-slate-400/50 flex items-center justify-center">
                     <span className="text-base font-black text-slate-400">?</span>
                   </div>
