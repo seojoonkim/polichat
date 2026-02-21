@@ -262,13 +262,6 @@ export default function PoliticianSelector({ politicians }: Props) {
     { value: 'hanhong', label: '한동훈 VS 홍준표' },
   ] as const;
 
-function formatIssueDate(dateStr: string): string {
-  const parts = dateStr.split('-');
-  const month = parseInt(parts[1] || '0', 10);
-  const day = parseInt(parts[2] || '0', 10);
-  return `${month}월 ${day}일`;
-}
-
   // 페이지 로드 즉시 모든 카드 stagger reveal (스크롤 불필요)
   useEffect(() => {
     if (activeTab !== 'chat') return;
