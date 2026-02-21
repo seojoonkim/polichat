@@ -478,27 +478,32 @@ export default function PoliticianSelector({ politicians }: Props) {
             <DebateBanner debateType="hanhong" />
 
             <div
-              className="relative overflow-hidden rounded-2xl mb-5 px-5 py-4 bg-gradient-to-br from-slate-800 to-slate-900 opacity-90 cursor-default"
+              className="relative overflow-hidden rounded-2xl mb-5 bg-gradient-to-br from-slate-800 to-slate-900 cursor-default"
               style={{ boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.12)' }}
             >
-              <div className="absolute inset-0 pointer-events-none">
-                <div
-                  className="h-full w-1/3 bg-gradient-to-r from-transparent via-white/25 to-transparent opacity-30"
-                  style={{ animation: 'matchTeaserShimmer 2s linear infinite' }}
-                />
+              {/* shimmer */}
+              <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                <div className="h-full w-1/3 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-30" style={{ animation: 'matchTeaserShimmer 2s linear infinite' }} />
               </div>
-              <div className="relative flex items-center gap-3">
-                <div className="flex gap-2">
-                  <div className="w-12 h-12 rounded-full bg-slate-400/40 border border-slate-300/60 text-slate-700 text-2xl font-black flex items-center justify-center">
-                    ?
-                  </div>
-                  <div className="w-12 h-12 rounded-full bg-slate-400/40 border border-slate-300/60 text-slate-700 text-2xl font-black flex items-center justify-center">
-                    ?
+              {/* 매치업 레이아웃 */}
+              <div className="relative flex items-center justify-between px-6 py-4">
+                {/* 왼쪽 ? */}
+                <div className="flex flex-col items-center gap-1.5">
+                  <div className="w-14 h-14 rounded-full bg-slate-600/50 border-2 border-dashed border-slate-400/50 flex items-center justify-center">
+                    <span className="text-2xl font-black text-slate-400">?</span>
                   </div>
                 </div>
-                <div>
-                  <p className="text-xs text-slate-100 font-bold">🔜 곧 공개</p>
-                  <p className="text-[12px] text-slate-300 mt-1">다음 대결 준비 중...</p>
+                {/* 중앙 VS + 텍스트 */}
+                <div className="flex flex-col items-center gap-0.5">
+                  <span className="text-[22px] font-black text-slate-400 leading-none">VS</span>
+                  <span className="text-[11px] font-bold text-slate-300 mt-1">🔜 곧 공개</span>
+                  <span className="text-[10px] text-slate-500">다음 대결 준비 중...</span>
+                </div>
+                {/* 오른쪽 ? */}
+                <div className="flex flex-col items-center gap-1.5">
+                  <div className="w-14 h-14 rounded-full bg-slate-600/50 border-2 border-dashed border-slate-400/50 flex items-center justify-center">
+                    <span className="text-2xl font-black text-slate-400">?</span>
+                  </div>
                 </div>
               </div>
             </div>
