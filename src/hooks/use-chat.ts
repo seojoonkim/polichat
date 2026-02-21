@@ -203,11 +203,12 @@ export function useChat(systemPrompt: string, knowledge?: Record<KnowledgeCatego
                       }
                     }
                     setTimeout(() => persistMessages(), 50);
-                    // 추천 질문 생성
+                    // 추천 질문 생성 — 3회 이상 교환 후에만 (인사 단계 제외)
                     const { messages: suggMsgs } = useChatStore.getState();
+                    const userMsgCount = suggMsgs.filter(m => m.role === 'user').length;
                     const lastUserMsg = [...suggMsgs].reverse().find(m => m.role === 'user');
                     const lastAiMsg = [...suggMsgs].reverse().find(m => m.role === 'assistant');
-                    if (lastUserMsg && lastAiMsg && lastAiMsg.content.trim()) {
+                    if (userMsgCount >= 3 && lastUserMsg && lastAiMsg && lastAiMsg.content.trim()) {
                       generateSuggestedQuestions(
                         lastUserMsg.content,
                         lastAiMsg.content,
@@ -225,7 +226,7 @@ export function useChat(systemPrompt: string, knowledge?: Record<KnowledgeCatego
                       setTimeout(() => { sendMessage(pendingText); }, 100);
                     }
                   }
-                }, (index + 1) * 600); // 각 말풍선 600ms 간격
+                }, (index + 1) * 1500); // 각 말풍선 1500ms 간격 (자연스러운 타이밍)
               });
             } else {
               // 단일 말풍선: ** 제거만 적용
@@ -243,11 +244,12 @@ export function useChat(systemPrompt: string, knowledge?: Record<KnowledgeCatego
                 addReactionToLastUserMessage('❤️');
               }
               setTimeout(() => persistMessages(), 50);
-              // 추천 질문 생성
+              // 추천 질문 생성 — 3회 이상 교환 후에만 (인사 단계 제외)
               const { messages: suggMsgs } = useChatStore.getState();
+              const userMsgCount = suggMsgs.filter(m => m.role === 'user').length;
               const lastUserMsg = [...suggMsgs].reverse().find(m => m.role === 'user');
               const lastAiMsg = [...suggMsgs].reverse().find(m => m.role === 'assistant');
-              if (lastUserMsg && lastAiMsg && lastAiMsg.content.trim()) {
+              if (userMsgCount >= 3 && lastUserMsg && lastAiMsg && lastAiMsg.content.trim()) {
                 generateSuggestedQuestions(
                   lastUserMsg.content,
                   lastAiMsg.content,
