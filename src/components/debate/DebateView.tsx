@@ -295,7 +295,7 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
   // 1순위: 명시적 출처 패턴 "(출처: 기관명 자료명 연도)" 감지
   const explicitMatch = text.match(/\(출처:\s*([^)]+)\)/);
   if (explicitMatch) {
-    const raw = explicitMatch[1].trim();
+    const raw = (explicitMatch[1] ?? '').trim();
     const dateM = raw.match(/\d{4}년(?:\s*\d{1,2}월)?/);
     const dateStr = dateM ? dateM[0] : '';
     const label = dateStr ? raw.replace(dateStr, '').trim().replace(/\s+$/, '') : raw;
@@ -312,7 +312,7 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
   const pos = text.indexOf(sourceHit);
   const after = text.slice(pos + sourceHit.length, pos + sourceHit.length + 35);
   const reportMatch = after.match(/^[은는이가의에서\s]*([가-힣A-Za-z0-9·\s]{2,20}(?:보고서|조사|자료|통계|발표|기준|지수|지표|현황|동향|백서|계획))/);
-  const reportName = reportMatch ? reportMatch[1].trim() : '';
+  const reportName = reportMatch ? (reportMatch[1] ?? '').trim() : '';
   const label = reportName ? `${sourceHit} ${reportName}` : sourceHit;
 
   // 날짜 추출 (연도+월 우선, 연도만 fallback)
