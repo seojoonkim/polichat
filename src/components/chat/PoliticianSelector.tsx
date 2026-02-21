@@ -456,17 +456,22 @@ export default function PoliticianSelector({ politicians }: Props) {
           </div>
         </div>
 
-        {/* 이슈 티저 스트립 */}
+        {/* 이슈 티저 카드 */}
         {activeTab !== 'issue' && heroVisible && heroIssue?.title && (
           <button
             onClick={() => switchTab('issue')}
-            className="w-full flex items-center gap-2.5 px-4 py-2.5 bg-violet-50 border-b border-violet-100 text-left"
+            className="mx-3 my-2 w-[calc(100%-1.5rem)] flex items-start gap-2.5 px-4 py-3 rounded-xl text-left transition-all hover:scale-[1.01] active:scale-[0.99]"
+            style={{
+              background: 'linear-gradient(135deg, #ede9fe 0%, #f3e8ff 100%)',
+              border: '1px solid #c4b5fd',
+              boxShadow: '0 2px 8px rgba(139,92,246,0.15)',
+            }}
           >
-            <span className="text-sm shrink-0">🔥</span>
-            <span className="text-xs font-semibold text-violet-900 truncate flex-1">
-              {heroIssue.title.length > 38 ? heroIssue.title.slice(0, 38) + '…' : heroIssue.title}
+            <span className="text-sm shrink-0 mt-0.5">🔥</span>
+            <span className="text-xs font-semibold text-violet-900 flex-1 leading-snug line-clamp-2">
+              {heroIssue.title}
             </span>
-            <span className="shrink-0 text-[10px] font-bold text-violet-600 bg-violet-100 px-2 py-0.5 rounded-full whitespace-nowrap">이슈 토론 →</span>
+            <span className="shrink-0 text-[10px] font-bold text-violet-700 bg-violet-200 px-2 py-0.5 rounded-full whitespace-nowrap mt-0.5">이슈 토론 &gt;</span>
           </button>
         )}
 
