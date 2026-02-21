@@ -268,16 +268,28 @@ export default function DebateView({ debateType = 'seoul', dynamicKB, issueTitle
 
 const FACT_CHECK_SOURCES = ['AP통신', '연합뉴스', '조선일보', '한겨레', 'YTN', 'KBS', 'MBC', 'SBS', '헤럴드경제', '뉴스1'];
 
-function detectFacts(text: string): string | null {
-  if (/\d{4}년/.test(text) || /\d+%/.test(text)) {
-    return '📎 수치/날짜 인용';
-  }
+function detectFacts(text: string): { label: string; detail: string } | null {
+  const sourceHit = FACT_CHECK_SOURCES.find((s) => text.includes(s));
 
-  const hit = FACT_CHECK_SOURCES.find((source) => text.includes(source));
-  if (hit) {
-    return `📎 ${hit} 인용`;
-  }
+  // 퍼센트 포함 문맥 추출 (앞뒤 포함, 최대 35자)
+  const percentMatch = text.match(/[^。、,.!?]*\d+(?:\.\d+)?%[^。、,.!?]*/);
+  // 연도 포함 문맥 추출
+  const yearMatch = text.match(/\d{4}년[^。、,.!?]{0,25}/);
 
+  if (sourceHit) {
+    const stat = percentMatch
+      ? percentMatch[0].trim().slice(0, 35)
+      : yearMatch
+      ? yearMatch[0].trim().slice(0, 35)
+      : '';
+    return { label: sourceHit, detail: stat };
+  }
+  if (percentMatch) {
+    return { label: '통계', detail: percentMatch[0].trim().slice(0, 35) };
+  }
+  if (yearMatch) {
+    return { label: '날짜', detail: yearMatch[0].trim().slice(0, 35) };
+  }
   return null;
 }
 
@@ -826,7 +838,7 @@ function detectFacts(text: string): string | null {
             setAudienceReactionTrigger(prev => prev + 1);
             const partialErrMsg: DebateMessage = {
               speaker: "__moderator__",
-              text: `⚠️ ${speaker} 응답 중 오류: ${debErr.slice(0, 220)}`,
+              text: `(잠시 네트워크 상태가 좋지 않아 발언이 중단됐습니다. 토론을 계속합니다.)`,
               timestamp: Date.now(),
             };
             allMessages.push(partialErrMsg);
@@ -835,8 +847,8 @@ function detectFacts(text: string): string | null {
             await sleep(900);
           } else {
             // 완전 실패 여유: 공백 구간을 만들지 않도록 fallback 말풍선 추가하고 다음 턴으로 진행
-            const fallbackText = `${speaker} 측 응답 생성 중 오류 발생으로 라운드 생략합니다 (오류 ${attempt + 1}회). ${debErr.slice(0, 180)} (다음 화자 진행).`;
-            const fallbackMsg: DebateMessage = { speaker, text: fallbackText, timestamp: Date.now() };
+            const fallbackText = `(잠시 생각을 가다듬으며 다음 발언을 준비합니다...)`;
+            const fallbackMsg: DebateMessage = { speaker: '__moderator__', text: fallbackText, timestamp: Date.now() };
             allMessages.push(fallbackMsg);
             setMessages((prev) => [...prev, fallbackMsg]);
             lastText = opponentClaimRef.current || lastText;
@@ -1538,9 +1550,16 @@ function detectFacts(text: string): string | null {
               <MessageBubble msg={msg} config={config} />
               {factLabel && !msg.isTopicChange && (
                 <div
-                  className={`text-xs text-gray-400 bg-gray-50 border border-gray-100 rounded-md px-2 py-1 mt-1 inline-block max-w-xs ${isSpeakerA ? 'ml-11' : 'mr-11'}`}
+                  className={`mt-1 inline-flex flex-col max-w-[260px] rounded-xl border border-blue-100 bg-blue-50 px-3 py-1.5 ${isSpeakerA ? 'ml-11' : 'mr-11'}`}
                 >
-                  {factLabel}
+                  <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wide">
+                    📎 {factLabel.label}
+                  </span>
+                  {factLabel.detail && (
+                    <span className="text-[11px] text-blue-700 leading-snug mt-0.5">
+                      {factLabel.detail}
+                    </span>
+                  )}
                 </div>
               )}
               {/* 관중 반응 (마지막 완료 메시지에만) */}
