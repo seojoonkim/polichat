@@ -16,17 +16,26 @@ export default async function handler(req, res) {
 
   const supabase = createClient(supabaseUrl, supabaseKey);
 
+  const buildStyleKey = (style, promptVersion) => {
+    const baseStyle = (typeof style === 'string' ? style : 'free').trim() || 'free';
+    const versionTag = typeof promptVersion === 'string' && promptVersion.trim()
+      ? `__pv_${promptVersion.trim()}`
+      : '';
+    return `${baseStyle}${versionTag}`;
+  };
+
   // GET: 캐시 조회 (최신 버전)
   if (req.method === 'GET') {
-    const { topic, style = 'free', debateType = 'seoul' } = req.query;
+    const { topic, style = 'free', debateType = 'seoul', pv = null } = req.query;
     if (!topic) return res.status(400).json({ error: 'topic required' });
+    const styleKey = buildStyleKey(style, pv);
 
     try {
       const { data, error } = await supabase
         .from('debate_cache')
         .select('*')
         .eq('topic', topic)
-        .eq('style', style)
+        .eq('style', styleKey)
         .eq('debate_type', debateType)
         .order('version', { ascending: false })
         .limit(1)
@@ -47,10 +56,11 @@ export default async function handler(req, res) {
 
   // POST: 캐시 저장
   if (req.method === 'POST') {
-    const { topic, style = 'free', messages, judgment, debateType = 'seoul' } = req.body;
+    const { topic, style = 'free', messages, judgment, debateType = 'seoul', promptVersion = null } = req.body;
     if (!topic || !messages) {
       return res.status(400).json({ error: 'topic and messages required' });
     }
+    const styleKey = buildStyleKey(style, promptVersion);
 
     try {
       // 현재 최대 버전 확인
@@ -58,7 +68,7 @@ export default async function handler(req, res) {
         .from('debate_cache')
         .select('version')
         .eq('topic', topic)
-        .eq('style', style)
+        .eq('style', styleKey)
         .eq('debate_type', debateType)
         .order('version', { ascending: false })
         .limit(1)
@@ -71,7 +81,7 @@ export default async function handler(req, res) {
       for (let attempt = 0; attempt < 3; attempt++) {
         ({ data, error } = await supabase
           .from('debate_cache')
-          .insert({ topic, style, debate_type: debateType, version: nextVersion, messages, judgment: judgment || null })
+          .insert({ topic, style: styleKey, debate_type: debateType, version: nextVersion, messages, judgment: judgment || null })
           .select()
           .single());
         
