@@ -290,6 +290,11 @@ export default function PoliticianSelector({ politicians }: Props) {
 
   useEffect(() => {
     const controller = new AbortController();
+    // issue-history를 최초 마운트 시 즉시 병렬 fetch (빠른 로딩)
+    fetch('/api/issue-history?days=3')
+      .then((r) => r.json())
+      .then((data) => { if (data?.issues?.length) setIssueHistory(data.issues); })
+      .catch(() => {});
     const loadIssues = async () => {
       try {
           const res = await fetch('/api/issues', { signal: controller.signal });
@@ -300,12 +305,6 @@ export default function PoliticianSelector({ politicians }: Props) {
         const first = (data?.issues || [])[0];
         if (!controller.signal.aborted && first?.title) {
           setHeroIssue({ title: first.title });
-          fetch('/api/issue-history')
-            .then((r) => r.json())
-            .then((data) => {
-              if (data?.issues?.length) setIssueHistory(data.issues);
-            })
-            .catch(() => {});
 
           // 백그라운드에서 모든 매치업 타입 프리패치 (silent)
           const prefetchTypes = ['seoul', 'national', 'leejeon', 'kimjin', 'hanhong'];
@@ -612,9 +611,7 @@ export default function PoliticianSelector({ politicians }: Props) {
                   : [];
 
               if (displayList.length === 0) {
-                return (
-                  <p className="text-center text-gray-500 text-sm py-16">이슈 히스토리 쌓이는 중...<br/><span className="text-xs text-gray-400">매 2시간 자동 업데이트</span></p>
-                );
+                return <div className="py-8 flex justify-center"><div className="w-6 h-6 border-2 border-violet-300 border-t-violet-600 rounded-full animate-spin"/></div>;
               }
 
               return displayList.map((dayIssue) => {
@@ -627,49 +624,46 @@ export default function PoliticianSelector({ politicians }: Props) {
                 const calMonthName = monthNames[calMonth] || '';
 
                 return (
-                  <div key={dayIssue.date}>
+                  <div key={dayIssue.date} className="rounded-2xl overflow-hidden shadow-sm" style={{background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%)'}}>
                     {/* 헤더 — 클릭 시 토론자 펼침/접힘 */}
                     <div
-                      className="rounded-2xl overflow-hidden cursor-pointer active:opacity-90 transition-opacity"
-                      style={{background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%)'}}
+                      className="px-4 py-3 flex items-center gap-3 cursor-pointer active:opacity-90 transition-opacity"
                       onClick={() => toggleDate(dayIssue.date)}
                     >
-                      <div className="px-4 py-3 flex items-center gap-3">
-                        {/* 달력 뱃지 — 정사각형 */}
-                        <div className="shrink-0 flex flex-col rounded-xl overflow-hidden shadow-md" style={{width: '52px', height: '52px', border: '1px solid rgba(167,139,250,0.4)'}}>
-                          <div className="flex-1 flex items-center justify-center text-[9px] font-black tracking-wide text-white" style={{background: '#4c1d95'}}>
-                            {calYear} {calMonthName}
-                          </div>
-                          <div className="flex-1 flex items-center justify-center bg-white">
-                            <span className="text-[20px] font-black text-gray-900 leading-none">{calDay}</span>
-                          </div>
+                      {/* 달력 뱃지 — 정사각형, 날짜 위/연도월 아래 */}
+                      <div className="shrink-0 flex flex-col rounded-xl overflow-hidden shadow-md" style={{width: '52px', height: '52px', border: '1px solid rgba(167,139,250,0.4)'}}>
+                        <div className="flex-[3] flex items-center justify-center bg-white">
+                          <span className="text-[21px] font-black text-gray-900 leading-none">{calDay}</span>
                         </div>
-                        {/* 제목 — 크게 */}
-                        <p className="text-[18px] font-bold text-white leading-snug flex-1">{dayIssue.title}</p>
-                        {/* 접기/펼치기 화살표 */}
-                        <span className="shrink-0 text-white/50 text-xs transition-transform duration-200" style={{transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)'}}>▼</span>
+                        <div className="flex-[2] flex items-center justify-center text-[8px] font-black tracking-wide text-white" style={{background: '#4c1d95'}}>
+                          {calYear} {calMonthName}
+                        </div>
                       </div>
+                      {/* 제목 */}
+                      <p className="text-[18px] font-bold text-white leading-snug flex-1">{dayIssue.title}</p>
+                      {/* 화살표 */}
+                      <span className="shrink-0 text-white/50 text-xs" style={{transition: 'transform 0.2s', display: 'inline-block', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)'}}>▼</span>
                     </div>
 
-                    {/* 아코디언 — 토론자 목록 */}
+                    {/* 아코디언 — 카드에 물린 토론자 목록 */}
                     {isExpanded && (
-                      <div className="mt-2 space-y-1.5">
+                      <div className="bg-[#F6F6FA] mx-2 mb-2 rounded-xl overflow-hidden divide-y divide-gray-100">
                         {issueTypes.map((item) => (
                           <button
                             key={item.value}
                             onClick={() => navigate(`/debate?type=${item.value}&issue=${encodeURIComponent(dayIssue.title)}&autostart=1`)}
-                            className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl border border-gray-200 bg-white hover:border-violet-300 hover:bg-violet-50 active:scale-[0.98] transition-all duration-150"
+                            className="w-full flex items-center gap-2 px-3 py-2.5 bg-white hover:bg-violet-50 active:bg-violet-100 transition-colors"
                           >
                             <div className="flex items-center gap-1.5 shrink-0">
-                              <img src={item.imgA} alt={item.nameA} className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm" onError={(e) => { e.currentTarget.style.display='none'; }} />
-                              <span className="text-[15px] font-bold text-gray-800">{item.nameA}</span>
+                              <img src={item.imgA} alt={item.nameA} className="w-9 h-9 rounded-full object-cover border-2 border-white shadow-sm" onError={(e) => { e.currentTarget.style.display='none'; }} />
+                              <span className="text-[14px] font-bold text-gray-800">{item.nameA}</span>
                             </div>
-                            <span className="text-[11px] font-bold text-gray-400 shrink-0 px-1">VS</span>
+                            <span className="text-[10px] font-bold text-gray-400 shrink-0 px-1">VS</span>
                             <div className="flex items-center gap-1.5 flex-1">
-                              <img src={item.imgB} alt={item.nameB} className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm" onError={(e) => { e.currentTarget.style.display='none'; }} />
-                              <span className="text-[15px] font-bold text-gray-800">{item.nameB}</span>
+                              <img src={item.imgB} alt={item.nameB} className="w-9 h-9 rounded-full object-cover border-2 border-white shadow-sm" onError={(e) => { e.currentTarget.style.display='none'; }} />
+                              <span className="text-[14px] font-bold text-gray-800">{item.nameB}</span>
                             </div>
-                            <span className="shrink-0 text-violet-500 text-xs font-bold">시작 →</span>
+                            <span className="shrink-0 text-violet-500 text-[11px] font-bold">시작 →</span>
                           </button>
                         ))}
                       </div>

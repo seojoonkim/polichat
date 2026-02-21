@@ -60,6 +60,7 @@ export async function getRecentIssues(days) {
 /** RSS에서 날짜별 이슈 직접 가져오기 (Supabase fallback용) */
 async function fetchIssuesByDateFromRSS(days) {
   const feeds = [
+    'https://news.google.com/rss/search?q=%ED%95%9C%EA%B5%AD+%EC%A0%95%EC%B9%98&hl=ko&gl=KR&ceid=KR:ko',
     'https://www.ytn.co.kr/_ln/0101_rss.xml',
     'https://rss.donga.com/politics.xml',
     'https://www.hani.co.kr/rss/politics/',
