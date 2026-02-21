@@ -469,12 +469,7 @@ function formatIssueDate(dateStr: string): string {
         )}
 
         {activeTab === 'battle' && (
-          <div id="debate-battle" className="animate-fade-in-up space-y-2" style={{ animationDelay: '0.12s' }}>
-            <div className="mb-2">
-              <p className="text-[12px] font-bold text-gray-500 uppercase tracking-widest mb-3 px-1">
-                AI 5분 토론
-              </p>
-            </div>
+          <div id="debate-battle" className="animate-fade-in-up space-y-2 pt-3" style={{ animationDelay: '0.12s' }}>
             <DebateBanner debateType="seoul" />
             <DebateBanner debateType="national" />
             <DebateBanner debateType="leejeon" />
@@ -511,20 +506,8 @@ function formatIssueDate(dateStr: string): string {
 
         {activeTab === 'chat' && (
           <>
-            <div id="politician-chat" className="mb-3 animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
-              <p className="text-[13px] font-bold text-gray-700 tracking-wide uppercase flex items-center gap-1.5" style={{ letterSpacing: '0.06em' }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                  <circle cx="9" cy="10" r="0.8" fill="currentColor"/>
-                  <circle cx="12" cy="10" r="0.8" fill="currentColor"/>
-                  <circle cx="15" cy="10" r="0.8" fill="currentColor"/>
-                </svg>
-                AI 1:1 대화
-              </p>
-            </div>
-
             {/* Politician Cards */}
-            <div className="space-y-3">
+            <div className="space-y-3 pt-3">
               {politicians.map((politician, index) => (
                 <div
                   key={politician.id}
@@ -619,11 +602,7 @@ function formatIssueDate(dateStr: string): string {
 
         {activeTab === 'issue' && (
           <div className="px-4 py-4 space-y-6">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-[12px] font-bold text-gray-400 uppercase tracking-widest">📰 오늘의 이슈 토론</span>
-            </div>
             {(() => {
-              // Build list: history first, fallback to today's hero issue
               const displayList = issueHistory.length > 0
                 ? issueHistory
                 : heroIssue?.title
@@ -632,28 +611,33 @@ function formatIssueDate(dateStr: string): string {
 
               if (displayList.length === 0) {
                 return (
-                  <p className="text-center text-gray-500 text-sm py-16">이슈 히스토리 쌓이는 중... (매 2시간 업데이트)</p>
+                  <p className="text-center text-gray-500 text-sm py-16">이슈 히스토리 쌓이는 중...<br/><span className="text-xs text-gray-400">매 2시간 자동 업데이트</span></p>
                 );
               }
 
               return displayList.map((dayIssue) => {
                 const isToday = dayIssue.date === todayKST;
+                const dateParts = dayIssue.date.split('-');
+                const calMonth = parseInt(dateParts[1] || '0', 10);
+                const calDay = parseInt(dateParts[2] || '0', 10);
+                const monthNames = ['','JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+                const calMonthName = monthNames[calMonth] || '';
                 return (
-                  <div key={dayIssue.date} className="space-y-2.5">
-                    {/* Date label */}
-                    <div className="flex items-center gap-2">
-                      <span className={`text-xs font-bold uppercase tracking-wide px-2 py-0.5 rounded-full
-                        ${isToday ? 'bg-violet-100 text-violet-700' : 'text-gray-400'}`}>
-                        {isToday ? '오늘' : formatIssueDate(dayIssue.date)}
-                      </span>
-                      <div className="flex-1 h-px bg-gray-100" />
-                    </div>
-
-                    {/* Issue headline card */}
+                  <div key={dayIssue.date} className="space-y-2">
+                    {/* Issue headline card with calendar badge */}
                     <div className="rounded-2xl overflow-hidden" style={{background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%)'}}>
-                      <div className="px-4 py-3.5">
-                        <p className="text-[10px] uppercase tracking-widest text-violet-300 mb-1.5">📰 오늘의 이슈</p>
-                        <p className="text-sm font-bold text-white leading-snug">{dayIssue.title}</p>
+                      <div className="px-4 py-3.5 flex items-start gap-3">
+                        {/* Calendar badge */}
+                        <div className="shrink-0 flex flex-col items-center rounded-xl overflow-hidden shadow-md" style={{minWidth: '42px', border: '1px solid rgba(167,139,250,0.4)'}}>
+                          <div className="w-full text-center py-0.5 text-[9px] font-black tracking-wider text-white" style={{background: isToday ? '#7c3aed' : '#4c1d95'}}>
+                            {isToday ? '오늘' : calMonthName}
+                          </div>
+                          <div className="w-full text-center bg-white py-0.5">
+                            <span className="text-[19px] font-black text-gray-900 leading-none">{calDay}</span>
+                          </div>
+                        </div>
+                        {/* Title */}
+                        <p className="text-sm font-bold text-white leading-snug flex-1 pt-0.5">{dayIssue.title}</p>
                       </div>
                     </div>
 
