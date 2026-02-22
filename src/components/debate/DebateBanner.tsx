@@ -37,41 +37,167 @@ export default function DebateBanner({ debateType = 'seoul' }: DebateBannerProps
   };
 
   const c = config[debateType] ?? config['seoul'];
+  const isNational = debateType === 'national';
+  const isLeejeon = debateType === 'leejeon';
+  const isKimjin = debateType === 'kimjin';
+  const isHanhong = debateType === 'hanhong';
   const navigationUrl = debateType === 'seoul' ? '/debate' : `/debate?type=${debateType}`;
-  const uid = debateType;
+
+  const cardBackground = isLeejeon
+    ? 'linear-gradient(120deg, #1a0800 0%, #150510 40%, #1a0000 100%)'
+    : isKimjin
+    ? 'linear-gradient(120deg, #0f0f0f 0%, #141414 40%, #0f0f0f 100%)'
+    : isHanhong
+    ? 'linear-gradient(120deg, #2a0408 0%, #1a0008 40%, #2a0408 100%)'
+    : isNational
+    ? 'linear-gradient(120deg, #060b1a 0%, #1a1020 40%, #1a0608 100%)'
+    : 'linear-gradient(120deg, #2a0408 0%, #1a1020 40%, #06112a 100%)';
+
+  const bgRadialGradient = isLeejeon
+    ? `radial-gradient(ellipse 90% 130% at 10% 50%, rgba(255,107,53,0.65) 0%, transparent 55%),
+       radial-gradient(ellipse 90% 130% at 90% 50%, rgba(201,21,30,0.65) 0%, transparent 55%)`
+    : isKimjin
+    ? `radial-gradient(ellipse 90% 130% at 10% 50%, rgba(90,90,90,0.55) 0%, transparent 55%),
+       radial-gradient(ellipse 90% 130% at 90% 50%, rgba(60,60,60,0.55) 0%, transparent 55%)`
+    : isHanhong
+    ? `radial-gradient(ellipse 90% 130% at 10% 50%, rgba(201,21,30,0.55) 0%, transparent 55%),
+       radial-gradient(ellipse 90% 130% at 90% 50%, rgba(139,0,0,0.55) 0%, transparent 55%)`
+    : isNational
+    ? `radial-gradient(ellipse 90% 130% at 10% 50%, rgba(0,78,162,0.55) 0%, transparent 55%),
+       radial-gradient(ellipse 90% 130% at 90% 50%, rgba(201,21,30,0.55) 0%, transparent 55%)`
+    : `radial-gradient(ellipse 90% 130% at 10% 50%, rgba(201,21,30,0.55) 0%, transparent 55%),
+       radial-gradient(ellipse 90% 130% at 90% 50%, rgba(0,78,162,0.55) 0%, transparent 55%)`;
+  const uid = debateType; // unique prefix for animation names
 
   return (
     <div
-      className="relative rounded-2xl overflow-hidden cursor-pointer mb-5 group bg-white border border-gray-100"
-      style={{ boxShadow: '0 1px 6px rgba(0,0,0,0.06)', minHeight: '150px' }}
+      className="relative rounded-2xl overflow-hidden cursor-pointer mb-5 group"
+      style={{
+        background: cardBackground,
+        minHeight: '150px',
+      }}
       onClick={() => navigate(navigationUrl)}
     >
+      {/* ── 애니메이션 CSS ─────────────────────────────────────────── */}
       <style>{`
+        @keyframes bgBreath-${uid} {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.7; }
+        }
+        @keyframes scanLine-${uid} {
+          0%   { transform: translateX(-100%); opacity: 0; }
+          10%  { opacity: 1; }
+          90%  { opacity: 1; }
+          100% { transform: translateX(400%); opacity: 0; }
+        }
         @keyframes ringGlowA-${uid} {
-          0%, 100% { box-shadow: 0 0 0 2.5px ${c.candidateA.color}99, 0 4px 16px ${c.candidateA.color}30; }
-          50%       { box-shadow: 0 0 0 3px ${c.candidateA.color}CC, 0 4px 24px ${c.candidateA.color}55; }
+          0%, 100% { box-shadow: 0 0 0 2.5px ${c.candidateA.color}CC, 0 4px 20px ${c.candidateA.color}60; }
+          50%       { box-shadow: 0 0 0 3px ${c.candidateA.color}FF, 0 4px 30px ${c.candidateA.color}AA, 0 0 20px ${c.candidateA.color}40; }
         }
         @keyframes ringGlowB-${uid} {
-          0%, 100% { box-shadow: 0 0 0 2.5px ${c.candidateB.color}99, 0 4px 16px ${c.candidateB.color}30; }
-          50%       { box-shadow: 0 0 0 3px ${c.candidateB.color}CC, 0 4px 24px ${c.candidateB.color}55; }
+          0%, 100% { box-shadow: 0 0 0 2.5px ${c.candidateB.color}CC, 0 4px 20px ${c.candidateB.color}60; }
+          50%       { box-shadow: 0 0 0 3px ${c.candidateB.color}FF, 0 4px 30px ${c.candidateB.color}AA, 0 0 20px ${c.candidateB.color}40; }
+        }
+        @keyframes vsPulse-${uid} {
+          0%, 100% { filter: drop-shadow(0 2px 6px rgba(255,200,0,0.4)); transform: scale(1); }
+          50%       { filter: drop-shadow(0 2px 18px rgba(255,200,0,0.75)); transform: scale(1.06); }
+        }
+        @keyframes btnGlow-${uid} {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(255,215,0,0); border-color: rgba(255,215,0,0.5); }
+          50%       { box-shadow: 0 0 12px 2px rgba(255,215,0,0.2); border-color: rgba(255,215,0,0.85); }
+        }
+        @keyframes taglinePulse-${uid} {
+          0%, 100% { opacity: 1; text-shadow: 0 0 8px rgba(255,255,255,0.15); }
+          50%       { opacity: 0.88; text-shadow: 0 0 16px rgba(255,255,255,0.3); }
+        }
+        @keyframes particleFloat-${uid} {
+          0%   { transform: translateY(0) scale(1); opacity: 0.6; }
+          100% { transform: translateY(-60px) scale(0.3); opacity: 0; }
         }
       `}</style>
 
-      {/* 상단 태그라인 */}
-      <div className="relative z-10 text-center pt-3 pb-0">
-        <p className="text-violet-600 font-black text-[15px] tracking-tight">
+      {/* ── 배경 그라디언트 (숨쉬는 효과) ─────────────────────────── */}
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: bgRadialGradient,
+          animation: `bgBreath-${uid} 4s ease-in-out infinite`,
+        }}
+      />
+
+      {/* ── 격자 텍스처 ────────────────────────────────────────────── */}
+      <div
+        className="absolute inset-0 opacity-[0.04]"
+        style={{
+          backgroundImage: 'linear-gradient(rgba(255,255,255,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+        }}
+      />
+
+      {/* ── 스캔라인 (가로로 쓸고 지나가는 빛) ─────────────────────── */}
+      <div
+        className="absolute inset-y-0 w-1/4 pointer-events-none"
+        style={{
+          background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent)',
+          animation: `scanLine-${uid} 5s ease-in-out infinite`,
+          animationDelay: debateType === 'national' ? '2.5s' : '0s',
+        }}
+      />
+
+      {/* ── 떠오르는 파티클 (왼쪽) ──────────────────────────────────── */}
+      {[...Array(3)].map((_, idx) => (
+        <div
+          key={`pl-${idx}`}
+          className="absolute rounded-full pointer-events-none"
+          style={{
+            width: '3px', height: '3px',
+            background: c.candidateA.color,
+            left: `${8 + idx * 6}%`,
+            bottom: `${20 + idx * 12}%`,
+            opacity: 0.5,
+            animation: `particleFloat-${uid} ${2.5 + idx * 0.8}s ease-out infinite`,
+            animationDelay: `${idx * 0.9}s`,
+          }}
+        />
+      ))}
+
+      {/* ── 떠오르는 파티클 (오른쪽) ─────────────────────────────────── */}
+      {[...Array(3)].map((_, idx) => (
+        <div
+          key={`pr-${idx}`}
+          className="absolute rounded-full pointer-events-none"
+          style={{
+            width: '3px', height: '3px',
+            background: c.candidateB.color,
+            right: `${8 + idx * 6}%`,
+            bottom: `${20 + idx * 12}%`,
+            opacity: 0.5,
+            animation: `particleFloat-${uid} ${2.5 + idx * 0.8}s ease-out infinite`,
+            animationDelay: `${0.4 + idx * 0.9}s`,
+          }}
+        />
+      ))}
+
+      {/* ── 상단 태그라인 ─────────────────────────────────────────── */}
+      <div className="relative z-10 text-center pt-2 pb-0">
+        <p
+          className="text-white font-black text-[17px] tracking-tight"
+          style={{ animation: `taglinePulse-${uid} 3.5s ease-in-out infinite` }}
+        >
           {c.tagline}
         </p>
       </div>
 
-      {/* 메인 그리드 */}
-      <div className="relative z-10 grid grid-cols-3 items-center px-4 py-3">
+      {/* ── 메인 그리드 ───────────────────────────────────────────── */}
+      <div className="relative z-10 grid grid-cols-3 items-center px-4 py-2">
 
         {/* 후보 A */}
         <div className="flex flex-col items-center gap-1.5">
           <div
-            className="w-[86px] h-[86px] rounded-full overflow-hidden transition-transform duration-300 group-hover:scale-105"
-            style={{ animation: `ringGlowA-${uid} 2.8s ease-in-out infinite` }}
+            className="w-[90px] h-[90px] rounded-full overflow-hidden transition-transform duration-300 group-hover:scale-105"
+            style={{
+              animation: `ringGlowA-${uid} 2.8s ease-in-out infinite`,
+            }}
           >
             <img
               src={`/politicians/${c.candidateA.id}/profile.jpg`}
@@ -80,10 +206,10 @@ export default function DebateBanner({ debateType = 'seoul' }: DebateBannerProps
               onError={(e) => { e.currentTarget.style.display = 'none'; }}
             />
           </div>
-          <span className="text-gray-900 text-[15px] font-bold tracking-tight">{c.candidateA.name}</span>
+          <span className="text-white text-[15px] font-bold tracking-tight">{c.candidateA.name}</span>
           <span
             className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
-            style={{ backgroundColor: `${c.candidateA.color}15`, color: c.candidateA.color, border: `1px solid ${c.candidateA.color}40` }}
+            style={{ background: 'rgba(255,255,255,0.92)', color: c.candidateA.color, border: `1px solid ${c.candidateA.color}80` }}
           >
             {c.candidateA.party}
           </span>
@@ -92,26 +218,38 @@ export default function DebateBanner({ debateType = 'seoul' }: DebateBannerProps
         {/* VS + CTA */}
         <div className="flex flex-col items-center gap-2">
           <div
-            className="text-[30px] font-black leading-none tracking-tighter text-violet-600"
+            className="text-[32px] font-black leading-none tracking-tighter"
+            style={{
+              background: 'linear-gradient(180deg, #FFE566 0%, #FFB800 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              animation: `vsPulse-${uid} 2.2s ease-in-out infinite`,
+              display: 'inline-block',
+            }}
           >
             VS
           </div>
-          <div className="text-gray-400 text-[10px] font-bold tracking-[0.12em] uppercase">AI 토론배틀</div>
-          <button
-            className="mt-1 px-4 py-1.5 rounded-full text-[12px] font-bold flex items-center gap-1 transition-all duration-200 group-hover:scale-105 bg-violet-600 text-white"
-            style={{ boxShadow: '0 2px 8px rgba(124,58,237,0.35)' }}
+          <div className="text-white/60 text-[10px] font-bold tracking-[0.12em] uppercase">AI 토론배틀</div>
+          <div
+            className="mt-1 px-5 py-1.5 rounded-full text-[12px] font-bold flex items-center gap-1.5 transition-transform duration-200 group-hover:scale-105"
+            style={{
+              background: 'rgba(255,215,0,0.15)',
+              border: '1px solid rgba(255,215,0,0.5)',
+              color: '#FFD700',
+              animation: `btnGlow-${uid} 2.5s ease-in-out infinite`,
+            }}
           >
             토론 시작
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="9 18 15 12 9 6"/>
             </svg>
-          </button>
+          </div>
         </div>
 
         {/* 후보 B */}
         <div className="flex flex-col items-center gap-1.5">
           <div
-            className="w-[86px] h-[86px] rounded-full overflow-hidden transition-transform duration-300 group-hover:scale-105"
+            className="w-[90px] h-[90px] rounded-full overflow-hidden transition-transform duration-300 group-hover:scale-105"
             style={{
               animation: `ringGlowB-${uid} 2.8s ease-in-out infinite`,
               animationDelay: '1.4s',
@@ -124,10 +262,10 @@ export default function DebateBanner({ debateType = 'seoul' }: DebateBannerProps
               onError={(e) => { e.currentTarget.style.display = 'none'; }}
             />
           </div>
-          <span className="text-gray-900 text-[15px] font-bold tracking-tight">{c.candidateB.name}</span>
+          <span className="text-white text-[15px] font-bold tracking-tight">{c.candidateB.name}</span>
           <span
             className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
-            style={{ backgroundColor: `${c.candidateB.color}15`, color: c.candidateB.color, border: `1px solid ${c.candidateB.color}40` }}
+            style={{ background: 'rgba(255,255,255,0.92)', color: c.candidateB.color, border: `1px solid ${c.candidateB.color}80` }}
           >
             {c.candidateB.party}
           </span>
