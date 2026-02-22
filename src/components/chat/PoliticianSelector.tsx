@@ -533,7 +533,7 @@ export default function PoliticianSelector({ politicians }: Props) {
                   >
                     <div
                       className="pc-card-interactive w-full overflow-hidden rounded-2xl relative"
-                      style={{ background: 'linear-gradient(120deg, #0f0f0f 0%, #1a1a1a 50%, #0f0f0f 100%)' }}
+                      style={{ background: 'linear-gradient(120deg, #1e293b 0%, #0f172a 50%, #1e293b 100%)' }}
                     >
                       {/* 당색 radial glow 오버레이 */}
                       <div
