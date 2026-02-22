@@ -250,7 +250,20 @@ export default function PoliticianSelector({ politicians }: Props) {
   const cardsRef = useRef<(HTMLDivElement | null)[]>([]);
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabId>('battle');
-  const [heroIssue, setHeroIssue] = useState<IssueHeadline | null>(null);
+  const [heroIssue, setHeroIssue] = useState<IssueHeadline | null>(() => {
+    // stale-while-revalidate: 이전에 캐시된 이슈를 즉시 표시 (오늘 날짜 것만)
+    try {
+      const todayKST = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+      const cached = localStorage.getItem('pc_hero_issue');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed.date === todayKST && parsed.title) {
+          return { title: parsed.title };
+        }
+      }
+    } catch {}
+    return null;
+  });
   const [heroVisible, setHeroVisible] = useState(true);
   const [issueError, setIssueError] = useState(false);
   const [issueHistory, setIssueHistory] = useState<IssueHistoryItem[]>([]);
@@ -306,6 +319,11 @@ export default function PoliticianSelector({ politicians }: Props) {
         const first = (data?.issues || [])[0];
         if (!controller.signal.aborted && first?.title) {
           setHeroIssue({ title: first.title });
+          // 오늘 날짜로 캐싱 (다음 방문 시 즉시 표시)
+          try {
+            const todayKST = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+            localStorage.setItem('pc_hero_issue', JSON.stringify({ date: todayKST, title: first.title }));
+          } catch {}
 
           // 백그라운드에서 모든 매치업 타입 프리패치 (silent)
           const prefetchTypes = ['seoul', 'national', 'leejeon', 'kimjin', 'hanhong'];
