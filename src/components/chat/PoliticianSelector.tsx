@@ -236,9 +236,9 @@ function useTypingLoop(name: string) {
 
 function TypingPreview({ name }: { name: string }) {
   const { text, isTyping } = useTypingLoop(name);
-  if (!text) return <p className="typing-preview idle text-xs text-slate-600 mb-2 truncate">&nbsp;</p>;
+  if (!text) return <p className="typing-preview idle text-xs text-white/60 mb-2 truncate">&nbsp;</p>;
   return (
-    <p className={`typing-preview ${isTyping ? 'typing' : 'idle'} text-xs text-slate-600 mb-2 truncate overflow-hidden`}>
+    <p className={`typing-preview ${isTyping ? 'typing' : 'idle'} text-xs text-white/60 mb-2 truncate overflow-hidden`}>
       {text}
     </p>
   );
@@ -532,16 +532,21 @@ export default function PoliticianSelector({ politicians }: Props) {
                     className="w-full text-left group"
                   >
                     <div
-                      className="pc-card-interactive w-full overflow-hidden rounded-2xl"
-                      style={{ background: `linear-gradient(135deg, ${politician.themeColor}50 0%, ${politician.themeColor}20 50%, ${politician.themeColor}10 100%)` }}
+                      className="pc-card-interactive w-full overflow-hidden rounded-2xl relative"
+                      style={{ background: 'linear-gradient(120deg, #0f0f0f 0%, #1a1a1a 50%, #0f0f0f 100%)' }}
                     >
-                      <div className="flex items-center gap-5 px-5 py-4">
-                        {/* Profile circle with color ring */}
+                      {/* 당색 radial glow 오버레이 */}
+                      <div
+                        className="absolute inset-0 pointer-events-none"
+                        style={{ background: `radial-gradient(ellipse 80% 100% at 15% 50%, ${politician.themeColor}45 0%, transparent 60%)` }}
+                      />
+                      <div className="relative flex items-center gap-5 px-5 py-4">
+                        {/* Profile circle with battle-style glow ring */}
                         <div className="relative shrink-0">
                           <div
                             className="w-[85px] h-[85px] rounded-full overflow-hidden"
                             style={{
-                              boxShadow: `0 0 0 3px white, 0 0 0 6px ${politician.themeColor}90, 0 8px 20px ${politician.themeColor}30`,
+                              boxShadow: `0 0 0 2.5px ${politician.themeColor}CC, 0 4px 20px ${politician.themeColor}60`,
                             }}
                           >
                             {politician.profileImageUrl ? (
@@ -571,27 +576,28 @@ export default function PoliticianSelector({ politicians }: Props) {
                         {/* Info */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-bold text-[20px] text-gray-950 truncate">
+                            <h3 className="font-bold text-[20px] text-white truncate">
                               {politician.nameKo}
                             </h3>
                             <span
                               className="px-2 py-0.5 text-[11px] font-bold rounded-full shrink-0 whitespace-nowrap"
                               style={{
-                                backgroundColor: `${politician.themeColor}15`,
+                                background: 'rgba(255,255,255,0.92)',
                                 color: politician.themeColor,
+                                border: `1px solid ${politician.themeColor}80`,
                               }}
                             >
                               {politician.group}
                             </span>
                           </div>
-                          <p className="text-[13px] text-gray-700 line-clamp-1 mb-1.5 leading-snug">
+                          <p className="text-[13px] text-white/70 line-clamp-1 mb-1.5 leading-snug">
                             <TaglineRenderer text={politician.tagline} />
                           </p>
                           <TypingPreview name={politician.nameKo} />
                         </div>
 
                         {/* Chevron arrow */}
-                        <div className="shrink-0 pl-1 text-gray-300 transition-all duration-300 group-hover:text-gray-500 group-hover:translate-x-1">
+                        <div className="shrink-0 pl-1 text-white/50 transition-all duration-300 group-hover:text-white/80 group-hover:translate-x-1">
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M9 18l6-6-6-6" />
                           </svg>
@@ -653,7 +659,7 @@ export default function PoliticianSelector({ politicians }: Props) {
 
                     {/* 아코디언 — 카드에 물린 토론자 목록 */}
                     {isExpanded && (
-                      <div className="bg-[#F7F8F8] mx-2 mb-2 rounded-xl overflow-hidden divide-y divide-gray-100">
+                      <div className="mx-2 mb-2 rounded-xl overflow-hidden divide-y divide-white/10" style={{ background: 'rgba(255,255,255,0.05)' }}>
                         {(dayIssue.matchups && dayIssue.matchups.length > 0
                           ? issueTypes.filter(t => dayIssue.matchups!.includes(t.value))
                           : issueTypes
@@ -661,21 +667,28 @@ export default function PoliticianSelector({ politicians }: Props) {
                           <button
                             key={item.value}
                             onClick={() => navigate(`/debate?type=${item.value}&autostart=1`, { state: { issue: dayIssue.title } })}
-                            className="w-full flex items-center px-3 py-2.5 bg-white hover:bg-violet-50 active:bg-violet-100 transition-colors"
+                            className="w-full flex items-center px-3 py-2.5 bg-white/5 hover:bg-white/10 active:bg-white/15 transition-colors"
                           >
                             {/* 중앙 정렬 매치업 */}
                             <div className="flex-1 flex items-center justify-center gap-2">
                               <div className="flex items-center gap-1.5">
-                                <img src={item.imgA} alt={item.nameA} className="w-9 h-9 rounded-full object-cover border-2 border-white shadow-sm" onError={(e) => { e.currentTarget.style.display='none'; }} />
-                                <span className="text-[14px] font-bold text-gray-800">{item.nameA}</span>
+                                <img src={item.imgA} alt={item.nameA} className="w-9 h-9 rounded-full object-cover border-2 border-white/30 shadow-sm" onError={(e) => { e.currentTarget.style.display='none'; }} />
+                                <span className="text-[14px] font-bold text-white">{item.nameA}</span>
                               </div>
-                              <span className="text-[10px] font-bold text-gray-400 px-0.5">VS</span>
+                              <span className="text-[10px] font-bold text-white/40 px-0.5">VS</span>
                               <div className="flex items-center gap-1.5">
-                                <img src={item.imgB} alt={item.nameB} className="w-9 h-9 rounded-full object-cover border-2 border-white shadow-sm" onError={(e) => { e.currentTarget.style.display='none'; }} />
-                                <span className="text-[14px] font-bold text-gray-800">{item.nameB}</span>
+                                <img src={item.imgB} alt={item.nameB} className="w-9 h-9 rounded-full object-cover border-2 border-white/30 shadow-sm" onError={(e) => { e.currentTarget.style.display='none'; }} />
+                                <span className="text-[14px] font-bold text-white">{item.nameB}</span>
                               </div>
                             </div>
-                            <span className="shrink-0 text-violet-500 text-[11px] font-bold ml-2">시작 →</span>
+                            <span
+                              className="shrink-0 text-xs font-bold ml-2 rounded-full px-3 py-1"
+                              style={{
+                                background: 'rgba(255,215,0,0.15)',
+                                border: '1px solid rgba(255,215,0,0.5)',
+                                color: '#FFD700',
+                              }}
+                            >시작 ›</span>
                           </button>
                         ))}
                       </div>
