@@ -2923,6 +2923,7 @@ export default async function handler(req, res) {
     timeLeft = null,
     dynamicKB = null,
     speakerA,
+    isFreeTopicMode = false,
   } = payload;
   const safeTimeLeft = (Number.isFinite(Number(timeLeft)) && Number(timeLeft) >= 0) ? Number(timeLeft) : null;
 
@@ -3371,6 +3372,11 @@ Step 3 — 프레임 재설정: 토론의 프레임 자체를 바꿔라. "이건
     }
   }
 
+
+  // ── 주제 고정 모드: 자유토론이 아닐 때 주제 전환 금지 ─────────────────────
+  if (!isFreeTopicMode) {
+    systemPrompt += `\n\n⚠️ 주제 고정: 반드시 주어진 주제("${safeTopic}")만 토론하라. 주제를 바꾸겠다거나 새 주제를 선언하지 마라. 사회자처럼 주제 전환을 선언하는 발언 금지.`;
+  }
 
   // ── 대화 히스토리 → messages 배열로 전달 (LLM native 방식, 전체 기억) ───────
   const SPEAKER_NAMES = {

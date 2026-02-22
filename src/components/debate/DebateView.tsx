@@ -387,7 +387,12 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
 
   // ─── 화면 이탈 감지 (다른 앱 전환 시 fetch abort 방지) ──────────────────
   useEffect(() => {
-    const onVisibility = () => { pageHiddenRef.current = document.hidden; };
+    const onVisibility = () => {
+      pageHiddenRef.current = document.hidden;
+      if (document.hidden && activeAbortCtrlRef.current) {
+        activeAbortCtrlRef.current.abort();
+      }
+    };
     document.addEventListener('visibilitychange', onVisibility);
     return () => document.removeEventListener('visibilitychange', onVisibility);
   }, []);
@@ -567,6 +572,7 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
           topic, speaker, opponentLastMessage, style, debateType,
           speakerA: config.speakerA,
           dynamicKB,
+          isFreeTopicMode: selectedTopic === 'free',
           timeLeft: opts?.timeLeft ?? timeLeftRef.current,
           recentHistory: recentHistory ?? [],
           debateSummary: opts?.debateSummary,
