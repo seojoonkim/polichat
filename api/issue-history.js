@@ -59,6 +59,40 @@ export async function saveIssueForDate(date, issueTitle, judgment = null, force 
   }
 }
 
+// ── 전체 이슈 조회 (무제한) ──────────────────────────────────────────────────
+export async function getAllIssues() {
+  const supabase = getSupabase();
+  if (!supabase) return [];
+  try {
+    const { data } = await supabase
+      .from('debate_cache')
+      .select('style, messages, judgment, created_at')
+      .eq('topic', '__issue_history__')
+      .order('style', { ascending: false });
+
+    const seenDates = new Set();
+    const deduped = (data || []).filter(row => {
+      if (seenDates.has(row.style)) return false;
+      seenDates.add(row.style);
+      return true;
+    });
+
+    return deduped.map(row => {
+      const raw = row.messages?.[0]?.content || '';
+      const matchups = (() => {
+        try {
+          const parsed = JSON.parse(row.judgment || '{}');
+          return Array.isArray(parsed.matchups) ? parsed.matchups : [];
+        } catch { return []; }
+      })();
+      return { date: row.style, title: cleanTitle(raw), matchups };
+    }).filter(r => r.title);
+  } catch (e) {
+    console.error('[issue-history] getAllIssues error:', e.message);
+    return [];
+  }
+}
+
 // ── 최근 날짜 이슈 조회 ─────────────────────────────────────────────────────
 export async function getRecentIssues(days) {
   const supabase = getSupabase();
@@ -142,7 +176,13 @@ export default async function handler(req, res) {
   res.setHeader('Cache-Control', 's-maxage=1800, stale-while-revalidate=3600');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const days = parseInt(req.query.days || '3', 10);
+  // all=1 → 날짜 제한 없이 전체 반환
+  if (req.query.all === '1') {
+    const all = await getAllIssues();
+    return res.status(200).json({ issues: all, source: 'supabase-all' });
+  }
+
+  const days = parseInt(req.query.days || '7', 10);
   const saved = await getRecentIssues(days + 1);
 
   if (saved.length >= days) {

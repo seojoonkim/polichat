@@ -292,7 +292,7 @@ export default function PoliticianSelector({ politicians }: Props) {
   useEffect(() => {
     const controller = new AbortController();
     // issue-history를 최초 마운트 시 즉시 병렬 fetch (빠른 로딩)
-    fetch('/api/issue-history?days=7')
+    fetch('/api/issue-history?all=1')
       .then((r) => r.json())
       .then((data) => { if (data?.issues?.length) setIssueHistory(data.issues); })
       .catch(() => {});
