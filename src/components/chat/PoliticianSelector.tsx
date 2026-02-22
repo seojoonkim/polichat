@@ -281,7 +281,7 @@ export default function PoliticianSelector({ politicians }: Props) {
         if (!el) return;
         el.classList.remove('revealed');
         const delay = Number(el.dataset.revealDelay || '0');
-        const t = setTimeout(() => el.classList.add('revealed'), delay + 50);
+        const t = setTimeout(() => el.classList.add('revealed'), delay + 20);
         timers.push(t);
       });
     }, 10);
@@ -476,7 +476,7 @@ export default function PoliticianSelector({ politicians }: Props) {
         )}
 
         {activeTab === 'battle' && (
-          <div id="debate-battle" className="animate-fade-in-up space-y-2 pt-3" style={{ animationDelay: '0.12s' }}>
+          <div id="debate-battle" className="animate-tab-in space-y-2 pt-3">
             <DebateBanner debateType="seoul" />
             <DebateBanner debateType="national" />
             <DebateBanner debateType="leejeon" />
@@ -517,7 +517,7 @@ export default function PoliticianSelector({ politicians }: Props) {
         )}
 
         {activeTab === 'chat' && (
-          <>
+          <div className="animate-tab-in">
             {/* Politician Cards */}
             <div className="space-y-3 pt-3">
               {politicians.map((politician, index) => (
@@ -525,7 +525,7 @@ export default function PoliticianSelector({ politicians }: Props) {
                   key={politician.id}
                   ref={(el) => { cardsRef.current[index] = el; }}
                   className="reveal-card"
-                  data-reveal-delay={index * 40}
+                  data-reveal-delay={index * 20}
                 >
                   <button
                     onClick={() => setCurrentPolitician(politician.id)}
@@ -609,11 +609,11 @@ export default function PoliticianSelector({ politicians }: Props) {
               ))}
             </div>
 
-          </>
+          </div>
         )}
 
         {activeTab === 'issue' && (
-          <div className="px-4 py-4 space-y-4">
+          <div className="animate-tab-in px-4 py-4 space-y-4">
             {(() => {
               const displayList = [...(issueHistory.length > 0
                 ? issueHistory
