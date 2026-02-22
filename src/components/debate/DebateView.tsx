@@ -638,7 +638,7 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
                 if (json.text) {
                   if (!firstTokenReceived) {
                     firstTokenReceived = true;
-                    clearTimeout(firstTokenTimeout); // 첫 토큰 도착 → 타임아웃 해제
+                    clearTimeout(firstTokenTimeoutRef.current); // 첫 토큰 도착 → 타임아웃 해제
                   }
                   fullText += json.text;
                   if (abortRef.current) {
