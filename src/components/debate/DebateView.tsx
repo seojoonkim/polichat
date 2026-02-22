@@ -1494,7 +1494,7 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
           <p className="text-white/70 text-base mb-10">{config.speakerAName} vs {config.speakerBName}</p>
 
           {/* 인물 프로필 */}
-          <div className="flex items-center gap-12 mb-8">
+          <div className="flex items-center gap-6 mb-8">
             {/* Speaker A */}
             <div className={`flex flex-col items-center transition-all duration-700 ${
               coinFlipStage === 'revealed'
@@ -1516,8 +1516,51 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
               <span className="text-white/90 text-sm mt-3 font-semibold">{config.speakerAName.split(' ')[0]}</span>
             </div>
 
-            {/* VS */}
-            <span className="text-white/40 font-bold text-2xl">VS</span>
+            {/* 흑백 3D 코인 */}
+            <div style={{ position: 'relative', width: 90, height: 90, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {coinFlipStage === 'spinning' && (
+                <div style={{
+                  position: 'absolute', width: 116, height: 116, borderRadius: '50%',
+                  boxShadow: '0 0 20px 4px rgba(180,180,200,0.45)',
+                  animation: 'orbitRing 1.4s ease-in-out infinite alternate',
+                  pointerEvents: 'none',
+                }} />
+              )}
+              <div style={{ perspective: '500px' }}>
+                <div style={{
+                  width: 80, height: 80, position: 'relative',
+                  transformStyle: 'preserve-3d',
+                  animation: coinFlipStage === 'spinning' ? 'coinSpin3D 0.45s linear infinite' : 'none',
+                  transition: coinFlipStage === 'revealed' ? 'transform 0.7s cubic-bezier(0.34,1.56,0.64,1)' : 'none',
+                  transform: coinFlipStage === 'revealed'
+                    ? (coinFlipWinner?.key === config.speakerA ? 'rotateY(0deg)' : 'rotateY(180deg)')
+                    : undefined,
+                  filter: 'drop-shadow(0 4px 12px rgba(200,200,220,0.5))',
+                }}>
+                  {/* 앞면: Speaker A (흑백) */}
+                  <div style={{
+                    position: 'absolute', inset: 0, backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden', borderRadius: '50%', overflow: 'hidden',
+                    border: '4px solid #888', boxShadow: 'inset 0 0 0 2px rgba(255,255,255,0.2)',
+                  }}>
+                    <img src={`/politicians/${config.speakerA}/profile.jpg`}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover',
+                        filter: 'grayscale(1) contrast(1.1) brightness(1.05)' }} />
+                  </div>
+                  {/* 뒷면: Speaker B (흑백) */}
+                  <div style={{
+                    position: 'absolute', inset: 0, backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(180deg)',
+                    borderRadius: '50%', overflow: 'hidden',
+                    border: '4px solid #888', boxShadow: 'inset 0 0 0 2px rgba(255,255,255,0.2)',
+                  }}>
+                    <img src={`/politicians/${config.speakerB}/profile.jpg`}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover',
+                        filter: 'grayscale(1) contrast(1.1) brightness(1.05)' }} />
+                  </div>
+                </div>
+              </div>
+            </div>
 
             {/* Speaker B */}
             <div className={`flex flex-col items-center transition-all duration-700 ${
@@ -1553,6 +1596,14 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
           )}
 
           <style>{`
+            @keyframes coinSpin3D {
+              0%   { transform: rotateY(0deg); }
+              100% { transform: rotateY(360deg); }
+            }
+            @keyframes orbitRing {
+              0%   { transform: rotateX(72deg) rotateZ(0deg); }
+              100% { transform: rotateX(72deg) rotateZ(360deg); }
+            }
             @keyframes fadeInUp {
               from { opacity: 0; transform: translateY(12px); }
               to { opacity: 1; transform: translateY(0); }
