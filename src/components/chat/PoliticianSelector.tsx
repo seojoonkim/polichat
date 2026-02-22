@@ -660,7 +660,7 @@ export default function PoliticianSelector({ politicians }: Props) {
                         ).map((item) => (
                           <button
                             key={item.value}
-                            onClick={() => navigate(`/debate?type=${item.value}&issue=${encodeURIComponent(dayIssue.title)}&autostart=1`)}
+                            onClick={() => navigate(`/debate?type=${item.value}&autostart=1`, { state: { issue: dayIssue.title } })}
                             className="w-full flex items-center px-3 py-2.5 bg-white hover:bg-violet-50 active:bg-violet-100 transition-colors"
                           >
                             {/* 중앙 정렬 매치업 */}

@@ -99,7 +99,7 @@ export default function IssuesPage() {
                 <p className="text-base font-semibold text-gray-900 leading-snug">{issue.title}</p>
                 <button
                   onClick={() =>
-                    navigate(`/debate?type=leejeon&issue=${encodeURIComponent(issue.title)}`)
+                    navigate(`/debate?type=leejeon`, { state: { issue: issue.title } })
                   }
                   className="self-start inline-flex px-3 py-2 rounded-full text-sm font-semibold text-white"
                   style={{

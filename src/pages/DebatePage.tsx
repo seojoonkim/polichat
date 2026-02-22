@@ -1,4 +1,4 @@
-import { useSearchParams } from 'react-router';
+import { useSearchParams, useLocation } from 'react-router';
 import { useEffect, useState } from 'react';
 import DebateView, { type DebateType } from '@/components/debate/DebateView';
 import IssueResearchLoader, { type ResearchResult } from '@/components/debate/IssueResearchLoader';
@@ -10,10 +10,12 @@ const LS_TTL = 2 * 60 * 60 * 1000; // 2 hours
 
 export default function DebatePage() {
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const rawType = searchParams.get('type') || 'seoul';
   // 유효하지 않은 debate type이면 'seoul'로 fallback
   const debateType: DebateType = (VALID_TYPES.includes(rawType as DebateType) ? rawType : 'seoul') as DebateType;
-  const issueParam = searchParams.get('issue') || '';
+  // issue는 state로 전달 (URL 한국어 방지). 구형 링크 호환을 위해 searchParams fallback 유지
+  const issueParam: string = (location.state as any)?.issue || searchParams.get('issue') || '';
   const autoStart = searchParams.get('autostart') === '1';
 
   const [researchState, setResearchState] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
