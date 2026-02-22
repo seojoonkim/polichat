@@ -333,6 +333,7 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
   // 실행 취소용 ref
   const abortRef = useRef(false);
   const activeAbortCtrlRef = useRef<AbortController | null>(null);
+  const pageHiddenRef = useRef(false); // 화면 이탈 추적
   const scrollRafRef = useRef<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const freeTopicRef = useRef<string>('');
@@ -382,6 +383,13 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
       abortRef.current = true;
       activeAbortCtrlRef.current?.abort();
     };
+  }, []);
+
+  // ─── 화면 이탈 감지 (다른 앱 전환 시 fetch abort 방지) ──────────────────
+  useEffect(() => {
+    const onVisibility = () => { pageHiddenRef.current = document.hidden; };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
   }, []);
 
   // ─── 타이머 ──────────────────────────────────────────────────────────────
@@ -522,13 +530,22 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
       const abortCtrl = new AbortController();
       activeAbortCtrlRef.current = abortCtrl;
 
-      // 25초 내 첫 토큰 미수신 시 abort (Phase 1+2로 프롬프트 길어져서 API 레이턴시 증가)
-      const firstTokenTimeout = setTimeout(() => {
-        if (!firstTokenReceived) {
-          abortCtrl.abort();
-          reject(new Error('First token timeout'));
+      // 25초 내 첫 토큰 미수신 시 abort (단, 화면 이탈 중엔 타임아웃 연장)
+      const scheduleFirstTokenTimeout = (ms: number) => setTimeout(() => {
+        if (firstTokenReceived) return;
+        if (pageHiddenRef.current || document.hidden) {
+          // 화면 이탈 중 → visible 복귀 후 25초 재시도
+          const onVisible = () => {
+            document.removeEventListener('visibilitychange', onVisible);
+            firstTokenTimeoutRef.current = scheduleFirstTokenTimeout(25000);
+          };
+          document.addEventListener('visibilitychange', onVisible);
+          return;
         }
-      }, 25000);
+        abortCtrl.abort();
+        reject(new Error('First token timeout'));
+      }, ms);
+      const firstTokenTimeoutRef = { current: scheduleFirstTokenTimeout(25000) };
 
       // 전체 스트림 90초 hard limit (onToken sleep 포함한 전체 처리 시간 여유 확보)
       const hardTimeout = setTimeout(() => {
@@ -537,7 +554,7 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
       }, 150000);
 
       const cleanup = () => {
-        clearTimeout(firstTokenTimeout);
+        clearTimeout(firstTokenTimeoutRef.current);
         clearTimeout(hardTimeout);
         activeAbortCtrlRef.current = null;
       };
@@ -862,11 +879,27 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
         } catch (e) {
           const debErr = summarizeDebateError(e);
           console.error(`[debate] Stream error (attempt ${attempt + 1}):`, debErr);
+
+          // 화면 이탈 중 발생한 에러 → 복귀까지 대기 후 조용히 재시도
+          if (pageHiddenRef.current || document.hidden) {
+            await new Promise<void>(resolve => {
+              if (!document.hidden) { resolve(); return; }
+              const onVisible = () => {
+                if (!document.hidden) {
+                  document.removeEventListener('visibilitychange', onVisible);
+                  resolve();
+                }
+              };
+              document.addEventListener('visibilitychange', onVisible);
+            });
+            setCurrentText('');
+            setCurrentSpeaker(null);
+            continue; // 에러 메시지 없이 재시도
+          }
+
           // 이미 커밋된 버블 있거나, 스트리밍 중 partial text가 있으면 부분 성공 처리
-          // → 화면에서 사라지지 않음 ("보이다 사라짐" 버그 방지)
           const hasPartial = allMessages.length > messagesSnapshotLength || streamedText.trim().length > 0;
           if (hasPartial) {
-            // 현재 스트리밍 중이던 텍스트도 커밋 (버블로 확정)
             if (currentBubble.trim()) {
               const msg: DebateMessage = { speaker, text: currentBubble.trim(), timestamp: Date.now() }; 
               allMessages.push(msg);
@@ -888,7 +921,6 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
             roundSuccess = true;
             await sleep(900);
           } else {
-            // 완전 실패 여유: 공백 구간을 만들지 않도록 fallback 말풍선 추가하고 다음 턴으로 진행
             const fallbackText = `(잠시 생각을 가다듬으며 다음 발언을 준비합니다...)`;
             const fallbackMsg: DebateMessage = { speaker: '__moderator__', text: fallbackText, timestamp: Date.now() };
             allMessages.push(fallbackMsg);
@@ -1347,13 +1379,13 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
         className="shrink-0 flex items-center justify-between px-4 pb-3 border-b"
         style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)', borderColor: 'rgba(0,0,0,0.1)' }}
       >
-        <div className="flex items-center gap-2">
-          <span className="text-gray-800 font-extrabold text-base truncate max-w-[200px]">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <span className="text-gray-800 font-extrabold text-base truncate">
             🥊 {topicLabel}
           </span>
         </div>
         {(phase === 'running' || phase === 'coinflip') && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <div className="flex items-center gap-1.5 bg-gray-200 rounded-full px-3 h-8">
               <span className="text-purple-600 text-xs font-semibold">남은 시간</span>
               <span className="text-gray-800 font-bold text-base font-mono tracking-wide">
@@ -1370,7 +1402,7 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
           </div>
         )}
         {phase === 'finished' && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <span className="text-gray-500 text-sm font-semibold">🏁 종료</span>
             <button
               onClick={endDebate}
@@ -1382,7 +1414,7 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
           </div>
         )}
         {(phase === 'judging' || phase === 'result') && (
-          <span className="text-yellow-400 text-sm font-bold flex items-center gap-1">
+          <span className="text-yellow-400 text-sm font-bold flex items-center gap-1 shrink-0">
             {phase === 'judging' ? (
               <>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5"/></svg>
