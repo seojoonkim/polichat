@@ -31,7 +31,7 @@ export async function saveIssueForDate(date, issueTitle, judgment = null, force 
       .select('id')
       .eq('topic', '__issue_history__')
       .eq('style', date)
-      .order('created_at', { ascending: false })
+      .order('style', { ascending: false })
       .limit(1);
     const existing = data?.[0];
 
@@ -71,7 +71,7 @@ export async function getRecentIssues(days) {
       .select('style, messages, judgment, created_at')
       .eq('topic', '__issue_history__')
       .gte('created_at', cutoff.toISOString())
-      .order('created_at', { ascending: false });
+      .order('style', { ascending: false });
 
     // 날짜별 중복 제거 (가장 최신 행만 유지)
     const seenDates = new Set();
