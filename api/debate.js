@@ -3028,11 +3028,11 @@ export default async function handler(req, res) {
     systemPrompt += kbText;
   }
 
-  // ── 개선 A: 전체 히스토리에서 이미 사용된 논거/수치 추출 ──────────────────
+  // ── 개선 A: 전체 히스토리에서 이미 사용된 논거/수치 추출 (제한 없이 전체) ──────────────────
   const usedEvidenceAll = extractUsedEvidence(safeRecentHistory);
   if (usedEvidenceAll.size > 0) {
-    const evidenceList = Array.from(usedEvidenceAll).slice(0, 20).join(', ');
-    systemPrompt += `\n\n🔴 이미 토론에서 언급된 수치/기관 (양측 포함, 재인용 절대 금지):\n${evidenceList}\n→ 위 수치를 다시 쓰면 토론 실격. 완전히 새로운 수치·사례·출처만 사용하라.\n→ 상대방이 쓴 수치를 내 논거로 재활용하는 것도 금지. 반박 시에도 새 데이터로 반박하라.`;
+    const evidenceList = Array.from(usedEvidenceAll).join(', '); // slice 제거 — 전체 표시
+    systemPrompt += `\n\n🔴🔴 사용 금지 데이터 블랙리스트 (토론 전체 기준, 양측 포함, 위반 시 즉시 실격):\n${evidenceList}\n→ 위 수치·기관·사건명을 어떤 형태로도 다시 쓰면 토론 실격.\n→ 같은 수치를 다른 단위·표현으로 바꿔도 금지. (예: "30%"를 "10명 중 3명"으로 표현 금지)\n→ 상대방 수치를 반박에 재인용하는 것도 금지. 반드시 새 출처·새 수치로만 반박.\n→ ⚠️ 이번 발언에서 반드시 위 목록에 없는 새로운 데이터 최소 1개를 포함해야 한다.`;
   }
 
   // ── 개선 B: 상대방 발언에 맞는 반박 논거 매칭 ─────────────────────────────
@@ -3057,43 +3057,53 @@ export default async function handler(req, res) {
   }));
 
   // ── 반복 금지 목록 주입 (현재 speaker가 이미 사용한 논점 추출 + 테마 추출) ────────
-  const myPastMessages = (compactHistory || []).filter(msg => msg.speaker === safeSpeaker);
-  if (myPastMessages.length > 0) {
-    const usedTexts = myPastMessages.map((m, i) => `${i + 1}. ${m.text}`).join('\n');
-    
-    // 과거 발언들에서 핵심 테마/키워드 추출
-    const allText = myPastMessages.map(m => m.text).join(' ');
+  // 전체 히스토리에서 내 발언만 추출 (compactHistory 아닌 safeRecentHistory 사용)
+  const myAllMessages = (safeRecentHistory || []).filter(msg => msg.speaker === safeSpeaker);
+  const myPastMessages = (compactHistory || []).filter(msg => msg.speaker === safeSpeaker); // 최근 8개 (상세)
+  if (myAllMessages.length > 0) {
+    // 과거 발언들에서 핵심 테마/키워드 추출 (전체 기준)
+    const allText = myAllMessages.map(m => m.text).join(' ');
     const themeKeywords = extractThemes(allText);
     
-    // 반복 방지: 최근 4개 발언 — 앞 50자 + 뒤 50자 동시 추출 (결론부 반복 포착)
-    const recentUsed = myPastMessages.slice(-4).map((m, i) => {
-      const t = m.text;
-      const head = t.slice(0, 50);
-      const tail = t.length > 80 ? '…' + t.slice(-50) : '';
-      return `${i+1}. ${head}${tail}`;
+    // 반복 방지: 전체 발언 요약 (앞 60자 + 뒤 40자) — 전체 토론 반복 포착
+    const allUsed = myAllMessages.map((m, i) => {
+      const t = m.text || '';
+      const head = t.slice(0, 60);
+      const tail = t.length > 100 ? '…' + t.slice(-40) : '';
+      return `R${i+1}: ${head}${tail}`;
     }).join('\n');
-    systemPrompt += `\n\n🚫 반복 금지 — 최근 발언 (앞/뒤 모두 참조):\n${recentUsed}`;
-    systemPrompt += `\n⛔ 사용한 테마 (다시 언급 금지): ${themeKeywords.slice(0, 8).join(', ')}`;
+    systemPrompt += `\n\n🚫🚫 내 전체 발언 기록 (이 내용과 유사한 표현 절대 금지):\n${allUsed}`;
+    systemPrompt += `\n⛔ 반복 사용 테마 (언급 자체 금지): ${themeKeywords.slice(0, 12).join(', ')}`;
 
-    // 결론 패턴 추출 (문장 끝 40자 — 반복되는 closing 문구 차단)
-    const conclusionPatterns = myPastMessages.slice(-3)
+    // 결론 패턴 추출 (문장 끝 40자 — 반복되는 closing 문구 차단, 전체 발언 기준)
+    const conclusionPatterns = myAllMessages
       .map(m => m.text.replace(/[.!?]+$/, '').slice(-40).trim())
       .filter(s => s.length > 10);
     if (conclusionPatterns.length > 0) {
       systemPrompt += `\n⛔ 결론부 반복 금지 (이 표현으로 끝내지 마라): ${conclusionPatterns.map(s => `"…${s}"`).join(' / ')}`;
     }
 
-    // 수치 반복 차단: 이미 사용한 숫자·퍼센트·연도 추출
-    const allMyText = myPastMessages.map(m => m.text).join(' ');
+    // 수치 반복 차단: 전체 발언 기준으로 사용된 모든 숫자 추출
+    const allMyText = myAllMessages.map(m => m.text).join(' ');
     const usedNumbers = [...new Set(
       (allMyText.match(/\d+[\.,]?\d*\s*(%|조|억|만|건|명|년|개월|석|위|배|점|km|㎡|달러|원)/g) || [])
-        .concat(allMyText.match(/\d{4}[.\-]\d{1,2}[.\-]?\d{0,2}/g) || [])  // 날짜
-        .concat(allMyText.match(/\d+\s*(?:만표|만호|만명|만원|조원)/g) || [])
-    )].slice(0, 10);
+        .concat(allMyText.match(/\d{4}[.\-]\d{1,2}[.\-]?\d{0,2}/g) || [])
+        .concat(allMyText.match(/\d+\s*(?:만표|만호|만명|만원|조원|퍼센트|배포인트)/g) || [])
+        .concat(allMyText.match(/\d+위|\d+번째|\d+차/g) || [])
+    )];
     if (usedNumbers.length > 0) {
-      systemPrompt += `\n⛔ 내가 이미 사용한 수치 (완전 금지 — 같은 숫자 어떤 형태로도 재사용 불가): ${usedNumbers.join(', ')}`;
+      systemPrompt += `\n⛔ 내가 이미 사용한 수치 전체 목록 (어떤 형태로도 재사용 불가):\n${usedNumbers.join(' / ')}\n→ "30%"를 "10명 중 3명"으로 바꿔도 금지. 숫자 자체가 블랙리스트.`;
     }
-    systemPrompt += `\n✅ 위 논거 후보 중 아직 안 쓴 것으로 새로운 각도에서 공격/방어하라.`;
+    
+    // 반복 논리 구조 차단: 이미 사용한 논리 패턴 추출
+    const usedLogicPatterns = myAllMessages
+      .map(m => m.text.slice(0, 30).trim())
+      .filter(s => s.length > 5);
+    if (usedLogicPatterns.length > 0) {
+      systemPrompt += `\n⛔ 이미 사용한 발언 시작 패턴 (비슷하게 시작 금지): ${usedLogicPatterns.map(s => `"${s}…"`).join(' / ')}`;
+    }
+    
+    systemPrompt += `\n✅ 반드시 위 목록에 없는 완전히 새로운 논거·수치·출처로만 발언하라.`;
     
     // 에스컬레이션 기반 전략 가이드 (3막 구조)
     const act = getAct(compactHistory.length, safeTimeLeft);
@@ -3147,12 +3157,14 @@ export default async function handler(req, res) {
   systemPrompt += `\n\n🎯 이번 발언 필수 공격 각도: ${forcedAngle}\n이 각도로 시작하라. 다른 각도로 시작 금지.`
 
   // ── 반복 방지 강화 (최우선) ────────────────────────────────────────────────
-  systemPrompt += `\n\n🚨 CRITICAL — 반복 절대 금지:
-- 이 응답 내에서 같은 수치·통계·숫자를 2번 이상 사용하지 마라.
-- 같은 논거·주장을 다른 표현으로 바꿔 말하는 것도 반복이다.
-- 매 문장이 반드시 새로운 정보를 도입해야 한다.
-- 이전 발언에서 이미 사용한 수치는 절대 재사용 금지.
-- 위반 시 토론 패배로 간주.`;
+  systemPrompt += `\n\n🚨🚨 CRITICAL — 데이터 반복 절대 금지 (최우선 규칙):
+① 이 응답 내에서 같은 수치·통계·숫자를 단 1번도 중복 사용 금지.
+② 위 블랙리스트에 있는 수치는 어떤 형태로도(%, 배, 명, 원 등 단위 변환 포함) 재사용 금지.
+③ 같은 논거·주장을 다른 표현으로 바꿔 말하는 것도 반복이다 — 내용이 같으면 표현이 달라도 금지.
+④ 매 문장은 반드시 이전 발언에 없던 새로운 정보·수치·출처를 도입해야 한다.
+⑤ "앞서 말씀드렸듯이", "다시 한번", "강조하건대" 등 기존 논거를 재인용하는 표현 금지.
+⑥ 이번 발언에 새로운 데이터가 없으면 발언 자체를 생성하지 마라.
+위반 즉시 토론 실격. 새로운 논거가 없으면 상대의 약점을 새 각도로 파고드는 것에 집중하라.`;
 
   // ── 발언 구조 규칙 (클라이언트 버블 분리로 전환됨 — || 구분자 제거) ──────────
   systemPrompt += `\n\n🧩 발언 구조 규칙 (필수)
