@@ -3,12 +3,16 @@ import { useEffect, useState } from 'react';
 import DebateView, { type DebateType } from '@/components/debate/DebateView';
 import IssueResearchLoader, { type ResearchResult } from '@/components/debate/IssueResearchLoader';
 
+const VALID_TYPES: DebateType[] = ['seoul', 'national', 'leejeon', 'kimjin', 'hanhong'];
+
 const LS_PREFIX = 'pc_issue_kb_';
 const LS_TTL = 2 * 60 * 60 * 1000; // 2 hours
 
 export default function DebatePage() {
   const [searchParams] = useSearchParams();
-  const debateType = (searchParams.get('type') as DebateType) || 'seoul';
+  const rawType = searchParams.get('type') || 'seoul';
+  // 유효하지 않은 debate type이면 'seoul'로 fallback
+  const debateType: DebateType = (VALID_TYPES.includes(rawType as DebateType) ? rawType : 'seoul') as DebateType;
   const issueParam = searchParams.get('issue') || '';
   const autoStart = searchParams.get('autostart') === '1';
 

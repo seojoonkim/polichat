@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router';
+import { Routes, Route, Navigate } from 'react-router';
 import { lazy, Suspense } from 'react';
 import ChatPage from './pages/ChatPage';
 import DebatePage from './pages/DebatePage';
@@ -10,6 +10,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<ChatPage />} />
+      <Route path="/chat" element={<Navigate to="/" replace />} />
       <Route path="/chat/:politicianId" element={<ChatPage />} />
       <Route path="/debate" element={<DebatePage />} />
       <Route
