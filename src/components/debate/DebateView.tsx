@@ -33,12 +33,9 @@ export const DEBATE_CONFIGS = {
       { id: 'transport', label: '교통 인프라' },
       { id: 'environment', label: '환경·탄소중립' },
       { id: 'youth', label: '청년 정책' },
-      { id: 'admin', label: '행정 혁신' },
-      { id: 'branding', label: '도시 브랜딩' },
       { id: 'edu-gap', label: '교육 격차 해소' },
       { id: 'small-biz', label: '소상공인 지원' },
       { id: 'safety', label: '치안·안전 정책' },
-      { id: 'culture', label: '문화·관광 육성' },
     ],
   },
   national: {
