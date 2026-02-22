@@ -1455,150 +1455,63 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
           style={{ background: 'rgba(10,10,20,0.92)', backdropFilter: 'blur(6px)' }}
         >
           {/* 토론 제목 */}
-          <p className="text-white font-bold text-2xl mb-1 tracking-tight text-center px-6"
-             style={{ textShadow: '0 2px 16px rgba(0,0,0,0.5)' }}>
+          <p className="text-white font-extrabold text-3xl mb-2 tracking-tight text-center px-6"
+             style={{ textShadow: '0 2px 24px rgba(0,0,0,0.7)' }}>
             {config.title}
           </p>
-          <p className="text-white/60 text-sm mb-8">{config.speakerAName} vs {config.speakerBName}</p>
-          <p className="text-white/50 text-xs mb-8 tracking-[0.2em] uppercase">선공 결정 중</p>
+          <p className="text-white/70 text-base mb-10">{config.speakerAName} vs {config.speakerBName}</p>
 
-          <div className="flex items-center gap-10 mb-8">
+          {/* 인물 프로필 */}
+          <div className="flex items-center gap-12 mb-8">
             {/* Speaker A */}
             <div className={`flex flex-col items-center transition-all duration-700 ${
               coinFlipStage === 'revealed'
                 ? coinFlipWinner.key === config.speakerA
                   ? 'scale-125 opacity-100'
-                  : 'opacity-25 scale-90'
+                  : 'opacity-30 scale-90'
                 : 'opacity-100'
             }`}>
-              <div style={{ position: 'relative', width: 72, height: 72 }}>
+              <div style={{ position: 'relative', width: 100, height: 100 }}>
                 <img
                   src={`/politicians/${config.speakerA}/profile.jpg`}
-                  style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', border: '3px solid #A8B8C8',
-                    filter: 'grayscale(0.5) contrast(1.08) brightness(1.05) saturate(0.45)',
-                    boxShadow: '0 0 10px rgba(160,185,210,0.4)' }}
-                />
-                <div style={{ position: 'absolute', inset: 0, borderRadius: '50%',
-                  background: 'linear-gradient(135deg, rgba(235,242,255,0.2) 0%, transparent 60%)', pointerEvents: 'none' }} />
-              </div>
-              <span className="text-white/90 text-sm mt-2 font-semibold">{config.speakerAName.split(' ')[0]}</span>
-            </div>
-
-            {/* 3D 골드 코인 */}
-            <div style={{ position: 'relative', width: 120, height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              {/* 금빛 글로우 링 */}
-              {coinFlipStage === 'spinning' && (
-                <div style={{
-                  position: 'absolute',
-                  width: 154,
-                  height: 154,
-                  borderRadius: '50%',
-                  background: 'transparent',
-                  boxShadow: '0 0 28px 6px rgba(160,185,210,0.55), 0 0 60px 10px rgba(160,185,210,0.18)',
-                  animation: 'orbitRing 1.4s ease-in-out infinite alternate',
-                  pointerEvents: 'none',
-                }} />
-              )}
-              <div style={{ perspective: '500px' }}>
-                <div
                   style={{
-                    width: 100,
-                    height: 100,
-                    position: 'relative',
-                    transformStyle: 'preserve-3d',
-                    animation: coinFlipStage === 'spinning' ? 'coinSpin3D 0.45s linear infinite' : 'none',
-                    transition: coinFlipStage === 'revealed' ? 'transform 0.7s cubic-bezier(0.34,1.56,0.64,1)' : 'none',
-                    transform: coinFlipStage === 'revealed'
-                      ? (coinFlipWinner?.key === config.speakerA ? 'rotateY(0deg)' : 'rotateY(180deg)')
-                      : undefined,
-                    filter: coinFlipStage === 'spinning' ? 'drop-shadow(0 0 12px rgba(160,185,210,0.8))' : 'drop-shadow(0 4px 20px rgba(160,185,210,0.6))',
+                    width: 100, height: 100, borderRadius: '50%', objectFit: 'cover',
+                    border: `3px solid ${config.speakerAColor}`,
+                    boxShadow: `0 0 16px ${config.speakerAColor}66`,
                   }}
-                >
-                  {/* 앞면: Speaker A — 골드 코인 */}
-                  <div style={{
-                    position: 'absolute', inset: 0,
-                    backfaceVisibility: 'hidden',
-                    WebkitBackfaceVisibility: 'hidden',
-                    borderRadius: '50%',
-                    overflow: 'hidden',
-                    border: '5px solid #A8B8C8',
-                    boxShadow: 'inset 0 0 0 2px rgba(210,225,240,0.6), inset 0 0 0 4px rgba(100,130,160,0.4), 0 0 20px rgba(160,185,210,0.5)',
-                    outline: '2px solid rgba(190,210,230,0.2)',
-                  }}>
-                    <img
-                      src={`/politicians/${config.speakerA}/profile.jpg`}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover',
-                        filter: 'grayscale(0.65) contrast(1.1) brightness(1.08) saturate(0.35)' }}
-                      alt={config.speakerAName}
-                    />
-                    {/* 릿지 오버레이 */}
-                    <div style={{
-                      position: 'absolute', inset: 0, borderRadius: '50%',
-                      background: 'radial-gradient(circle at 35% 28%, rgba(230,240,255,0.4) 0%, rgba(140,165,190,0.08) 45%, transparent 70%)',
-                      pointerEvents: 'none',
-                    }} />
-                    {/* 하이라이트 사선 */}
-                    <div style={{
-                      position: 'absolute', inset: 0, borderRadius: '50%',
-                      background: 'linear-gradient(135deg, rgba(235,242,255,0.35) 0%, transparent 50%, rgba(50,80,120,0.12) 100%)',
-                      pointerEvents: 'none',
-                    }} />
-                  </div>
-
-                  {/* 뒷면: Speaker B — 골드 코인 */}
-                  <div style={{
-                    position: 'absolute', inset: 0,
-                    backfaceVisibility: 'hidden',
-                    WebkitBackfaceVisibility: 'hidden',
-                    transform: 'rotateY(180deg)',
-                    borderRadius: '50%',
-                    overflow: 'hidden',
-                    border: '5px solid #A8B8C8',
-                    boxShadow: 'inset 0 0 0 2px rgba(210,225,240,0.6), inset 0 0 0 4px rgba(100,130,160,0.4), 0 0 20px rgba(160,185,210,0.5)',
-                    outline: '2px solid rgba(190,210,230,0.2)',
-                  }}>
-                    <img
-                      src={`/politicians/${config.speakerB}/profile.jpg`}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover',
-                        filter: 'grayscale(0.65) contrast(1.1) brightness(1.08) saturate(0.35)' }}
-                      alt={config.speakerBName}
-                    />
-                    <div style={{
-                      position: 'absolute', inset: 0, borderRadius: '50%',
-                      background: 'radial-gradient(circle at 35% 28%, rgba(230,240,255,0.4) 0%, rgba(140,165,190,0.08) 45%, transparent 70%)',
-                      pointerEvents: 'none',
-                    }} />
-                    <div style={{
-                      position: 'absolute', inset: 0, borderRadius: '50%',
-                      background: 'linear-gradient(135deg, rgba(235,242,255,0.35) 0%, transparent 50%, rgba(50,80,120,0.12) 100%)',
-                      pointerEvents: 'none',
-                    }} />
-                  </div>
-                </div>
+                />
               </div>
+              <span className="text-white/90 text-sm mt-3 font-semibold">{config.speakerAName.split(' ')[0]}</span>
             </div>
+
+            {/* VS */}
+            <span className="text-white/40 font-bold text-2xl">VS</span>
 
             {/* Speaker B */}
             <div className={`flex flex-col items-center transition-all duration-700 ${
               coinFlipStage === 'revealed'
                 ? coinFlipWinner.key === config.speakerB
                   ? 'scale-125 opacity-100'
-                  : 'opacity-25 scale-90'
+                  : 'opacity-30 scale-90'
                 : 'opacity-100'
             }`}>
-              <div style={{ position: 'relative', width: 72, height: 72 }}>
+              <div style={{ position: 'relative', width: 100, height: 100 }}>
                 <img
                   src={`/politicians/${config.speakerB}/profile.jpg`}
-                  style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', border: '3px solid #A8B8C8',
-                    filter: 'grayscale(0.5) contrast(1.08) brightness(1.05) saturate(0.45)',
-                    boxShadow: '0 0 10px rgba(160,185,210,0.4)' }}
+                  style={{
+                    width: 100, height: 100, borderRadius: '50%', objectFit: 'cover',
+                    border: `3px solid ${config.speakerBColor}`,
+                    boxShadow: `0 0 16px ${config.speakerBColor}66`,
+                  }}
                 />
-                <div style={{ position: 'absolute', inset: 0, borderRadius: '50%',
-                  background: 'linear-gradient(135deg, rgba(235,242,255,0.2) 0%, transparent 60%)', pointerEvents: 'none' }} />
               </div>
-              <span className="text-white/90 text-sm mt-2 font-semibold">{config.speakerBName.split(' ')[0]}</span>
+              <span className="text-white/90 text-sm mt-3 font-semibold">{config.speakerBName.split(' ')[0]}</span>
             </div>
           </div>
+
+          {coinFlipStage === 'spinning' && (
+            <p className="text-white/40 text-xs tracking-[0.2em] uppercase mb-4">선공 결정 중</p>
+          )}
 
           {coinFlipStage === 'revealed' && (
             <div className="text-center" style={{ animation: 'fadeInUp 0.4s ease' }}>
@@ -1608,14 +1521,6 @@ function detectFacts(text: string): { label: string; subtitle: string; detail: s
           )}
 
           <style>{`
-            @keyframes coinSpin3D {
-              0%   { transform: rotateY(0deg); }
-              100% { transform: rotateY(360deg); }
-            }
-            @keyframes orbitRing {
-              0%   { transform: rotateX(72deg) rotateZ(0deg); }
-              100% { transform: rotateX(72deg) rotateZ(360deg); }
-            }
             @keyframes fadeInUp {
               from { opacity: 0; transform: translateY(12px); }
               to { opacity: 1; transform: translateY(0); }
