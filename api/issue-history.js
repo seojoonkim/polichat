@@ -176,8 +176,9 @@ export default async function handler(req, res) {
   res.setHeader('Cache-Control', 's-maxage=1800, stale-while-revalidate=3600');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  // all=1 → 날짜 제한 없이 전체 반환
+  // all=1 → 날짜 제한 없이 전체 반환 (캐시 짧게)
   if (req.query.all === '1') {
+    res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120');
     const all = await getAllIssues();
     return res.status(200).json({ issues: all, source: 'supabase-all' });
   }
